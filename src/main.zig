@@ -19,14 +19,14 @@ pub fn main(init: std.process.Init) !void {
     const allocator = init.gpa;
     const io = init.io;
 
-    // var conn = try db.connect(allocator);
-    // defer conn.deinit();
-    // db_pool.init(&conn);
-    // try db_migrate.run();
-    //
-    // const repo = DriverRepository.init(allocator);
-    // const usecase = DriverUsecase.init(repo);
-    // driverController = DriverController.init(allocator, usecase);
+    var conn = try db.connect(allocator);
+    defer conn.deinit();
+    db_pool.init(&conn);
+    try db_migrate.run();
+
+    const repo = DriverRepository.init(allocator);
+    const usecase = DriverUsecase.init(repo);
+    driverController = DriverController.init(allocator, usecase);
 
     try spider.initWsHub(allocator, io);
     defer spider.deinitWsHub(allocator);
@@ -35,7 +35,7 @@ pub fn main(init: std.process.Init) !void {
     defer server.deinit();
 
     server
-        // .get("/drivers", getDrivers)
+        .get("/drivers", getDrivers)
         .get("/assets/*", static.serve)
         .get("/", DocsController.index)
         .get("/ping", pingHandler)

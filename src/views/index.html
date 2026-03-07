@@ -9,49 +9,241 @@
     <script src="https://unpkg.com/htmx.org@1.9.12"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <style>
-        body { background:#0b1121; color:white; }
-        .hero-dark { background:#0b1121; }
+        /* ── Base ── */
+        body { background: #0b1121; color: white; }
+        .hero-dark { background: #0b1121; }
+
+        /* ── Sticky Navbar ── */
+        .site-nav {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: rgba(11, 17, 33, 0.88);
+            backdrop-filter: blur(14px);
+            -webkit-backdrop-filter: blur(14px);
+            border-bottom: 1px solid #1e293b;
+            height: 58px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .site-nav .nav-inner {
+            width: 100%;
+            max-width: 1100px;
+            padding: 0 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .site-nav .nav-brand {
+            display: flex;
+            align-items: center;
+            gap: 0.55rem;
+            font-weight: 800;
+            font-size: 1rem;
+            color: #e2e8f0;
+            text-decoration: none;
+            letter-spacing: 0.02em;
+        }
+        .site-nav .nav-brand img {
+            width: 24px;
+            height: 24px;
+            object-fit: contain;
+        }
+        .site-nav .nav-links {
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+        .site-nav .nav-links a {
+            color: #94a3b8;
+            text-decoration: none;
+            font-size: 0.85rem;
+            padding: 0.38rem 0.75rem;
+            border-radius: 6px;
+            transition: color 0.15s, background 0.15s;
+        }
+        .site-nav .nav-links a:hover {
+            color: #e2e8f0;
+            background: #1e293b;
+        }
+        .site-nav .nav-cta {
+            background: #ffc439 !important;
+            color: #000 !important;
+            font-weight: 700 !important;
+        }
+        .site-nav .nav-cta:hover {
+            background: #ffd166 !important;
+        }
+        @media (max-width: 768px) {
+            .site-nav .nav-links { display: none; }
+        }
+
+        /* ── Section dividers ── */
+        .section-divided {
+            border-top: 1px solid #1e293b;
+        }
+
+        /* ── Code blocks ── */
         .code-block {
-            background: #0f172a;
+            background: #060d1a;
             color: #e2e8f0;
             padding: 1.5rem;
-            border-radius: 12px;
+            border-radius: 10px;
             border: 1px solid #1e293b;
             font-family: 'JetBrains Mono', monospace;
             overflow-x: auto;
+            font-size: 0.82rem;
+            line-height: 1.75;
         }
+
+        /* ── Step cards ── */
+        .step-card {
+            background: #0f172a;
+            border: 1px solid #1e293b;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-bottom: 1.25rem;
+            transition: border-color 0.2s;
+        }
+        .step-card:hover { border-color: rgba(255, 196, 57, 0.3); }
+        .step-card-header {
+            display: flex;
+            align-items: center;
+            gap: 0.85rem;
+            padding: 0.85rem 1.5rem;
+            border-bottom: 1px solid #1e293b;
+            background: rgba(255,255,255,0.02);
+        }
+        .step-num {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: rgba(255,196,57,0.1);
+            border: 1px solid rgba(255,196,57,0.3);
+            color: #ffc439;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.7rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+        .step-card-title {
+            font-weight: 700;
+            font-size: 0.9rem;
+            color: #e2e8f0;
+        }
+        .step-card .code-block {
+            border-radius: 0;
+            border: none;
+        }
+        .step-note {
+            padding: 0.65rem 1.5rem;
+            font-size: 0.83rem;
+            color: #94a3b8;
+            border-top: 1px solid #1e293b;
+        }
+        .step-note code {
+            background: rgba(255,196,57,0.1);
+            color: #ffc439;
+            padding: 0.1rem 0.35rem;
+            border-radius: 4px;
+            font-size: 0.78rem;
+        }
+
+        /* ── Feature cards ── */
         .feature-card {
-            background:#0f172a;
-            border:1px solid #1e293b;
-            border-radius:10px;
+            background: #0f172a;
+            border: 1px solid #1e293b;
+            border-radius: 10px;
             height: 100%;
-            transition: transform 0.2s;
+            transition: transform 0.2s, border-color 0.2s, background 0.2s;
             cursor: pointer;
         }
-        .feature-card:hover { transform: translateY(-5px); border-color: #ffc439; }
+        .feature-card:hover { transform: translateY(-4px); border-color: #ffc439; background: #1e293b; }
         .feature-card.active { border-color: #ffc439; background: #1e293b; }
-        .spider-name { color:white; font-weight:800; font-size:3.5rem; line-height: 1; }
-        .accent { color:#ffc439; }
-        .logo-img { max-width: 120px; margin-bottom: 1rem; }
-        .button.is-success.is-light { background-color: #ffc439; color: #000; border: none; font-weight: bold; }
-        .k { color: #f472b6; }
-        .f { color: #38bdf8; }
-        .s { color: #fbbf24; }
-        .n { color: #f78c6c; }
-        .c { color: #64748b; font-style: italic; }
-        pre { background: transparent; padding: 0; color: inherit; }
+        .feature-card code {
+            background: rgba(255,196,57,0.1);
+            color: #ffc439;
+            padding: 0.1rem 0.35rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+        }
+
+        /* ── Detail box ── */
         #feature-detail { transition: all 0.2s; }
         #feature-detail:empty { display: none; }
         .detail-box {
             background: #0f172a;
             border: 1px solid #1e293b;
-            border-radius: 12px;
+            border-left: 3px solid #ffc439;
+            border-radius: 10px;
             padding: 2rem;
-            margin-top: 1rem;
+            margin-top: 1.5rem;
         }
+        .detail-box code {
+            background: rgba(255,196,57,0.1);
+            color: #ffc439;
+            padding: 0.1rem 0.35rem;
+            border-radius: 4px;
+            font-size: 0.82rem;
+        }
+
+        /* ── Misc ── */
+        .spider-name { color: white; font-weight: 800; font-size: clamp(4rem, 10vw, 7rem); line-height: 1; }
+        .accent { color: #ffc439; }
+        .logo-img { max-width: 230px; margin-bottom: 0.0rem; }
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            background: rgba(255,196,57,0.08);
+            border: 1px solid rgba(255,196,57,0.22);
+            color: #ffc439;
+            padding: 0.28rem 0.75rem;
+            border-radius: 100px;
+            font-size: 0.78rem;
+            font-family: 'JetBrains Mono', monospace;
+            margin-bottom: 1.2rem;
+        }
+        .button.is-success.is-light {
+            background-color: #ffc439;
+            color: #000;
+            border: none;
+            font-weight: bold;
+            transition: background 0.15s, transform 0.15s;
+        }
+        .button.is-success.is-light:hover { background-color: #ffd166; transform: translateY(-1px); }
+        .button.is-outlined.is-light { transition: background 0.15s, transform 0.15s; }
+        .button.is-outlined.is-light:hover { background: rgba(255,255,255,0.05); transform: translateY(-1px); }
+        .k { color: #f472b6; }
+        .f { color: #38bdf8; }
+        .s { color: #fbbf24; }
+        .n { color: #f78c6c; }
+        .c { color: #475569; font-style: italic; }
+        pre { background: transparent; padding: 0; color: inherit; }
     </style>
 </head>
 <body>
+
+    <!-- Sticky navbar -->
+    <nav class="site-nav">
+        <div class="nav-inner">
+        <a href="#" class="nav-brand">
+            <img src="/assets/spider_logo.png" alt="Spider">
+            Spider
+        </a>
+        <div class="nav-links">
+            <a href="#quickstart">Docs</a>
+            <a href="#features">Features</a>
+            <a href="https://github.com/llllOllOOll/spider">GitHub</a>
+            <a href="#quickstart" class="nav-cta">Quick Start</a>
+        </div>
+        </div>
+    </nav>
+
     {% template "hero" %}
     {% template "quickstart" %}
     {% template "features" %}
@@ -61,23 +253,41 @@
 {% end %}
 
 {% block "hero" %}
-<section class="hero hero-dark is-medium">
-    <div class="hero-body has-text-centered">
+<section class="hero hero-dark" style="min-height: calc(100vh - 58px); display: flex; align-items: center;">
+    <div class="hero-body has-text-centered" style="width:100%;">
         <img src="/assets/spider_logo.png" alt="Spider Logo" class="logo-img">
         <h1 class="spider-name">Spider</h1>
-        <p class="subtitle has-text-grey-light mt-2">Web framework written in <span class="accent">Zig</span> (0.16.0-dev)</p>
+        <p class="subtitle has-text-grey-light mt-2">Web framework written in <span class="accent">Zig</span> </p>
         <div class="buttons is-centered mt-4">
             <a href="https://github.com/llllOllOOll/spider" class="button is-success is-light">GitHub</a>
             <a href="#quickstart" class="button is-outlined is-light">Quick Start</a>
+        </div>
+        <div style="display:flex; justify-content:center; margin-top: 2.5rem;">
+            <div class="code-block" style="width:580px; max-width:90vw; text-align:left; overflow-x:visible; overflow:visible; white-space:pre-wrap; word-break:break-word;">
+<pre><span class="k">const</span> std = <span class="f">@import</span>(<span class="s">"std"</span>);
+<span class="k">const</span> spider = <span class="f">@import</span>(<span class="s">"spider"</span>);
+
+<span class="k">pub fn</span> <span class="f">main</span>(init: std.process.Init) !<span class="k">void</span> {
+    <span class="k">const</span> server = <span class="k">try</span> spider.Spider.<span class="f">init</span>(
+        init.gpa, init.io, <span class="s">"127.0.0.1"</span>, <span class="n">8080</span>
+    );
+    <span class="k">defer</span> server.<span class="f">deinit</span>();
+    <span class="k">try</span> server.<span class="f">get</span>(<span class="s">"/"</span>, pingHandler).<span class="f">listen</span>();
+}
+
+<span class="k">fn</span> <span class="f">pingHandler</span>(alc: std.mem.Allocator, _: *spider.Request) !spider.Response {
+    <span class="k">return</span> spider.Response.<span class="f">json</span>(alc, .{ .msg = <span class="s">"pong"</span> });
+}</pre>
+            </div>
         </div>
     </div>
 </section>
 {% end %}
 
 {% block "quickstart" %}
-<section class="section" id="quickstart">
+<section class="section section-divided" id="quickstart" style="scroll-margin-top: 58px;">
 <div class="container">
-<h2 class="title has-text-white has-text-centered mb-5">Getting Started</h2>
+<h2 class="title has-text-white has-text-centered mb-6">Getting Started</h2>
 <p class="subtitle has-text-grey-light has-text-centered mb-5">Requires Zig 0.16.0-dev and libpq (for PostgreSQL)</p>
 
 <div class="mb-5">
@@ -85,7 +295,7 @@
 <div class="code-block">
 <pre>zig fetch --save git+https://github.com/llllOllOOll/spider</pre>
 </div>
-<p class="has-text-grey-light mt-2">This updates your <code>build.zig.zon</code> with the dependency.</p>
+<p class="has-text-grey-light mt-2">This updates your <code style="background:rgba(255,196,57,0.1);color:#ffc439;padding:0.1rem 0.35rem;border-radius:4px;">build.zig.zon</code> with the dependency.</p>
 </div>
 
 <div class="mb-5">
@@ -145,16 +355,18 @@ exe.root_module.<span class="f">linkSystemLibrary</span>(<span class="s">"pq"</s
 <pre>zig build run</pre>
 </div>
 <p class="has-text-grey-light mt-2">Visit <span class="accent">http://localhost:8080/</span></p>
-<p class="has-text-grey-light">Expected response: <code>{"msg":"pong"}</code></p>
+<p class="has-text-grey-light">Expected response: <code style="background:rgba(255,196,57,0.1);color:#ffc439;padding:0.1rem 0.35rem;border-radius:4px;">{"msg":"pong"}</code></p>
 </div>
+
 </div>
 </section>
 {% end %}
 
 {% block "features" %}
-<section class="section">
+<section class="section section-divided" id="features" style="scroll-margin-top: 58px;">
     <div class="container">
         <h2 class="title has-text-white has-text-centered mb-6">Core Features</h2>
+        <p class="subtitle has-text-grey-light has-text-centered mb-6">Click any card to see documentation and examples</p>
         <div class="columns is-multiline">
             <div class="column is-3">
                 <div class="feature-card p-5"
@@ -177,26 +389,28 @@ exe.root_module.<span class="f">linkSystemLibrary</span>(<span class="s">"pq"</s
                     <p class="mt-2"><a href="/chat" target="_blank" style="color:#ffc439;font-size:0.85rem;" onclick="event.stopPropagation()">→ Live Demo</a></p>
                 </div>
             </div>
-            <div class="column is-3">
-                <div class="feature-card p-5"
-                     hx-get="/docs/postgres"
-                     hx-target="#feature-detail"
-                     hx-swap="innerHTML"
-                     onclick="document.querySelectorAll('.feature-card').forEach(c=>c.classList.remove('active'));this.classList.add('active')">
-                    <p class="accent has-text-weight-bold">PostgreSQL</p>
-                    <p class="has-text-grey-light">Built-in PG client with pooling</p>
-                </div>
-            </div>
-            <div class="column is-3">
-                <div class="feature-card p-5"
-                     hx-get="/docs/metrics"
-                     hx-target="#feature-detail"
-                     hx-swap="innerHTML"
-                     onclick="document.querySelectorAll('.feature-card').forEach(c=>c.classList.remove('active'));this.classList.add('active')">
-                    <p class="accent has-text-weight-bold">Metrics</p>
-                    <p class="has-text-grey-light">Internal metrics + dashboard</p>
-                </div>
-            </div>
+<div class="column is-3">
+<div class="feature-card p-5"
+hx-get="/docs/postgres"
+hx-target="#feature-detail"
+hx-swap="innerHTML"
+onclick="document.querySelectorAll('.feature-card').forEach(c=>c.classList.remove('active'));this.classList.add('active')">
+<p class="accent has-text-weight-bold">PostgreSQL</p>
+<p class="has-text-grey-light">Built-in PG client with pooling</p>
+<p class="mt-2"><a href="https://spiderme.org/drivers" target="_blank" style="color:#ffc439;font-size:0.85rem;" onclick="event.stopPropagation()">→ Live Demo</a></p>
+</div>
+</div>
+<div class="column is-3">
+<div class="feature-card p-5"
+hx-get="/docs/metrics"
+hx-target="#feature-detail"
+hx-swap="innerHTML"
+onclick="document.querySelectorAll('.feature-card').forEach(c=>c.classList.remove('active'));this.classList.add('active')">
+<p class="accent has-text-weight-bold">Metrics</p>
+<p class="has-text-grey-light">Internal metrics + dashboard</p>
+<p class="mt-2"><a href="https://spiderme.org/_spider/dashboard" target="_blank" style="color:#ffc439;font-size:0.85rem;" onclick="event.stopPropagation()">→ Live Demo</a></p>
+</div>
+</div>
             <div class="column is-3">
                 <div class="feature-card p-5"
                      hx-get="/docs/logger"
@@ -277,37 +491,37 @@ exe.root_module.<span class="f">linkSystemLibrary</span>(<span class="s">"pq"</s
                     <p class="has-text-grey-light">Chain functions via <code>server.use(fn)</code></p>
                 </div>
             </div>
-<div class="column is-3">
-<div class="feature-card p-5"
-hx-get="/docs/templates"
-hx-target="#feature-detail"
-hx-swap="innerHTML"
-onclick="document.querySelectorAll('.feature-card').forEach(c=>c.classList.remove('active'));this.classList.add('active')">
-<p class="accent has-text-weight-bold">Templates</p>
-<p class="has-text-grey-light">Blocks, variables, loops, if/else, include</p>
-</div>
-</div>
-<div class="column is-3">
-<div class="feature-card p-5"
-hx-get="/docs/docker"
-hx-target="#feature-detail"
-hx-swap="innerHTML"
-onclick="document.querySelectorAll('.feature-card').forEach(c=>c.classList.remove('active'));this.classList.add('active')">
-<p class="accent has-text-weight-bold">Docker</p>
-<p class="has-text-grey-light">Official Zig image for fast builds</p>
-</div>
-</div>
-<div class="column is-3">
-<div class="feature-card p-5"
-hx-get="/docs/testing"
-hx-target="#feature-detail"
-hx-swap="innerHTML"
-onclick="document.querySelectorAll('.feature-card').forEach(c=>c.classList.remove('active'));this.classList.add('active')">
-<p class="accent has-text-weight-bold">Testing</p>
-<p class="has-text-grey-light"><code>zig test .</code> + <code>zig fmt .</code></p>
-</div>
-</div>
-</div>
+            <div class="column is-3">
+                <div class="feature-card p-5"
+                     hx-get="/docs/templates"
+                     hx-target="#feature-detail"
+                     hx-swap="innerHTML"
+                     onclick="document.querySelectorAll('.feature-card').forEach(c=>c.classList.remove('active'));this.classList.add('active')">
+                    <p class="accent has-text-weight-bold">Templates</p>
+                    <p class="has-text-grey-light">Blocks, variables, loops, if/else, include</p>
+                </div>
+            </div>
+            <div class="column is-3">
+                <div class="feature-card p-5"
+                     hx-get="/docs/docker"
+                     hx-target="#feature-detail"
+                     hx-swap="innerHTML"
+                     onclick="document.querySelectorAll('.feature-card').forEach(c=>c.classList.remove('active'));this.classList.add('active')">
+                    <p class="accent has-text-weight-bold">Docker</p>
+                    <p class="has-text-grey-light">Official Zig image for fast builds</p>
+                </div>
+            </div>
+            <div class="column is-3">
+                <div class="feature-card p-5"
+                     hx-get="/docs/testing"
+                     hx-target="#feature-detail"
+                     hx-swap="innerHTML"
+                     onclick="document.querySelectorAll('.feature-card').forEach(c=>c.classList.remove('active'));this.classList.add('active')">
+                    <p class="accent has-text-weight-bold">Testing</p>
+                    <p class="has-text-grey-light"><code>zig test .</code> + <code>zig fmt .</code></p>
+                </div>
+            </div>
+        </div>
 
         <!-- Feature detail loads here via HTMX -->
         <div id="feature-detail"></div>
@@ -317,7 +531,7 @@ onclick="document.querySelectorAll('.feature-card').forEach(c=>c.classList.remov
 {% end %}
 
 {% block "footer" %}
-<footer class="footer has-background-black">
+<footer class="footer has-background-black" style="border-top: 1px solid #1e293b;">
     <div class="content has-text-centered has-text-grey">
         Spider • MIT License • Built with <span class="accent">Zig</span>
     </div>
