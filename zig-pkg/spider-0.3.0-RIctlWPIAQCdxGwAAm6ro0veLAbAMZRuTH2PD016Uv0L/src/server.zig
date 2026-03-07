@@ -305,13 +305,20 @@ fn handleConnection(ctx: *ConnectionContext) error{Canceled}!void {
                 }
             }
 
-            request.respond(web_res.body orelse "", .{
-                .status = @enumFromInt(@intFromEnum(web_res.status)),
-                .extra_headers = extra_headers[0..header_count],
-            }) catch {
-                metrics.global_metrics.incrementError();
-                break;
-            };
+            // If 404 and static_dir is set, try serving static file
+            if (web_res.status == .not_found and ctx.static_dir.len > 0) {
+                staticFileHandler(&request, arena, ctx.static_dir, ctx.io) catch {
+                    metrics.global_metrics.incrementError();
+                };
+            } else {
+                request.respond(web_res.body orelse "", .{
+                    .status = @enumFromInt(@intFromEnum(web_res.status)),
+                    .extra_headers = extra_headers[0..header_count],
+                }) catch {
+                    metrics.global_metrics.incrementError();
+                    break;
+                };
+            }
 
             metrics.global_metrics.incrementRequest();
             log.request(@intFromEnum(web_res.status), 0, method, path);
@@ -369,7 +376,45 @@ fn payloadTooLargeHandler(req: *std.http.Server.Request, allocator: std.mem.Allo
 }
 
 fn staticFileHandler(req: *std.http.Server.Request, allocator: std.mem.Allocator, static_dir: []const u8, io: Io) !void {
-    _ = static_dir;
-    _ = io;
-    try notFoundHandler(req, allocator);
+    // Remove leading slash from request path
+    const req_path = if (std.mem.startsWith(u8, req.head.target, "/")) req.head.target[1..] else req.head.target;
+
+    // Join static_dir with request path
+    const full_path = std.fs.path.join(allocator, &.{ static_dir, req_path }) catch |err| {
+        std.debug.print("SERVER: path join error: {}\n", .{err});
+        try notFoundHandler(req, allocator);
+        return;
+    };
+    defer allocator.free(full_path);
+
+    // Read file
+    const content = std.Io.Dir.cwd().readFileAlloc(
+        io,
+        full_path,
+        allocator,
+        .limited(10 * 1024 * 1024),
+    ) catch |err| {
+        std.debug.print("SERVER: file read error: {}\n", .{err});
+        try notFoundHandler(req, allocator);
+        return;
+    };
+    defer allocator.free(content);
+
+    // Determine MIME type
+    const content_type = blk: {
+        if (std.mem.endsWith(u8, req_path, ".png")) break :blk "image/png";
+        if (std.mem.endsWith(u8, req_path, ".jpg") or std.mem.endsWith(u8, req_path, ".jpeg")) break :blk "image/jpeg";
+        if (std.mem.endsWith(u8, req_path, ".svg")) break :blk "image/svg+xml";
+        if (std.mem.endsWith(u8, req_path, ".css")) break :blk "text/css";
+        if (std.mem.endsWith(u8, req_path, ".js")) break :blk "application/javascript";
+        if (std.mem.endsWith(u8, req_path, ".ico")) break :blk "image/x-icon";
+        if (std.mem.endsWith(u8, req_path, ".html")) break :blk "text/html";
+        if (std.mem.endsWith(u8, req_path, ".woff2")) break :blk "font/woff2";
+        break :blk "application/octet-stream";
+    };
+
+    try req.respond(content, .{
+        .status = .ok,
+        .extra_headers = &.{.{ .name = "content-type", .value = content_type }},
+    });
 }

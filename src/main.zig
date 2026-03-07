@@ -9,7 +9,6 @@ const DriverUsecase = @import("driver_usecase.zig");
 const DocsController = @import("docs_controller.zig").DocsController;
 const ChatController = @import("chat_controller.zig").ChatController;
 var driverController: DriverController = undefined;
-const static = @import("static_handler.zig");
 
 fn getDrivers(alc: std.mem.Allocator, req: *spider.Request) !spider.Response {
     return driverController.getDrivers(alc, req);
@@ -35,8 +34,8 @@ pub fn main(init: std.process.Init) !void {
     defer server.deinit();
 
     server
+        .get("/assets/*", spider.static.serve)
         .get("/drivers", getDrivers)
-        .get("/assets/*", static.serve)
         .get("/", DocsController.index)
         .get("/ping", pingHandler)
         .get("/chat", ChatController.chatPage)

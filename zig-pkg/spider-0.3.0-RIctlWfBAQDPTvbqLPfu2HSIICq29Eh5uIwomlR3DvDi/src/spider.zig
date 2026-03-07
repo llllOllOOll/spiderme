@@ -104,6 +104,12 @@ pub const Spider = struct {
         return self;
     }
 
+    pub fn staticDir(self: Spider, dir: []const u8) Spider {
+        var s = self;
+        s.static_dir = dir;
+        return s;
+    }
+
     pub fn listen(self: Spider) !void {
         var server = try srv.Server.init(
             self.allocator,
