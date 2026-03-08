@@ -1,0 +1,932 @@
+<!-- {% block "docs" %} -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spider — Docs</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800;900&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/htmx.org@1.9.12"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+<style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: #0b1121; color: #cbd5e1; font-family: 'Outfit', sans-serif; font-size: 0.95rem; line-height: 1.7; }
+
+    /* ── NAV ── */
+    .site-nav {
+        position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+        background: rgba(11,17,33,0.95);
+        backdrop-filter: blur(12px);
+        border-bottom: 1px solid #1e293b;
+        height: 56px;
+        display: flex; align-items: center;
+        padding: 0 2rem;
+        justify-content: space-between;
+    }
+    .nav-brand {
+        display: flex; align-items: center; gap: 0.5rem;
+        font-family: 'Outfit', sans-serif;
+        font-weight: 800; font-size: 1rem;
+        color: #e2e8f0; text-decoration: none;
+    }
+    .nav-brand img { width: 22px; height: 22px; object-fit: contain; }
+    .nav-links { display: flex; gap: 0.2rem; }
+    .nav-links a {
+        color: #64748b; font-size: 0.82rem;
+        padding: 0.35rem 0.7rem; border-radius: 5px;
+        text-decoration: none; transition: all 0.15s;
+        font-family: 'IBM Plex Mono', monospace;
+    }
+    .nav-links a:hover { color: #e2e8f0; background: #1e293b; }
+    .nav-links a.active { color: #ffc439; }
+
+    /* ── LAYOUT ── */
+    .layout {
+        display: flex;
+        justify-content: center;
+        min-height: 100vh;
+        padding-top: 56px;
+        width: 100%;
+        max-width: 1600px;
+        margin: 0 auto;
+    }
+
+    /* ── SIDEBAR ── */
+    .sidebar {
+        width: 240px;
+        min-width: 240px;
+        position: sticky;
+        top: 56px;
+        height: calc(100vh - 56px);
+        overflow-y: auto;
+        padding: 2rem 1.25rem;
+        border-right: 1px solid #1e293b;
+    }
+    .sidebar::-webkit-scrollbar { width: 4px; }
+    .sidebar::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 2px; }
+
+    .sidebar-group { margin-bottom: 1.75rem; }
+    .sidebar-group-label {
+        font-size: 0.68rem;
+        font-weight: 700;
+        letter-spacing: 0.15em;
+        text-transform: uppercase;
+        color: #334155;
+        margin-bottom: 0.4rem;
+        padding: 0 0.5rem;
+        font-family: 'IBM Plex Mono', monospace;
+    }
+    .sidebar-link {
+        display: block;
+        padding: 0.32rem 0.5rem;
+        border-radius: 6px;
+        color: #64748b;
+        text-decoration: none;
+        font-size: 0.82rem;
+        transition: all 0.15s;
+        cursor: pointer;
+        font-family: 'IBM Plex Mono', monospace;
+    }
+    .sidebar-link:hover { color: #e2e8f0; background: #0f172a; }
+    .sidebar-link.active { color: #ffc439; background: rgba(255,196,57,0.06); font-weight: 600; }
+
+    /* ── CONTENT ── */
+    .content {
+        flex: 1;
+        max-width: 860px;
+        padding: 3rem 4rem;
+        min-width: 0;
+        border-right: 1px solid #1e293b;
+    }
+
+    /* ── ON THIS PAGE ── */
+    .on-this-page {
+        width: 240px;
+        min-width: 240px;
+        position: sticky;
+        top: 56px;
+        height: fit-content;
+        padding: 2rem 1.25rem;
+    }
+    .on-this-page-label {
+        font-size: 0.68rem;
+        font-weight: 700;
+        letter-spacing: 0.15em;
+        text-transform: uppercase;
+        color: #334155;
+        margin-bottom: 0.75rem;
+        font-family: 'IBM Plex Mono', monospace;
+    }
+    .on-this-page a {
+        display: block;
+        font-size: 0.78rem;
+        color: #475569;
+        text-decoration: none;
+        padding: 0.25rem 0 0.25rem 0.75rem;
+        margin-left: -0.75rem;
+        transition: color 0.15s;
+        border-left: 2px solid transparent;
+        font-family: 'IBM Plex Mono', monospace;
+    }
+    .on-this-page a:hover { color: #e2e8f0; }
+    .on-this-page a.active { color: #ffc439; border-left-color: #ffc439; }
+
+    /* ── CONTENT TYPOGRAPHY ── */
+    .content h1 { font-size: 2rem; font-weight: 800; color: #f1f5f9; margin-bottom: 1rem; }
+    .content h2 { font-size: 1.25rem; font-weight: 700; color: #e2e8f0; margin-top: 3rem; margin-bottom: 1rem; padding-bottom: 0.5rem; border-bottom: 1px solid #1e293b; }
+    .content p { color: #94a3b8; margin-bottom: 1rem; line-height: 1.75; }
+    .content p code, .content li code { background: #0f172a; border: 1px solid #1e293b; color: #fbbf24; padding: 0.1rem 0.4rem; border-radius: 4px; font-family: 'IBM Plex Mono', monospace; font-size: 0.78rem; }
+    .content ul { padding-left: 1.25rem; color: #94a3b8; margin-bottom: 1rem; }
+    .content li { margin-bottom: 0.4rem; }
+    .content a { color: #ffc439; text-decoration: none; }
+    .content a:hover { text-decoration: underline; }
+
+    /* ── CODE BLOCK ── */
+    .code-block { background: #0a1628; border: 1px solid #1e293b; border-radius: 8px; overflow: hidden; margin: 1.25rem 0; font-size: 0.78rem; }
+    .code-block-bar { background: #0f1e35; padding: 0.5rem 1rem; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #1e293b; }
+    .code-block-lang { font-family: 'IBM Plex Mono', monospace; font-size: 0.68rem; color: #334155; }
+    .code-block pre { padding: 1.25rem 1.5rem; font-family: 'IBM Plex Mono', monospace; color: #94a3b8; overflow-x: auto; background: transparent; white-space: pre; }
+
+    /* ── SYNTAX & OTHERS ── */
+    .k { color: #f472b6; } .f { color: #38bdf8; } .s { color: #fbbf24; } .n { color: #f78c6c; } .c { color: #475569; font-style: italic; } .w { color: #e2e8f0; }
+    .callout { background: rgba(255,196,57,0.05); border: 1px solid rgba(255,196,57,0.2); border-left: 3px solid #ffc439; border-radius: 8px; padding: 1rem 1.25rem; margin: 1.25rem 0; font-size: 0.85rem; color: #94a3b8; }
+    .callout strong { color: #ffc439; }
+    .pagination { display: flex; justify-content: space-between; margin-top: 4rem; padding-top: 2rem; border-top: 1px solid #1e293b; }
+    .pagination a { color: #64748b; text-decoration: none; font-size: 0.82rem; transition: color 0.15s; font-family: 'IBM Plex Mono', monospace; }
+    .pagination a:hover { color: #ffc439; }
+    #doc-content { transition: opacity 0.15s; }
+</style>
+</head>
+<body>
+
+<nav class="site-nav">
+    <a href="/" class="nav-brand">
+        <img src="/assets/spider_logo.png" alt="Spider">
+        Spider
+    </a>
+    <div class="nav-links">
+        <a href="/docs" class="active">Docs</a>
+        <a href="#" onclick="return false">Examples</a>
+        <a href="https://github.com/llllOllOOll/spider" target="_blank">GitHub</a>
+    </div>
+</nav>
+
+<div class="layout">
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+        <div class="sidebar-group">
+            <div class="sidebar-group-label">Getting Started</div>
+            <a class="sidebar-link active"
+               hx-get="/docs/quickstart" hx-target="#doc-content" hx-swap="innerHTML"
+               onclick="setActive(this)">Quick Start</a>
+        </div>
+        <div class="sidebar-group">
+            <div class="sidebar-group-label">Core</div>
+            <a class="sidebar-link"
+               hx-get="/docs/router" hx-target="#doc-content" hx-swap="innerHTML"
+               onclick="setActive(this)">Router</a>
+            <a class="sidebar-link"
+               hx-get="/docs/request" hx-target="#doc-content" hx-swap="innerHTML"
+               onclick="setActive(this)">Request</a>
+            <a class="sidebar-link"
+               hx-get="/docs/response" hx-target="#doc-content" hx-swap="innerHTML"
+               onclick="setActive(this)">Response</a>
+            <a class="sidebar-link"
+               hx-get="/docs/middleware" hx-target="#doc-content" hx-swap="innerHTML"
+               onclick="setActive(this)">Middleware</a>
+            <a class="sidebar-link"
+               hx-get="/docs/groups" hx-target="#doc-content" hx-swap="innerHTML"
+               onclick="setActive(this)">Group Routes</a>
+        </div>
+        <div class="sidebar-group">
+            <div class="sidebar-group-label">Features</div>
+            <a class="sidebar-link"
+               hx-get="/docs/postgres" hx-target="#doc-content" hx-swap="innerHTML"
+               onclick="setActive(this)">PostgreSQL</a>
+            <a class="sidebar-link"
+               hx-get="/docs/pooling" hx-target="#doc-content" hx-swap="innerHTML"
+               onclick="setActive(this)">Pooling</a>
+            <a class="sidebar-link"
+               hx-get="/docs/websocket" hx-target="#doc-content" hx-swap="innerHTML"
+               onclick="setActive(this)">WebSocket</a>
+            <a class="sidebar-link"
+               hx-get="/docs/templates" hx-target="#doc-content" hx-swap="innerHTML"
+               onclick="setActive(this)">Templates</a>
+            <a class="sidebar-link"
+               hx-get="/docs/static" hx-target="#doc-content" hx-swap="innerHTML"
+               onclick="setActive(this)">Static Files</a>
+            <a class="sidebar-link"
+               hx-get="/docs/metrics" hx-target="#doc-content" hx-swap="innerHTML"
+               onclick="setActive(this)">Metrics</a>
+            <a class="sidebar-link"
+               hx-get="/docs/logger" hx-target="#doc-content" hx-swap="innerHTML"
+               onclick="setActive(this)">Logger</a>
+            <a class="sidebar-link"
+               hx-get="/docs/shutdown" hx-target="#doc-content" hx-swap="innerHTML"
+               onclick="setActive(this)">Graceful Shutdown</a>
+        </div>
+        <div class="sidebar-group">
+            <div class="sidebar-group-label">Deployment</div>
+            <a class="sidebar-link"
+               hx-get="/docs/docker" hx-target="#doc-content" hx-swap="innerHTML"
+               onclick="setActive(this)">Docker</a>
+            <a class="sidebar-link"
+               hx-get="/docs/testing" hx-target="#doc-content" hx-swap="innerHTML"
+               onclick="setActive(this)">Testing</a>
+        </div>
+    </aside>
+
+    <!-- MAIN CONTENT — loaded via HTMX -->
+    <main class="content">
+        <div id="doc-content">
+            {% template "doc_quickstart" %}
+        </div>
+    </main>
+
+    <!-- ON THIS PAGE -->
+    <aside class="on-this-page" id="on-this-page">
+        <div class="on-this-page-label">On this page</div>
+        <a href="#prerequisites" class="active">Prerequisites</a>
+        <a href="#create">Create a project</a>
+        <a href="#fetch">Fetch Spider</a>
+        <a href="#build">Configure build.zig</a>
+        <a href="#example">Write your first handler</a>
+        <a href="#run">Run</a>
+        <a href="#next">Next Steps</a>
+    </aside>
+
+</div>
+
+<script>
+function setActive(el) {
+    document.querySelectorAll('.sidebar-link').forEach(l => l.classList.remove('active'));
+    el.classList.add('active');
+}
+</script>
+
+</body>
+</html>
+{% end %}
+
+{% block "doc_quickstart" %}
+<h1>Quick Start</h1>
+<p>Spider is a web framework for Zig. This guide gets you from zero to a running HTTP server in under 5 minutes.</p>
+
+<h2 id="prerequisites">Prerequisites</h2>
+<p>You need Zig <code>0.16.0-dev.2676+</code> or later. If you don't have it yet, download it at <a href="https://ziglang.org/download/" target="_blank">ziglang.org/download</a>.</p>
+
+<h2 id="create">Create a new project</h2>
+<div class="code-block">
+    <div class="code-block-bar"><span class="code-block-lang">sh</span></div>
+    <pre>mkdir myapp && cd myapp
+zig init</pre>
+</div>
+<p>This generates <code>build.zig</code>, <code>build.zig.zon</code>, and <code>src/main.zig</code>.</p>
+
+<h2 id="fetch">Fetch Spider</h2>
+<div class="code-block">
+    <div class="code-block-bar"><span class="code-block-lang">sh</span></div>
+    <pre>zig fetch --save git+https://github.com/llllOllOOll/spider</pre>
+</div>
+<p>Spider is added to your <code>build.zig.zon</code> automatically:</p>
+<div class="code-block">
+    <div class="code-block-bar"><span class="code-block-lang">zig</span></div>
+    <pre><span class="c">// build.zig.zon</span>
+.dependencies = .{
+    .spider = .{
+        .url = <span class="s">"git+https://github.com/llllOllOOll/spider#f79bfab69d1c99fa552583bd2cc627d34f894260"</span>,
+        .hash = <span class="s">"spider-0.3.0-RIctlSneAQAo31OblO8nx0AZLGT0-d5qjb4aAjdzp4lP"</span>,
+    },
+},</pre>
+</div>
+
+<h2 id="build">Configure build.zig</h2>
+<p>Open <code>build.zig</code> and add Spider as a dependency of your executable:</p>
+<div class="code-block">
+    <div class="code-block-bar"><span class="code-block-lang">zig</span></div>
+    <pre><span class="k">const</span> spider_dep = b.<span class="f">dependency</span>(<span class="s">"spider"</span>, .{ .target = target });
+
+<span class="k">const</span> exe = b.<span class="f">addExecutable</span>(.{
+    .name = <span class="s">"myapp"</span>,
+    .root_module = b.<span class="f">createModule</span>(.{
+        .root_source_file = b.<span class="f">path</span>(<span class="s">"src/main.zig"</span>),
+        .target = target,
+        .optimize = optimize,
+        .imports = &.{
+            .{ .name = <span class="s">"spider"</span>, .module = spider_dep.<span class="f">module</span>(<span class="s">"spider"</span>) },
+        },
+    }),
+});</pre>
+</div>
+
+<h2 id="example">Write your first handler</h2>
+<p>Replace <code>src/main.zig</code> with:</p>
+<div class="code-block">
+    <div class="code-block-bar"><span class="code-block-lang">zig</span></div>
+    <pre><span class="k">const</span> std = <span class="f">@import</span>(<span class="s">"std"</span>);
+<span class="k">const</span> spider = <span class="f">@import</span>(<span class="s">"spider"</span>);
+
+<span class="k">pub fn</span> <span class="f">main</span>(init: std.process.Init) !<span class="k">void</span> {
+    <span class="k">const</span> arena: std.mem.Allocator = init.arena.<span class="f">allocator</span>();
+    <span class="k">const</span> io = init.io;
+    <span class="k">const</span> server = <span class="k">try</span> spider.Spider.<span class="f">init</span>(arena, io, <span class="s">"127.0.0.1"</span>, <span class="n">8080</span>);
+    <span class="k">defer</span> server.<span class="f">deinit</span>();
+
+    server.<span class="f">get</span>(<span class="s">"/ping"</span>, pingHandler).<span class="f">listen</span>() <span class="k">catch</span> |err| {
+        std.log.<span class="f">err</span>(<span class="s">"server error: {}"</span>, .{err});
+        <span class="k">return</span> err;
+    };
+}
+
+<span class="k">fn</span> <span class="f">pingHandler</span>(alc: std.mem.Allocator, _: *spider.Request) !spider.Response {
+    <span class="k">return</span> spider.Response.<span class="f">json</span>(alc, .{ .msg = <span class="s">"pong"</span> });
+}</pre>
+</div>
+
+<h2 id="run">Run</h2>
+<div class="code-block">
+    <div class="code-block-bar"><span class="code-block-lang">sh</span></div>
+    <pre>zig build run</pre>
+</div>
+<p>Test it in another terminal:</p>
+<div class="code-block">
+    <div class="code-block-bar"><span class="code-block-lang">sh</span></div>
+    <pre>curl http://localhost:8080/ping
+<span class="c"># {"msg":"pong"}</span></pre>
+</div>
+<div class="callout">
+    <strong>✓</strong> You should also see Spider logging each request in the terminal:<br>
+    <code>[[SPIDER]] | 200 | 0ns | GET "/ping"</code>
+</div>
+
+<h2 id="next">Next Steps</h2>
+<p>Now that your server is running, explore what Spider can do:</p>
+<ul>
+    <li><a href="#" hx-get="/docs/router" hx-target="#doc-content" hx-swap="innerHTML" onclick="setActive(document.querySelector('[hx-get=\'/docs/router\']'))">Router</a> — dynamic params, wildcards, chained routes</li>
+    <li><a href="#" hx-get="/docs/postgres" hx-target="#doc-content" hx-swap="innerHTML" onclick="setActive(document.querySelector('[hx-get=\'/docs/postgres\']'))">PostgreSQL</a> — built-in PG client with struct mapping</li>
+    <li><a href="#" hx-get="/docs/websocket" hx-target="#doc-content" hx-swap="innerHTML" onclick="setActive(document.querySelector('[hx-get=\'/docs/websocket\']'))">WebSocket</a> — real-time with hub broadcasting</li>
+</ul>
+{% end %}
+
+{% block "doc_router" %}
+<h1>Router</h1>
+<p>Trie-based router supporting static routes, dynamic parameters (<code>:id</code>), and wildcards (<code>*</code>). Routes are chained directly on the server and dispatched per HTTP method.</p>
+
+<div class="code-block">
+    <div class="code-block-bar"><span class="code-block-lang">zig</span></div>
+    <pre><span class="c">// Static route</span>
+server.<span class="f">get</span>(<span class="s">"/"</span>, homeHandler);
+
+<span class="c">// Dynamic parameter — access via req.param("id")</span>
+server.<span class="f">get</span>(<span class="s">"/users/:id"</span>, userHandler);
+
+<span class="c">// Wildcard — matches /assets/logo.png, /assets/css/main.css, etc.</span>
+server.<span class="f">get</span>(<span class="s">"/assets/*"</span>, staticHandler);
+
+<span class="c">// Chained routes</span>
+server.<span class="f">get</span>(<span class="s">"/"</span>, homeHandler)
+      .<span class="f">post</span>(<span class="s">"/users"</span>, createUser)
+      .<span class="f">get</span>(<span class="s">"/users/:id"</span>, getUser)
+      .<span class="f">listen</span>() <span class="k">catch</span> |err| <span class="k">return</span> err;
+
+<span class="k">fn</span> <span class="f">userHandler</span>(alc: std.mem.Allocator, req: *spider.Request) !spider.Response {
+    <span class="k">const</span> id = req.<span class="f">param</span>(<span class="s">"id"</span>) <span class="k">orelse return</span> spider.Response.<span class="f">text</span>(alc, <span class="s">"missing id"</span>);
+    <span class="k">return</span> spider.Response.<span class="f">json</span>(alc, .{ .id = id });
+}</pre>
+</div>
+{% end %}
+
+{% block "doc_request" %}
+<h1>Request</h1>
+<p>Access route parameters, parse JSON bodies, and read form or query string values directly from <code>*spider.Request</code>.</p>
+
+<div class="code-block">
+    <div class="code-block-bar"><span class="code-block-lang">zig</span></div>
+    <pre><span class="c">// Route parameter — /users/:id</span>
+<span class="k">const</span> id = req.<span class="f">param</span>(<span class="s">"id"</span>) <span class="k">orelse return</span> spider.Response.<span class="f">text</span>(alc, <span class="s">"missing id"</span>);
+
+<span class="c">// JSON body binding</span>
+<span class="k">const</span> Task = <span class="k">struct</span> { title: []<span class="k">const</span> u8, done: <span class="k">bool</span> };
+<span class="k">const</span> task = <span class="k">try</span> req.<span class="f">bindJson</span>(alc, Task);
+
+<span class="c">// Form parameter (POST application/x-www-form-urlencoded)</span>
+<span class="k">const</span> name = <span class="k">try</span> req.<span class="f">formParam</span>(<span class="s">"name"</span>, alc);
+
+<span class="c">// Query string (?page=2)</span>
+<span class="k">const</span> page = <span class="k">try</span> req.<span class="f">queryParam</span>(<span class="s">"page"</span>, alc);
+
+<span class="c">// Raw path (e.g. "/users/42")</span>
+<span class="k">const</span> path = req.path;</pre>
+</div>
+{% end %}
+
+{% block "doc_response" %}
+<h1>Response</h1>
+<p>Build responses with JSON, HTML, plain text, or redirects. Set custom status codes and headers as needed.</p>
+
+<div class="code-block">
+    <div class="code-block-bar"><span class="code-block-lang">zig</span></div>
+    <pre><span class="c">// JSON</span>
+<span class="k">return</span> spider.Response.<span class="f">json</span>(alc, .{ .id = <span class="n">1</span>, .name = <span class="s">"Max"</span> });
+
+<span class="c">// HTML</span>
+<span class="k">return</span> spider.Response.<span class="f">html</span>(alc, <span class="s">"&lt;h1&gt;Hello&lt;/h1&gt;"</span>);
+
+<span class="c">// Plain text</span>
+<span class="k">return</span> spider.Response.<span class="f">text</span>(alc, <span class="s">"pong"</span>);
+
+<span class="c">// Redirect</span>
+<span class="k">return</span> spider.Response.<span class="f">redirect</span>(alc, <span class="s">"/dashboard"</span>);
+
+<span class="c">// Custom status + header</span>
+<span class="k">var</span> res = <span class="k">try</span> spider.Response.<span class="f">json</span>(alc, task);
+res.status = .created;
+<span class="k">try</span> res.headers.<span class="f">set</span>(alc, <span class="s">"X-Request-Id"</span>, <span class="s">"abc123"</span>);
+<span class="k">return</span> res;</pre>
+</div>
+{% end %}
+
+{% block "doc_middleware" %}
+<h1>Middleware</h1>
+<p>Middleware functions run before every request handler. Chain them with <code>server.use(fn)</code>. Each middleware receives the allocator, request, and a <code>next</code> function to continue the chain.</p>
+
+<div class="code-block">
+    <div class="code-block-bar"><span class="code-block-lang">zig</span></div>
+    <pre><span class="c">// Built-in middleware</span>
+<span class="k">const</span> web = spider.web;
+
+server.<span class="f">use</span>(web.corsMiddleware)
+      .<span class="f">use</span>(web.loggerMiddleware)
+      .<span class="f">use</span>(web.authMiddleware)
+      .<span class="f">get</span>(<span class="s">"/"</span>, homeHandler)
+      .<span class="f">listen</span>() <span class="k">catch</span> |err| <span class="k">return</span> err;
+
+<span class="c">// Custom middleware</span>
+<span class="k">fn</span> <span class="f">authMiddleware</span>(
+    alc: std.mem.Allocator,
+    req: *spider.Request,
+    next: spider.NextFn,
+) !spider.Response {
+    <span class="k">const</span> key = req.<span class="f">header</span>(<span class="s">"x-api-key"</span>);
+    <span class="k">if</span> (key == <span class="k">null</span>) {
+        <span class="k">var</span> res = <span class="k">try</span> spider.Response.<span class="f">text</span>(alc, <span class="s">"Unauthorized"</span>);
+        res.status = .unauthorized;
+        <span class="k">return</span> res;
+    }
+    <span class="k">return</span> <span class="f">next</span>(alc, req);
+}</pre>
+</div>
+{% end %}
+
+{% block "doc_groups" %}
+<h1>Group Routes</h1>
+<p>Group routes add a shared prefix to multiple routes — useful for versioned APIs like <code>/api/v1</code>.</p>
+
+<div class="code-block">
+    <div class="code-block-bar"><span class="code-block-lang">zig</span></div>
+    <pre><span class="c">// Style 1 — inline chaining</span>
+server.<span class="f">get</span>(<span class="s">"/"</span>, homeHandler)
+      .<span class="f">groupGet</span>(<span class="s">"/api/v1"</span>, <span class="s">"/users"</span>, usersHandler)
+      .<span class="f">groupGet</span>(<span class="s">"/api/v1"</span>, <span class="s">"/tasks"</span>, tasksHandler)
+      .<span class="f">groupPost</span>(<span class="s">"/api/v1"</span>, <span class="s">"/tasks"</span>, createTaskHandler)
+      .<span class="f">listen</span>() <span class="k">catch</span> |err| <span class="k">return</span> err;
+
+<span class="c">// Style 2 — group object</span>
+<span class="k">const</span> api = app.<span class="f">group</span>(<span class="s">"/api/v1"</span>);
+<span class="k">try</span> api.<span class="f">get</span>(<span class="s">"/users"</span>, usersHandler);
+<span class="k">try</span> api.<span class="f">post</span>(<span class="s">"/tasks"</span>, createTaskHandler);</pre>
+</div>
+{% end %}
+
+{% block "doc_postgres" %}
+<h1>PostgreSQL</h1>
+<p>Spider has a built-in PostgreSQL client via <code>spider.pg</code>. This guide goes from a fresh database to a working JSON endpoint, then shows how to move credentials to a <code>.env</code> file.</p>
+
+<h2 id="prerequisites">Prerequisites</h2>
+<p>The PostgreSQL client library (<code>libpq</code>) must be installed on your system.</p>
+<p>On Arch Linux:</p>
+<div class="code-block">
+    <div class="code-block-bar"><span class="code-block-lang">sh</span></div>
+    <pre>pacman -S postgresql-libs</pre>
+</div>
+<p>Verify the installation:</p>
+<div class="code-block">
+    <div class="code-block-bar"><span class="code-block-lang">sh</span></div>
+    <pre>pkg-config --exists libpq && echo "ok"</pre>
+</div>
+<p>For other distributions (Debian, Ubuntu, Fedora, etc.) install the equivalent package — usually <code>libpq-dev</code> or <code>postgresql-devel</code>.</p>
+
+<h2 id="database">Start PostgreSQL</h2>
+<p>We'll use Docker to run PostgreSQL locally. Create a <code>docker-compose.yml</code>:</p>
+<div class="code-block">
+    <div class="code-block-bar"><span class="code-block-lang">yaml</span></div>
+    <pre>services:
+  db:
+    container_name: legends
+    image: postgres:17
+    environment:
+      POSTGRES_USER: spider
+      POSTGRES_PASSWORD: spider
+      POSTGRES_DB: spider_db
+    ports:
+      - "5433:5432"</pre>
+</div>
+<div class="code-block">
+    <div class="code-block-bar"><span class="code-block-lang">sh</span></div>
+    <pre>docker compose up -d</pre>
+</div>
+<p>Connect and create the table:</p>
+<div class="code-block">
+    <div class="code-block-bar"><span class="code-block-lang">sh</span></div>
+    <pre>docker exec -it legends psql -U spider -d spider_db</pre>
+</div>
+<div class="code-block">
+    <div class="code-block-bar"><span class="code-block-lang">sql</span></div>
+    <pre>CREATE TABLE legends (
+    id         SERIAL PRIMARY KEY,
+    name       VARCHAR(100) NOT NULL,
+    band       VARCHAR(100) NOT NULL,
+    instrument VARCHAR(50)  NOT NULL
+);
+
+INSERT INTO legends (name, band, instrument) VALUES
+    ('Lemmy Kilmister', 'Motörhead',           'bass'),
+    ('Ozzy Osbourne',   'Black Sabbath',        'vocals'),
+    ('Tony Iommi',      'Black Sabbath',        'guitar'),
+    ('Dio',             'Rainbow/Sabbath/Dio',  'vocals'),
+    ('Rob Halford',     'Judas Priest',         'vocals');</pre>
+</div>
+
+<h2 id="build">Configure build.zig</h2>
+<p>Add <code>link_libc</code> and link against <code>libpq</code>:</p>
+<div class="code-block">
+    <div class="code-block-bar"><span class="code-block-lang">zig</span></div>
+    <pre><span class="k">const</span> exe = b.<span class="f">addExecutable</span>(.{
+    .name = <span class="s">"myapp"</span>,
+    .root_module = b.<span class="f">createModule</span>(.{
+        .root_source_file = b.<span class="f">path</span>(<span class="s">"src/main.zig"</span>),
+        .target = target,
+        .optimize = optimize,
+        .link_libc = <span class="k">true</span>, <span class="c">// required for libpq</span>
+        .imports = &.{
+            .{ .name = <span class="s">"spider"</span>, .module = spider_dep.<span class="f">module</span>(<span class="s">"spider"</span>) },
+        },
+    }),
+});
+exe.root_module.<span class="f">linkSystemLibrary</span>(<span class="s">"pq"</span>, .{});</pre>
+</div>
+
+<h2 id="connect">Connect and query</h2>
+<p>Define a struct that matches your table columns, connect to the database, and use <code>mapAll</code> to map the result automatically:</p>
+<div class="code-block">
+    <div class="code-block-bar"><span class="code-block-lang">zig</span></div>
+    <pre><span class="k">const</span> std = <span class="f">@import</span>(<span class="s">"std"</span>);
+<span class="k">const</span> spider = <span class="f">@import</span>(<span class="s">"spider"</span>);
+<span class="k">const</span> db = spider.pg;
+
+<span class="k">const</span> Legend = <span class="k">struct</span> {
+    id:         i32,
+    name:       []<span class="k">const</span> u8,
+    band:       []<span class="k">const</span> u8,
+    instrument: []<span class="k">const</span> u8,
+};
+
+<span class="k">fn</span> <span class="f">legendsHandler</span>(alc: std.mem.Allocator, _: *spider.Request) !spider.Response {
+    <span class="k">var</span> result = <span class="k">try</span> db.<span class="f">query</span>(<span class="s">"SELECT id, name, band, instrument FROM legends"</span>);
+    <span class="k">defer</span> result.<span class="f">deinit</span>();
+    <span class="k">const</span> legends = <span class="k">try</span> result.<span class="f">mapAll</span>(Legend, alc);
+    <span class="k">return</span> spider.Response.<span class="f">json</span>(alc, legends);
+}
+
+<span class="k">pub fn</span> <span class="f">main</span>(init: std.process.Init) !<span class="k">void</span> {
+    <span class="k">const</span> arena = init.arena.<span class="f">allocator</span>();
+    <span class="k">const</span> io = init.io;
+
+    <span class="k">try</span> db.<span class="f">init</span>(arena, .{
+        .host     = <span class="s">"localhost"</span>,
+        .port     = <span class="n">5433</span>,
+        .user     = <span class="s">"spider"</span>,
+        .password = <span class="s">"spider"</span>,
+        .database = <span class="s">"spider_db"</span>,
+    });
+    <span class="k">defer</span> db.<span class="f">deinit</span>();
+
+    <span class="k">const</span> server = <span class="k">try</span> spider.Spider.<span class="f">init</span>(arena, io, <span class="s">"127.0.0.1"</span>, <span class="n">8080</span>);
+    <span class="k">defer</span> server.<span class="f">deinit</span>();
+
+    server.<span class="f">get</span>(<span class="s">"/legends"</span>, legendsHandler)
+          .<span class="f">listen</span>() <span class="k">catch</span> |err| <span class="k">return</span> err;
+}</pre>
+</div>
+<div class="code-block">
+    <div class="code-block-bar"><span class="code-block-lang">sh</span></div>
+    <pre>curl http://localhost:8080/legends
+<span class="c"># [{"id":1,"name":"Lemmy Kilmister","band":"Motörhead","instrument":"bass"},...]</span></pre>
+</div>
+
+<h2 id="env">Using .env</h2>
+<p>Hardcoding credentials is fine for development, but for real projects move them to a <code>.env</code> file. Spider reads it automatically with <code>loadEnv</code> — system environment variables always take priority.</p>
+<div class="code-block">
+    <div class="code-block-bar"><span class="code-block-lang">sh</span></div>
+    <pre><span class="c"># .env</span>
+POSTGRES_HOST=localhost
+POSTGRES_PORT=5433
+POSTGRES_USER=spider
+POSTGRES_PASSWORD=spider
+POSTGRES_DB=spider_db</pre>
+</div>
+<p>Then replace the hardcoded config with:</p>
+<div class="code-block">
+    <div class="code-block-bar"><span class="code-block-lang">zig</span></div>
+    <pre>spider.<span class="f">loadEnv</span>(arena, <span class="s">".env"</span>) <span class="k">catch</span> {};  <span class="c">// silently skips if not found</span>
+<span class="k">try</span> db.<span class="f">init</span>(arena, .{});               <span class="c">// reads POSTGRES_* env vars</span></pre>
+</div>
+<div class="callout">
+    <strong>Note:</strong> Add <code>.env</code> to your <code>.gitignore</code> — never commit credentials.
+</div>
+
+<div class="pagination">
+    <a href="#" hx-get="/docs/quickstart" hx-target="#doc-content" hx-swap="innerHTML" onclick="setActive(document.querySelector('[hx-get=\'/docs/quickstart\']'))">
+        ← Quick Start
+    </a>
+    <a href="#" hx-get="/docs/router" hx-target="#doc-content" hx-swap="innerHTML" onclick="setActive(document.querySelector('[hx-get=\'/docs/router\']'))">
+        Router →
+    </a>
+</div>
+{% end %}
+
+{% block "doc_pooling" %}
+<h1>Pooling</h1>
+<p>Spider manages the PostgreSQL connection pool internally via <code>spider.pg</code>. No manual acquire/release needed — <code>query()</code>, <code>queryParams()</code>, and <code>exec()</code> handle it automatically. The pool size defaults to 10.</p>
+
+<div class="code-block">
+    <div class="code-block-bar"><span class="code-block-lang">zig</span></div>
+    <pre><span class="c">// Pool is invisible — Spider manages acquire/release internally</span>
+<span class="k">var</span> result = <span class="k">try</span> db.<span class="f">query</span>(<span class="s">"SELECT ..."</span>);   <span class="c">// acquires connection</span>
+<span class="k">defer</span> result.<span class="f">deinit</span>();                        <span class="c">// releases connection</span>
+
+<span class="c">// Configure pool size via DbConfig</span>
+<span class="k">try</span> spg.<span class="f">init</span>(allocator, .{
+    .host      = <span class="s">"localhost"</span>,
+    .database  = <span class="s">"spider_db"</span>,
+    .pool_size = <span class="n">20</span>,   <span class="c">// default: 10</span>
+});
+
+<span class="c">// Low-level API — for advanced use cases</span>
+<span class="k">const</span> pool = spg.Pool;
+<span class="k">const</span> conn = <span class="k">try</span> pool.<span class="f">acquire</span>();
+<span class="k">defer</span> pool.<span class="f">release</span>(conn);
+<span class="k">var</span> result = <span class="k">try</span> spg.<span class="f">queryConn</span>(conn, <span class="s">"SELECT ..."</span>);</pre>
+</div>
+{% end %}
+
+{% block "doc_websocket" %}
+<h1>WebSocket</h1>
+<p>Any path starting with <code>/ws</code> triggers WebSocket mode automatically. Spider manages the handshake, hub, and broadcast internally.</p>
+
+<div class="code-block">
+    <div class="code-block-bar"><span class="code-block-lang">zig</span></div>
+    <pre><span class="c">// main.zig — initialize the hub once at startup</span>
+<span class="k">try</span> spider.<span class="f">initWsHub</span>(allocator, io);
+<span class="k">defer</span> spider.<span class="f">deinitWsHub</span>(allocator);
+
+server.<span class="f">get</span>(<span class="s">"/ws"</span>, wsHandler);
+
+<span class="c">// broadcast from any handler</span>
+<span class="k">const</span> hub = spider.<span class="f">getWsHub</span>();
+hub.<span class="f">broadcast</span>(msg);
+
+<span class="c">// frontend — pure JS</span>
+<span class="k">const</span> ws = <span class="k">new</span> <span class="f">WebSocket</span>(<span class="s">"ws://"</span> + location.host + <span class="s">"/ws"</span>);
+ws.onmessage = (e) => {
+    <span class="k">const</span> { user, text } = JSON.<span class="f">parse</span>(e.data);
+    <span class="f">appendMessage</span>(user, text);
+};</pre>
+</div>
+<p><a href="/chat" target="_blank">→ Live Demo: WebSocket Chat</a></p>
+{% end %}
+
+{% block "doc_templates" %}
+<h1>Templates</h1>
+<p>Spider's template engine is embedded at compile time via <code>@embedFile</code>. Use <code>render</code> for simple templates and <code>renderBlock</code> when your file contains named blocks.</p>
+
+<h2 id="interpolation">Variable interpolation</h2>
+<p>Create <code>src/views/index.html</code> and use <code>{{ }}</code> to interpolate values:</p>
+<div class="code-block">
+    <div class="code-block-bar"><span class="code-block-lang">html</span></div>
+    <pre>&lt;!DOCTYPE html&gt;
+&lt;html lang="en"&gt;
+&lt;head&gt;
+    &lt;meta charset="UTF-8"&gt;
+    &lt;title&gt;Legends&lt;/title&gt;
+    &lt;link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@1.0.0/css/bulma.min.css"&gt;
+&lt;/head&gt;
+&lt;body&gt;
+&lt;section class="section"&gt;
+    &lt;div class="container"&gt;
+        &lt;h1 class="title"&gt;{{ name }}&lt;/h1&gt;
+        &lt;p class="subtitle"&gt;{{ band }}&lt;/p&gt;
+    &lt;/div&gt;
+&lt;/section&gt;
+&lt;/body&gt;
+&lt;/html&gt;</pre>
+</div>
+<p>In your handler, use <code>spider.template.render</code> and pass the data as a struct:</p>
+<div class="code-block">
+    <div class="code-block-bar"><span class="code-block-lang">zig</span></div>
+    <pre><span class="k">const</span> tmpl = <span class="f">@embedFile</span>(<span class="s">"views/index.html"</span>);
+
+<span class="k">fn</span> <span class="f">indexHandler</span>(alc: std.mem.Allocator, _: *spider.Request) !spider.Response {
+    <span class="k">const</span> html = <span class="k">try</span> spider.template.<span class="f">render</span>(tmpl, .{
+        .name = <span class="s">"Lemmy Kilmister"</span>,
+        .band = <span class="s">"Motörhead"</span>,
+    }, alc);
+    <span class="k">return</span> spider.Response.<span class="f">html</span>(alc, html);
+}</pre>
+</div>
+
+<h2 id="loop">Loops</h2>
+<p>Use <code>{% for %}</code> to iterate over a slice. Here we fetch all legends from the database and render them in a table:</p>
+<div class="code-block">
+    <div class="code-block-bar"><span class="code-block-lang">html</span></div>
+    <pre>&lt;tbody&gt;
+    {% for legend in legends %}
+    &lt;tr&gt;
+        &lt;td&gt;{{ legend.id }}&lt;/td&gt;
+        &lt;td&gt;{{ legend.name }}&lt;/td&gt;
+        &lt;td&gt;{{ legend.band }}&lt;/td&gt;
+        &lt;td&gt;{{ legend.instrument }}&lt;/td&gt;
+    &lt;/tr&gt;
+    {% endfor %}
+&lt;/tbody&gt;</pre>
+</div>
+<div class="code-block">
+    <div class="code-block-bar"><span class="code-block-lang">zig</span></div>
+    <pre><span class="k">fn</span> <span class="f">indexHandler</span>(alc: std.mem.Allocator, _: *spider.Request) !spider.Response {
+    <span class="k">var</span> result = <span class="k">try</span> db.<span class="f">query</span>(<span class="s">"SELECT id, name, band, instrument FROM legends"</span>);
+    <span class="k">defer</span> result.<span class="f">deinit</span>();
+    <span class="k">const</span> legends = <span class="k">try</span> result.<span class="f">mapAll</span>(Legend, alc);
+    <span class="k">const</span> html = <span class="k">try</span> spider.template.<span class="f">render</span>(tmpl, .{ .legends = legends }, alc);
+    <span class="k">return</span> spider.Response.<span class="f">html</span>(alc, html);
+}</pre>
+</div>
+
+<h2 id="blocks">Named blocks</h2>
+<p>When your template file contains multiple named blocks, use <code>renderBlock</code> to render only one of them — useful for HTMX partial responses.</p>
+<div class="code-block">
+    <div class="code-block-bar"><span class="code-block-lang">html</span></div>
+    <pre><span class="c">&lt;!-- views/index.html --&gt;</span>
+{% block "page" %}
+&lt;!DOCTYPE html&gt;
+...full page layout...
+{% end %}
+
+{% block "legends-table" %}
+&lt;tbody&gt;
+    {% for legend in legends %}
+    &lt;tr&gt;
+        &lt;td&gt;{{ legend.name }}&lt;/td&gt;
+        &lt;td&gt;{{ legend.band }}&lt;/td&gt;
+    &lt;/tr&gt;
+    {% endfor %}
+&lt;/tbody&gt;
+{% end %}</pre>
+</div>
+<div class="code-block">
+    <div class="code-block-bar"><span class="code-block-lang">zig</span></div>
+    <pre><span class="c">// full page</span>
+<span class="k">const</span> html = <span class="k">try</span> spider.template.<span class="f">renderBlock</span>(tmpl, <span class="s">"page"</span>, .{ .legends = legends }, alc);
+
+<span class="c">// partial — for HTMX swap</span>
+<span class="k">const</span> html = <span class="k">try</span> spider.template.<span class="f">renderBlock</span>(tmpl, <span class="s">"legends-table"</span>, .{ .legends = legends }, alc);</pre>
+</div>
+<div class="callout">
+    <strong>render vs renderBlock</strong> — use <code>render</code> when the file is a single template. Use <code>renderBlock</code> when the file contains multiple named <code>{% block %}</code> sections.
+</div>
+
+<div class="pagination">
+    <a href="#" hx-get="/docs/postgres" hx-target="#doc-content" hx-swap="innerHTML" onclick="setActive(document.querySelector('[hx-get=\'/docs/postgres\']'))">
+        ← PostgreSQL
+    </a>
+    <a href="#" hx-get="/docs/router" hx-target="#doc-content" hx-swap="innerHTML" onclick="setActive(document.querySelector('[hx-get=\'/docs/router\']'))">
+        Router →
+    </a>
+</div>
+{% end %}
+
+{% block "doc_static" %}
+<h1>Static Files</h1>
+<p>Serve static assets using a wildcard route. MIME type is detected automatically by file extension.</p>
+
+<div class="code-block">
+    <div class="code-block-bar"><span class="code-block-lang">zig</span></div>
+    <pre><span class="k">pub fn</span> <span class="f">serve</span>(alc: std.mem.Allocator, req: *spider.Request) !spider.Response {
+    <span class="k">const</span> full_path = <span class="k">try</span> std.fs.path.<span class="f">join</span>(alc, &.{ <span class="s">"."</span>, req.path });
+    <span class="k">defer</span> alc.<span class="f">free</span>(full_path);
+
+    <span class="k">var</span> threaded = std.Io.Threaded.init_single_threaded;
+    <span class="k">const</span> io = threaded.<span class="f">io</span>();
+    <span class="k">const</span> content = std.Io.Dir.<span class="f">cwd</span>().<span class="f">readFileAlloc</span>(
+        io, full_path, alc, .limited(<span class="n">10</span> * <span class="n">1024</span> * <span class="n">1024</span>),
+    ) <span class="k">catch</span> {
+        <span class="k">return</span> spider.Response.<span class="f">text</span>(alc, <span class="s">"Not Found"</span>);
+    };
+
+    <span class="k">var</span> res = spider.Response.<span class="f">init</span>();
+    res.body = content;
+    res.body_allocated = <span class="k">true</span>;
+    <span class="k">try</span> res.headers.<span class="f">set</span>(alc, <span class="s">"content-type"</span>, <span class="f">mimeType</span>(req.path));
+    <span class="k">return</span> res;
+}
+
+<span class="c">// main.zig</span>
+server.<span class="f">get</span>(<span class="s">"/assets/*"</span>, static.<span class="f">serve</span>);</pre>
+</div>
+{% end %}
+
+{% block "doc_metrics" %}
+<h1>Metrics</h1>
+<p>Spider automatically tracks uptime, request count, errors, slow requests, WebSocket clients, and bytes in/out. No configuration needed — the dashboard is available at <code>/_spider/dashboard</code>.</p>
+
+<div class="code-block">
+    <div class="code-block-bar"><span class="code-block-lang">zig</span></div>
+    <pre><span class="c">// No setup needed — built-in routes registered automatically:</span>
+<span class="c">//   GET /_spider/dashboard       → metrics UI</span>
+<span class="c">//   GET /_spider/metrics         → raw metrics JSON</span>
+<span class="c">//   GET /_spider/dashboard/panel → dashboard panel (HTMX)</span></pre>
+</div>
+<p><a href="https://spiderme.org/_spider/dashboard" target="_blank">→ Live Demo</a></p>
+{% end %}
+
+{% block "doc_logger" %}
+<h1>Logger</h1>
+<p>Spider outputs structured logs for every request automatically. Use Zig's standard <code>std.log</code> for application-level logging.</p>
+
+<div class="code-block">
+    <div class="code-block-bar"><span class="code-block-lang">zig</span></div>
+    <pre>std.log.<span class="f">info</span>(<span class="s">"server started on port {d}"</span>, .{<span class="n">3000</span>});
+std.log.<span class="f">err</span>(<span class="s">"query failed: {}"</span>, .{err});
+
+<span class="c">// Spider logs every request automatically:</span>
+<span class="c">// [[SPIDER]] | 200 | 0ns | GET "/drivers"</span>
+<span class="c">// [[SPIDER]] | 404 | 0ns | GET "/not-found"</span></pre>
+</div>
+{% end %}
+
+{% block "doc_shutdown" %}
+<h1>Graceful Shutdown</h1>
+<p>Spider handles graceful shutdown automatically. Use <code>Ctrl+\</code> (SIGQUIT) to stop the server — in-flight requests finish before exit.</p>
+
+<div class="code-block">
+    <div class="code-block-bar"><span class="code-block-lang">zig</span></div>
+    <pre><span class="c">// No setup needed — defer ensures cleanup on shutdown</span>
+<span class="k">defer</span> server.<span class="f">deinit</span>();
+<span class="k">defer</span> db.<span class="f">deinit</span>();
+
+server.<span class="f">get</span>(<span class="s">"/"</span>, homeHandler)
+      .<span class="f">listen</span>() <span class="k">catch</span> |err| <span class="k">return</span> err;
+
+<span class="c">// Ctrl+\ → graceful shutdown</span></pre>
+</div>
+{% end %}
+
+{% block "doc_docker" %}
+<h1>Docker</h1>
+<p>Spider has an official Zig Docker image <code>llllollooll/zig:master</code> for fast multi-stage builds.</p>
+
+<div class="code-block">
+    <div class="code-block-bar"><span class="code-block-lang">dockerfile</span></div>
+    <pre>FROM llllollooll/zig:master AS builder
+WORKDIR /app
+COPY . .
+RUN apt-get update && apt-get install -y --no-install-recommends libpq-dev
+RUN zig build -Doptimize=ReleaseSmall
+
+FROM debian:bookworm-slim
+RUN apt-get update && apt-get install -y --no-install-recommends libpq5 curl
+WORKDIR /app
+COPY --from=builder /app/zig-out/bin/spiderme /app/spiderme
+EXPOSE 3000
+CMD ["./spiderme"]</pre>
+</div>
+<p><a href="https://hub.docker.com/repository/docker/llllollooll/zig/general" target="_blank">→ Docker Hub</a></p>
+{% end %}
+
+{% block "doc_testing" %}
+<h1>Testing</h1>
+<p>Spider uses standard Zig testing. Run tests and format your code with these commands.</p>
+
+<div class="code-block">
+    <div class="code-block-bar"><span class="code-block-lang">sh</span></div>
+    <pre><span class="c"># Run all tests</span>
+zig test .
+
+<span class="c"># Format all source files</span>
+zig fmt .
+
+<span class="c"># Build optimized release</span>
+zig build -Doptimize=ReleaseSmall</pre>
+</div>
+{% end %}

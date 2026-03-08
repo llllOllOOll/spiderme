@@ -5,24 +5,32 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Spider — Zig Web Framework</title>
+{% block "index" %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spider — Zig Web Framework</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@700;800;900&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/htmx.org@1.9.12"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <style>
         /* ── Base ── */
-        body { background: #0b1121; color: white; }
-        .hero-dark { background: #0b1121; }
+        body { background: #0b1121; color: white; font-family: 'IBM Plex Mono', monospace; }
 
         /* ── Sticky Navbar ── */
         .site-nav {
             position: sticky;
             top: 0;
             z-index: 100;
-            background: rgba(11, 17, 33, 0.88);
+            background: rgba(11, 17, 33, 0.92);
             backdrop-filter: blur(14px);
             -webkit-backdrop-filter: blur(14px);
             border-bottom: 1px solid #1e293b;
-            height: 58px;
+            height: 56px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -39,118 +47,68 @@
             display: flex;
             align-items: center;
             gap: 0.55rem;
+            font-family: 'Outfit', sans-serif;
             font-weight: 800;
             font-size: 1rem;
             color: #e2e8f0;
             text-decoration: none;
-            letter-spacing: 0.02em;
         }
         .site-nav .nav-brand img {
-            width: 24px;
-            height: 24px;
+            width: 22px;
+            height: 22px;
             object-fit: contain;
         }
         .site-nav .nav-links {
             display: flex;
             align-items: center;
-            gap: 0.25rem;
+            gap: 0.2rem;
         }
         .site-nav .nav-links a {
-            color: #94a3b8;
+            color: #64748b;
             text-decoration: none;
-            font-size: 0.85rem;
-            padding: 0.38rem 0.75rem;
+            font-size: 0.82rem;
+            padding: 0.35rem 0.75rem;
             border-radius: 6px;
             transition: color 0.15s, background 0.15s;
+            font-family: 'IBM Plex Mono', monospace;
         }
-        .site-nav .nav-links a:hover {
-            color: #e2e8f0;
-            background: #1e293b;
-        }
-        .site-nav .nav-cta {
-            background: #ffc439 !important;
-            color: #000 !important;
-            font-weight: 700 !important;
-        }
-        .site-nav .nav-cta:hover {
-            background: #ffd166 !important;
-        }
-        @media (max-width: 768px) {
-            .site-nav .nav-links { display: none; }
-        }
+        .site-nav .nav-links a:hover { color: #e2e8f0; background: #1e293b; }
+        @media (max-width: 768px) { .site-nav .nav-links { display: none; } }
 
         /* ── Section dividers ── */
-        .section-divided {
-            border-top: 1px solid #1e293b;
-        }
+        .section-divided { border-top: 1px solid #1e293b; }
 
         /* ── Code blocks ── */
         .code-block {
-            background: #060d1a;
+            background: #0a1628;
             color: #e2e8f0;
-            padding: 1.5rem;
             border-radius: 10px;
             border: 1px solid #1e293b;
-            font-family: 'JetBrains Mono', monospace;
-            overflow-x: auto;
-            font-size: 0.82rem;
-            line-height: 1.75;
-        }
-
-        /* ── Step cards ── */
-        .step-card {
-            background: #0f172a;
-            border: 1px solid #1e293b;
-            border-radius: 10px;
             overflow: hidden;
-            margin-bottom: 1.25rem;
-            transition: border-color 0.2s;
+            font-size: 0.8rem;
+            line-height: 1.85;
         }
-        .step-card:hover { border-color: rgba(255, 196, 57, 0.3); }
-        .step-card-header {
+        .code-block-bar {
+            background: #0f1e35;
+            padding: 0.5rem 1rem;
             display: flex;
             align-items: center;
-            gap: 0.85rem;
-            padding: 0.85rem 1.5rem;
+            gap: 0.4rem;
             border-bottom: 1px solid #1e293b;
-            background: rgba(255,255,255,0.02);
         }
-        .step-num {
-            width: 24px;
-            height: 24px;
-            border-radius: 50%;
-            background: rgba(255,196,57,0.1);
-            border: 1px solid rgba(255,196,57,0.3);
-            color: #ffc439;
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 0.7rem;
-            font-weight: 700;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-shrink: 0;
-        }
-        .step-card-title {
-            font-weight: 700;
-            font-size: 0.9rem;
-            color: #e2e8f0;
-        }
-        .step-card .code-block {
-            border-radius: 0;
-            border: none;
-        }
-        .step-note {
-            padding: 0.65rem 1.5rem;
-            font-size: 0.83rem;
-            color: #94a3b8;
-            border-top: 1px solid #1e293b;
-        }
-        .step-note code {
-            background: rgba(255,196,57,0.1);
-            color: #ffc439;
-            padding: 0.1rem 0.35rem;
-            border-radius: 4px;
-            font-size: 0.78rem;
+        .dot { width: 11px; height: 11px; border-radius: 50%; }
+        .dot-r { background: #ff5f57; }
+        .dot-y { background: #ffbd2e; }
+        .dot-g { background: #28ca41; }
+        .code-block pre {
+            background: transparent;
+            padding: 1.25rem 1.5rem;
+            color: inherit;
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 0.8rem;
+            line-height: 1.85;
+            white-space: pre-wrap;
+            word-break: break-word;
         }
 
         /* ── Feature cards ── */
@@ -190,62 +148,53 @@
             border-radius: 4px;
             font-size: 0.82rem;
         }
+        .detail-box .code-block pre { padding: 1.25rem 1.5rem; }
 
-        /* ── Misc ── */
-        .spider-name { color: white; font-weight: 800; font-size: clamp(4rem, 10vw, 7rem); line-height: 1; }
-        .accent { color: #ffc439; }
-        .logo-img { max-width: 230px; margin-bottom: 0.0rem; }
-        .hero-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.4rem;
-            background: rgba(255,196,57,0.08);
-            border: 1px solid rgba(255,196,57,0.22);
-            color: #ffc439;
-            padding: 0.28rem 0.75rem;
-            border-radius: 100px;
-            font-size: 0.78rem;
-            font-family: 'JetBrains Mono', monospace;
-            margin-bottom: 1.2rem;
-        }
-        .button.is-success.is-light {
-            background-color: #ffc439;
-            color: #000;
-            border: none;
-            font-weight: bold;
-            transition: background 0.15s, transform 0.15s;
-        }
-        .button.is-success.is-light:hover { background-color: #ffd166; transform: translateY(-1px); }
-        .button.is-outlined.is-light { transition: background 0.15s, transform 0.15s; }
-        .button.is-outlined.is-light:hover { background: rgba(255,255,255,0.05); transform: translateY(-1px); }
+        /* ── Syntax colors ── */
         .k { color: #f472b6; }
         .f { color: #38bdf8; }
         .s { color: #fbbf24; }
         .n { color: #f78c6c; }
         .c { color: #475569; font-style: italic; }
-        pre { background: transparent; padding: 0; color: inherit; }
+        .w { color: #e2e8f0; }
+        .accent { color: #ffc439; }
+
+        /* ── Buttons ── */
+        .btn-primary {
+            background: #ffc439; color: #000;
+            font-weight: 700; padding: 0.6rem 1.3rem;
+            border-radius: 7px; text-decoration: none;
+            font-size: 0.82rem; font-family: 'IBM Plex Mono', monospace;
+            transition: all 0.15s; display: inline-block;
+        }
+        .btn-primary:hover { background: #ffd166; transform: translateY(-1px); color: #000; }
+        .btn-secondary {
+            border: 1px solid #1e293b; color: #64748b;
+            padding: 0.6rem 1.3rem; border-radius: 7px;
+            text-decoration: none; font-size: 0.82rem;
+            font-family: 'IBM Plex Mono', monospace;
+            transition: all 0.15s; display: inline-block;
+        }
+        .btn-secondary:hover { border-color: #334155; color: #94a3b8; }
     </style>
 </head>
 <body>
-
     <!-- Sticky navbar -->
     <nav class="site-nav">
         <div class="nav-inner">
-        <a href="#" class="nav-brand">
-            <img src="/assets/spider_logo.png" alt="Spider">
-            Spider
-        </a>
-        <div class="nav-links">
-            <a href="#quickstart">Docs</a>
-            <a href="#features">Features</a>
-            <a href="https://github.com/llllOllOOll/spider">GitHub</a>
-            <a href="#quickstart" class="nav-cta">Quick Start</a>
-        </div>
+            <a href="/" class="nav-brand">
+                <img src="/assets/spider_logo.png" alt="Spider">
+                Spider
+            </a>
+            <div class="nav-links">
+                <a href="/docs">Docs</a>
+                <a href="#features">Features</a>
+                <a href="https://github.com/llllOllOOll/spider" target="_blank">GitHub</a>
+            </div>
         </div>
     </nav>
 
     {% template "hero" %}
-    {% template "quickstart" %}
     {% template "features" %}
     {% template "footer" %}
 </body>
@@ -253,18 +202,35 @@
 {% end %}
 
 {% block "hero" %}
-<section class="hero hero-dark" style="min-height: calc(100vh - 58px); display: flex; align-items: center;">
-    <div class="hero-body has-text-centered" style="width:100%;">
-        <img src="/assets/spider_logo.png" alt="Spider Logo" class="logo-img">
-        <h1 class="spider-name">Spider</h1>
-        <p class="subtitle has-text-grey-light mt-2">Web framework written in <span class="accent">Zig</span> </p>
-        <div class="buttons is-centered mt-4">
-            <a href="https://github.com/llllOllOOll/spider" class="button is-success is-light">GitHub</a>
-            <a href="#quickstart" class="button is-outlined is-light">Quick Start</a>
+<section style="min-height: calc(100vh - 56px); display: grid; grid-template-columns: 1fr 1.3fr; align-items: center; max-width: 1100px; margin: 0 auto; padding: 4rem 2.5rem; gap: 4rem; border-bottom: 1px solid #1e293b;">
+
+    <!-- LEFT -->
+    <div>
+        <div style="font-family:'Outfit',sans-serif; font-weight:900; font-size:clamp(2.2rem,4.5vw,3.5rem); color:#f1f5f9; display:flex; align-items:center; gap:1.5rem; line-height:1.1;">
+            Spider
+            <img src="/assets/spider_logo.png" alt="" style="width:100px;height:100px;object-fit:contain;">
         </div>
-        <div style="display:flex; justify-content:center; margin-top: 2.5rem;">
-            <div class="code-block" style="width:580px; max-width:90vw; text-align:left; overflow-x:visible; overflow:visible; white-space:pre-wrap; word-break:break-word;">
-<pre><span class="k">const</span> std = <span class="f">@import</span>(<span class="s">"std"</span>);
+        <div style="font-family:'Outfit',sans-serif; font-weight:800; font-size:clamp(2.2rem,4.5vw,3.5rem); color:#f1f5f9; line-height:1.1; margin-bottom:1.25rem;">
+            Web Application<br>Framework
+        </div>
+        <p style="color:#64748b; font-size:0.875rem; line-height:1.75; margin-bottom:2rem;">
+            Fast, minimal, built for systems.<br>
+            Support for Zig 0.16.
+        </p>
+        <div style="display:flex; gap:0.75rem; flex-wrap:wrap;">
+            <a href="/docs" class="btn-primary">Get Started</a>
+            <a href="https://github.com/llllOllOOll/spider" target="_blank" class="btn-secondary">View on GitHub</a>
+        </div>
+    </div>
+
+    <!-- RIGHT — code block -->
+    <div class="code-block">
+        <div class="code-block-bar">
+            <div class="dot dot-r"></div>
+            <div class="dot dot-y"></div>
+            <div class="dot dot-g"></div>
+        </div>
+        <pre><span class="k">const</span> std = <span class="f">@import</span>(<span class="s">"std"</span>);
 <span class="k">const</span> spider = <span class="f">@import</span>(<span class="s">"spider"</span>);
 
 <span class="k">pub fn</span> <span class="f">main</span>(init: std.process.Init) !<span class="k">void</span> {
@@ -275,104 +241,24 @@
     <span class="k">try</span> server.<span class="f">get</span>(<span class="s">"/"</span>, pingHandler).<span class="f">listen</span>();
 }
 
-<span class="k">fn</span> <span class="f">pingHandler</span>(alc: std.mem.Allocator, _: *spider.Request) !spider.Response {
+<span class="k">fn</span> <span class="f">pingHandler</span>(alc: std.mem.Allocator,
+               _: *spider.Request) !spider.Response {
     <span class="k">return</span> spider.Response.<span class="f">json</span>(alc, .{ .msg = <span class="s">"pong"</span> });
 }</pre>
-            </div>
-        </div>
     </div>
-</section>
-{% end %}
 
-{% block "quickstart" %}
-<section class="section section-divided" id="quickstart" style="scroll-margin-top: 58px;">
-<div class="container">
-<h2 class="title has-text-white has-text-centered mb-6">Getting Started</h2>
-<p class="subtitle has-text-grey-light has-text-centered mb-5">Requires Zig 0.16.0-dev and libpq (for PostgreSQL)</p>
-
-<div class="mb-5">
-<h3 class="title is-5 has-text-white mb-3">Step 1: Fetch Spider</h3>
-<div class="code-block">
-<pre>zig fetch --save git+https://github.com/llllOllOOll/spider</pre>
-</div>
-<p class="has-text-grey-light mt-2">This updates your <code style="background:rgba(255,196,57,0.1);color:#ffc439;padding:0.1rem 0.35rem;border-radius:4px;">build.zig.zon</code> with the dependency.</p>
-</div>
-
-<div class="mb-5">
-<h3 class="title is-5 has-text-white mb-3">Step 2: Configure build.zig</h3>
-<div class="code-block">
-<pre>
-<span class="k">const</span> spider_dep = b.<span class="f">dependency</span>(<span class="s">"spider"</span>, .{
-    .target = target,
-});
-
-<span class="k">const</span> exe = b.<span class="f">addExecutable</span>(.{
-    .name = <span class="s">"spiderme"</span>,
-    .root_module = b.<span class="f">createModule</span>(.{
-        .root_source_file = b.<span class="f">path</span>(<span class="s">"src/main.zig"</span>),
-        .target = target,
-        .optimize = optimize,
-        .link_libc = <span class="k">true</span>, <span class="c">// required for libpq</span>
-        .imports = &.{
-            .{ .name = <span class="s">"spider"</span>, .module = spider_dep.<span class="f">module</span>(<span class="s">"spider"</span>) },
-        },
-    }),
-});
-
-<span class="c">// Link against system-wide libpq</span>
-exe.root_module.<span class="f">linkSystemLibrary</span>(<span class="s">"pq"</span>, .{});</pre>
-</div>
-</div>
-
-<div class="mb-5">
-<h3 class="title is-5 has-text-white mb-3">Step 3: Minimal Example</h3>
-<div class="code-block">
-<pre>
-<span class="k">const</span> std = <span class="f">@import</span>(<span class="s">"std"</span>);
-<span class="k">const</span> spider = <span class="f">@import</span>(<span class="s">"spider"</span>);
-
-<span class="k">pub fn</span> <span class="f">main</span>(init: std.process.Init) !<span class="k">void</span> {
-    <span class="k">const</span> allocator = init.gpa;
-    <span class="k">const</span> io = init.io;
-
-    <span class="k">const</span> server = <span class="k">try</span> spider.Spider.<span class="f">init</span>(allocator, io, <span class="s">"127.0.0.1"</span>, <span class="n">8080</span>);
-    <span class="k">defer</span> server.<span class="f">deinit</span>();
-
-    <span class="k">try</span> server
-        .<span class="f">get</span>(<span class="s">"/"</span>, pingHandler)
-        .<span class="f">listen</span>();
-}
-
-<span class="k">fn</span> <span class="f">pingHandler</span>(alc: std.mem.Allocator, _: *spider.Request) !spider.Response {
-    <span class="k">return</span> spider.Response.<span class="f">json</span>(alc, .{ .msg = <span class="s">"pong"</span> });
-}</pre>
-</div>
-</div>
-
-<div class="mb-5">
-<h3 class="title is-5 has-text-white mb-3">Step 4: Run</h3>
-<div class="code-block">
-<pre>zig build run</pre>
-</div>
-<p class="has-text-grey-light mt-2">Visit <span class="accent">http://localhost:8080/</span></p>
-<p class="has-text-grey-light">Expected response: <code style="background:rgba(255,196,57,0.1);color:#ffc439;padding:0.1rem 0.35rem;border-radius:4px;">{"msg":"pong"}</code></p>
-</div>
-
-</div>
 </section>
 {% end %}
 
 {% block "features" %}
-<section class="section section-divided" id="features" style="scroll-margin-top: 58px;">
+<section class="section section-divided" id="features" style="scroll-margin-top: 56px;">
     <div class="container">
-        <h2 class="title has-text-white has-text-centered mb-6">Core Features</h2>
-        <p class="subtitle has-text-grey-light has-text-centered mb-6">Click any card to see documentation and examples</p>
+        <h2 class="title has-text-white has-text-centered mb-6" style="font-family:'Outfit',sans-serif;">Core Features</h2>
+        <p class="subtitle has-text-centered mb-6" style="color:#475569;">Click any card to see documentation and examples</p>
         <div class="columns is-multiline">
             <div class="column is-3">
                 <div class="feature-card p-5"
-                     hx-get="/docs/router"
-                     hx-target="#feature-detail"
-                     hx-swap="innerHTML"
+                     hx-get="/docs/router" hx-target="#feature-detail" hx-swap="innerHTML"
                      onclick="document.querySelectorAll('.feature-card').forEach(c=>c.classList.remove('active'));this.classList.add('active')">
                     <p class="accent has-text-weight-bold">Router</p>
                     <p class="has-text-grey-light">Trie-based router with dynamic params <code>/users/:id</code></p>
@@ -380,9 +266,7 @@ exe.root_module.<span class="f">linkSystemLibrary</span>(<span class="s">"pq"</s
             </div>
             <div class="column is-3">
                 <div class="feature-card p-5"
-                     hx-get="/docs/websocket"
-                     hx-target="#feature-detail"
-                     hx-swap="innerHTML"
+                     hx-get="/docs/websocket" hx-target="#feature-detail" hx-swap="innerHTML"
                      onclick="document.querySelectorAll('.feature-card').forEach(c=>c.classList.remove('active'));this.classList.add('active')">
                     <p class="accent has-text-weight-bold">WebSocket</p>
                     <p class="has-text-grey-light">WS support + hub broadcasting</p>
@@ -391,9 +275,7 @@ exe.root_module.<span class="f">linkSystemLibrary</span>(<span class="s">"pq"</s
             </div>
             <div class="column is-3">
                 <div class="feature-card p-5"
-                     hx-get="/docs/postgres"
-                     hx-target="#feature-detail"
-                     hx-swap="innerHTML"
+                     hx-get="/docs/postgres" hx-target="#feature-detail" hx-swap="innerHTML"
                      onclick="document.querySelectorAll('.feature-card').forEach(c=>c.classList.remove('active'));this.classList.add('active')">
                     <p class="accent has-text-weight-bold">PostgreSQL</p>
                     <p class="has-text-grey-light">Built-in PG client with pooling</p>
@@ -402,9 +284,7 @@ exe.root_module.<span class="f">linkSystemLibrary</span>(<span class="s">"pq"</s
             </div>
             <div class="column is-3">
                 <div class="feature-card p-5"
-                     hx-get="/docs/metrics"
-                     hx-target="#feature-detail"
-                     hx-swap="innerHTML"
+                     hx-get="/docs/metrics" hx-target="#feature-detail" hx-swap="innerHTML"
                      onclick="document.querySelectorAll('.feature-card').forEach(c=>c.classList.remove('active'));this.classList.add('active')">
                     <p class="accent has-text-weight-bold">Metrics</p>
                     <p class="has-text-grey-light">Internal metrics + dashboard</p>
@@ -413,9 +293,7 @@ exe.root_module.<span class="f">linkSystemLibrary</span>(<span class="s">"pq"</s
             </div>
             <div class="column is-3">
                 <div class="feature-card p-5"
-                     hx-get="/docs/logger"
-                     hx-target="#feature-detail"
-                     hx-swap="innerHTML"
+                     hx-get="/docs/logger" hx-target="#feature-detail" hx-swap="innerHTML"
                      onclick="document.querySelectorAll('.feature-card').forEach(c=>c.classList.remove('active'));this.classList.add('active')">
                     <p class="accent has-text-weight-bold">Logger</p>
                     <p class="has-text-grey-light">Structured JSON logging</p>
@@ -423,9 +301,7 @@ exe.root_module.<span class="f">linkSystemLibrary</span>(<span class="s">"pq"</s
             </div>
             <div class="column is-3">
                 <div class="feature-card p-5"
-                     hx-get="/docs/pooling"
-                     hx-target="#feature-detail"
-                     hx-swap="innerHTML"
+                     hx-get="/docs/pooling" hx-target="#feature-detail" hx-swap="innerHTML"
                      onclick="document.querySelectorAll('.feature-card').forEach(c=>c.classList.remove('active'));this.classList.add('active')">
                     <p class="accent has-text-weight-bold">Pooling</p>
                     <p class="has-text-grey-light">Connection &amp; buffer pooling</p>
@@ -433,9 +309,7 @@ exe.root_module.<span class="f">linkSystemLibrary</span>(<span class="s">"pq"</s
             </div>
             <div class="column is-3">
                 <div class="feature-card p-5"
-                     hx-get="/docs/static"
-                     hx-target="#feature-detail"
-                     hx-swap="innerHTML"
+                     hx-get="/docs/static" hx-target="#feature-detail" hx-swap="innerHTML"
                      onclick="document.querySelectorAll('.feature-card').forEach(c=>c.classList.remove('active'));this.classList.add('active')">
                     <p class="accent has-text-weight-bold">Static Files</p>
                     <p class="has-text-grey-light">Built-in static file serving</p>
@@ -443,9 +317,7 @@ exe.root_module.<span class="f">linkSystemLibrary</span>(<span class="s">"pq"</s
             </div>
             <div class="column is-3">
                 <div class="feature-card p-5"
-                     hx-get="/docs/shutdown"
-                     hx-target="#feature-detail"
-                     hx-swap="innerHTML"
+                     hx-get="/docs/shutdown" hx-target="#feature-detail" hx-swap="innerHTML"
                      onclick="document.querySelectorAll('.feature-card').forEach(c=>c.classList.remove('active'));this.classList.add('active')">
                     <p class="accent has-text-weight-bold">Graceful Shutdown</p>
                     <p class="has-text-grey-light">Handles SIGINT / SIGTERM</p>
@@ -453,9 +325,7 @@ exe.root_module.<span class="f">linkSystemLibrary</span>(<span class="s">"pq"</s
             </div>
             <div class="column is-3">
                 <div class="feature-card p-5"
-                     hx-get="/docs/groups"
-                     hx-target="#feature-detail"
-                     hx-swap="innerHTML"
+                     hx-get="/docs/groups" hx-target="#feature-detail" hx-swap="innerHTML"
                      onclick="document.querySelectorAll('.feature-card').forEach(c=>c.classList.remove('active'));this.classList.add('active')">
                     <p class="accent has-text-weight-bold">Group Routes</p>
                     <p class="has-text-grey-light">Route prefixes via <code>.groupGet</code> / <code>.group</code></p>
@@ -463,9 +333,7 @@ exe.root_module.<span class="f">linkSystemLibrary</span>(<span class="s">"pq"</s
             </div>
             <div class="column is-3">
                 <div class="feature-card p-5"
-                     hx-get="/docs/request"
-                     hx-target="#feature-detail"
-                     hx-swap="innerHTML"
+                     hx-get="/docs/request" hx-target="#feature-detail" hx-swap="innerHTML"
                      onclick="document.querySelectorAll('.feature-card').forEach(c=>c.classList.remove('active'));this.classList.add('active')">
                     <p class="accent has-text-weight-bold">Request</p>
                     <p class="has-text-grey-light">Params, JSON binding, form &amp; query</p>
@@ -473,9 +341,7 @@ exe.root_module.<span class="f">linkSystemLibrary</span>(<span class="s">"pq"</s
             </div>
             <div class="column is-3">
                 <div class="feature-card p-5"
-                     hx-get="/docs/response"
-                     hx-target="#feature-detail"
-                     hx-swap="innerHTML"
+                     hx-get="/docs/response" hx-target="#feature-detail" hx-swap="innerHTML"
                      onclick="document.querySelectorAll('.feature-card').forEach(c=>c.classList.remove('active'));this.classList.add('active')">
                     <p class="accent has-text-weight-bold">Response</p>
                     <p class="has-text-grey-light">HTML, JSON, redirect, status, headers</p>
@@ -483,9 +349,7 @@ exe.root_module.<span class="f">linkSystemLibrary</span>(<span class="s">"pq"</s
             </div>
             <div class="column is-3">
                 <div class="feature-card p-5"
-                     hx-get="/docs/middleware"
-                     hx-target="#feature-detail"
-                     hx-swap="innerHTML"
+                     hx-get="/docs/middleware" hx-target="#feature-detail" hx-swap="innerHTML"
                      onclick="document.querySelectorAll('.feature-card').forEach(c=>c.classList.remove('active'));this.classList.add('active')">
                     <p class="accent has-text-weight-bold">Middleware</p>
                     <p class="has-text-grey-light">Chain functions via <code>server.use(fn)</code></p>
@@ -493,9 +357,7 @@ exe.root_module.<span class="f">linkSystemLibrary</span>(<span class="s">"pq"</s
             </div>
             <div class="column is-3">
                 <div class="feature-card p-5"
-                     hx-get="/docs/templates"
-                     hx-target="#feature-detail"
-                     hx-swap="innerHTML"
+                     hx-get="/docs/templates" hx-target="#feature-detail" hx-swap="innerHTML"
                      onclick="document.querySelectorAll('.feature-card').forEach(c=>c.classList.remove('active'));this.classList.add('active')">
                     <p class="accent has-text-weight-bold">Templates</p>
                     <p class="has-text-grey-light">Blocks, variables, loops, if/else, include</p>
@@ -503,9 +365,7 @@ exe.root_module.<span class="f">linkSystemLibrary</span>(<span class="s">"pq"</s
             </div>
             <div class="column is-3">
                 <div class="feature-card p-5"
-                     hx-get="/docs/docker"
-                     hx-target="#feature-detail"
-                     hx-swap="innerHTML"
+                     hx-get="/docs/docker" hx-target="#feature-detail" hx-swap="innerHTML"
                      onclick="document.querySelectorAll('.feature-card').forEach(c=>c.classList.remove('active'));this.classList.add('active')">
                     <p class="accent has-text-weight-bold">Docker</p>
                     <p class="has-text-grey-light">Official Zig image for fast builds</p>
@@ -513,19 +373,14 @@ exe.root_module.<span class="f">linkSystemLibrary</span>(<span class="s">"pq"</s
             </div>
             <div class="column is-3">
                 <div class="feature-card p-5"
-                     hx-get="/docs/testing"
-                     hx-target="#feature-detail"
-                     hx-swap="innerHTML"
+                     hx-get="/docs/testing" hx-target="#feature-detail" hx-swap="innerHTML"
                      onclick="document.querySelectorAll('.feature-card').forEach(c=>c.classList.remove('active'));this.classList.add('active')">
                     <p class="accent has-text-weight-bold">Testing</p>
                     <p class="has-text-grey-light"><code>zig test .</code> + <code>zig fmt .</code></p>
                 </div>
             </div>
         </div>
-
-        <!-- Feature detail loads here via HTMX -->
         <div id="feature-detail"></div>
-
     </div>
 </section>
 {% end %}
@@ -536,477 +391,4 @@ exe.root_module.<span class="f">linkSystemLibrary</span>(<span class="s">"pq"</s
         Spider • MIT License • Built with <span class="accent">Zig</span>
     </div>
 </footer>
-{% end %}
-
-{% block "doc_router" %}
-<div class="detail-box">
-    <h3 class="title is-4 has-text-white">Router</h3>
-    <p class="has-text-grey-light mb-4">
-        Trie-based router supporting static routes, dynamic parameters (<code>:id</code>), and wildcards (<code>*</code>).
-        Routes are chained directly on the server and dispatched per HTTP method.
-    </p>
-    <div class="code-block"><pre>
-<span class="c">// Static route</span>
-server.<span class="f">get</span>(<span class="s">"/"</span>, homeHandler);
-
-<span class="c">// Dynamic parameter — access via req.param("id")</span>
-server.<span class="f">get</span>(<span class="s">"/users/:id"</span>, userHandler);
-
-<span class="c">// Wildcard — matches /assets/logo.png, /assets/css/main.css, etc.</span>
-server.<span class="f">get</span>(<span class="s">"/assets/*"</span>, staticHandler);
-
-<span class="c">// Chained routes</span>
-server.<span class="f">get</span>(<span class="s">"/"</span>, homeHandler)
-      .<span class="f">post</span>(<span class="s">"/users"</span>, createUser)
-      .<span class="f">get</span>(<span class="s">"/users/:id"</span>, getUser)
-      .<span class="f">listen</span>() <span class="k">catch</span> |err| <span class="k">return</span> err;
-
-<span class="k">fn</span> <span class="f">userHandler</span>(alc: std.mem.Allocator, req: *spider.Request) !spider.Response {
-    <span class="k">const</span> id = req.<span class="f">param</span>(<span class="s">"id"</span>) <span class="k">orelse return</span> spider.Response.<span class="f">text</span>(alc, <span class="s">"missing id"</span>);
-    <span class="k">return</span> spider.Response.<span class="f">json</span>(alc, .{ .id = id });
-}</pre></div>
-</div>
-{% end %}
-
-{% block "doc_websocket" %}
-<div class="detail-box">
-    <h3 class="title is-4 has-text-white">WebSocket</h3>
-    <p class="has-text-grey-light mb-4">
-        Any path starting with <code>/ws</code> triggers WebSocket mode automatically.
-        Spider manages the handshake, hub, and broadcast internally — no custom handler needed.
-        Use <code>spider.getWsHub().broadcast(msg)</code> to push messages to all connected clients.
-    </p>
-    <div class="code-block"><pre>
-<span class="c">// main.zig — initialize the hub once at startup</span>
-<span class="k">try</span> spider.<span class="f">initWsHub</span>(allocator, io);
-<span class="k">defer</span> spider.<span class="f">deinitWsHub</span>(allocator);
-
-<span class="c">// register the /ws route — Spider handles the rest</span>
-server.<span class="f">get</span>(<span class="s">"/ws"</span>, wsHandler);
-
-<span class="c">// broadcast from any handler (e.g. on POST /messages)</span>
-<span class="k">const</span> hub = spider.<span class="f">getWsHub</span>();
-<span class="k">const</span> msg = <span class="k">try</span> std.fmt.<span class="f">allocPrint</span>(alc,
-    <span class="s">"{\"user\":\"{s}\",\"text\":\"{s}\"}"</span>, .{ user, text });
-hub.<span class="f">broadcast</span>(msg);
-
-<span class="c">// frontend — pure JS, no libraries needed</span>
-<span class="k">const</span> ws = <span class="k">new</span> <span class="f">WebSocket</span>(<span class="s">"ws://"</span> + location.host + <span class="s">"/ws"</span>);
-ws.onmessage = (e) => {
-    <span class="k">const</span> { user, text } = JSON.<span class="f">parse</span>(e.data);
-    <span class="f">appendMessage</span>(user, text);
-};</pre></div>
-    <p class="mt-4">
-        <a href="/chat" target="_blank" style="color:#ffc439;font-weight:bold;">→ Live Demo: WebSocket Chat</a>
-    </p>
-</div>
-{% end %}
-
-{% block "doc_postgres" %}
-<div class="detail-box">
-    <h3 class="title is-4 has-text-white">PostgreSQL</h3>
-    <p class="has-text-grey-light mb-4">
-        Built-in PostgreSQL client via <code>spider.pg</code>, wrapping libpq.
-        Initialize once at startup — connection pooling and acquire/release are handled internally.
-        Use <code>mapAll</code> to automatically map query results to Zig structs via comptime reflection.
-    </p>
-    <div class="code-block"><pre>
-<span class="k">const</span> spg = <span class="f">@import</span>(<span class="s">"spider"</span>).pg;
-
-<span class="c">// db.zig — configure once, app-wide</span>
-<span class="k">const</span> app_config = spg.DbConfig{
-    .host     = <span class="s">"localhost"</span>,
-    .user     = <span class="s">"spider"</span>,
-    .password = <span class="s">"spider_123"</span>,
-    .database = <span class="s">"spider_db"</span>,
-};
-
-<span class="k">pub fn</span> <span class="f">init</span>(allocator: std.mem.Allocator) !<span class="k">void</span> {
-    <span class="k">return</span> spg.<span class="f">init</span>(allocator, app_config);
-}
-
-<span class="k">pub const</span> deinit = spg.deinit;
-<span class="k">pub const</span> query   = spg.query;
-<span class="k">pub const</span> exec    = spg.exec;
-
-<span class="c">// main.zig — initialize once at startup</span>
-<span class="k">try</span> db.<span class="f">init</span>(allocator);
-<span class="k">defer</span> db.<span class="f">deinit</span>();
-
-<span class="c">// models/driver.zig</span>
-<span class="k">pub const</span> Driver = <span class="k">struct</span> {
-    id:     i32,
-    name:   []<span class="k">const</span> u8,
-    team:   []<span class="k">const</span> u8,
-    number: i32,
-};
-
-<span class="c">// driver_repository.zig — automatic struct mapping</span>
-<span class="k">pub fn</span> <span class="f">findAll</span>(self: DriverRepository) ![]Driver {
-    <span class="k">var</span> result = <span class="k">try</span> db.<span class="f">query</span>(
-        <span class="s">"SELECT id, name, team, number FROM drivers ORDER BY number"</span>
-    );
-    <span class="k">defer</span> result.<span class="f">deinit</span>();
-    <span class="k">return</span> result.<span class="f">mapAll</span>(Driver, self.allocator);
-}
-
-<span class="c">// parameterized query — SQL injection safe</span>
-<span class="k">pub fn</span> <span class="f">findByTeam</span>(self: DriverRepository, team: []<span class="k">const</span> u8) ![]Driver {
-    <span class="k">var</span> result = <span class="k">try</span> db.<span class="f">queryParams</span>(
-        <span class="s">"SELECT id, name, team, number FROM drivers WHERE team = $1"</span>,
-        &[_][]<span class="k">const</span> u8{team},
-    );
-    <span class="k">defer</span> result.<span class="f">deinit</span>();
-    <span class="k">return</span> result.<span class="f">mapAll</span>(Driver, self.allocator);
-}
-
-<span class="c">// env var override — priority: explicit > env var > default</span>
-<span class="k">try</span> spg.<span class="f">init</span>(allocator, .{});                         <span class="c">// reads POSTGRES_* env vars</span>
-<span class="k">try</span> spg.<span class="f">init</span>(allocator, .{ .database = <span class="s">"test_db"</span> });  <span class="c">// partial override</span></pre></div>
-    <p class="mt-4">
-        <a href="https://spiderme.org/drivers" target="_blank" style="color:#ffc439;font-weight:bold;">→ Live Demo</a>
-    </p>
-</div>
-{% end %}
-
-{% block "doc_metrics" %}
-<div class="detail-box">
-    <h3 class="title is-4 has-text-white">Metrics</h3>
-    <p class="has-text-grey-light mb-4">
-        Spider automatically tracks uptime, request count, errors, slow requests, WebSocket clients, and bytes in/out.
-        No configuration needed — the dashboard is available out of the box at <code>/_spider/dashboard</code>.
-    </p>
-    <div class="code-block"><pre>
-<span class="c">// No setup needed — just run your server</span>
-server.<span class="f">get</span>(<span class="s">"/"</span>, homeHandler)
-      .<span class="f">listen</span>() <span class="k">catch</span> |err| <span class="k">return</span> err;
-
-<span class="c">// Built-in routes registered automatically:</span>
-<span class="c">//   GET /_spider/dashboard       → metrics UI</span>
-<span class="c">//   GET /_spider/metrics         → raw metrics</span>
-<span class="c">//   GET /_spider/dashboard/panel → dashboard panel (HTMX)</span></pre></div>
-</div>
-{% end %}
-
-{% block "doc_logger" %}
-<div class="detail-box">
-    <h3 class="title is-4 has-text-white">Logger</h3>
-    <p class="has-text-grey-light mb-4">
-        Spider outputs structured JSON logs for every request automatically.
-        Use Zig's standard <code>std.log</code> for application-level logging — Spider pipes it through the same JSON format.
-    </p>
-    <div class="code-block"><pre>
-<span class="c">// Application logging — standard Zig std.log</span>
-std.log.<span class="f">info</span>(<span class="s">"server started on port {d}"</span>, .{<span class="n">3000</span>});
-std.log.<span class="f">err</span>(<span class="s">"query failed: {}"</span>, .{err});
-
-<span class="c">// Spider logs every request automatically:</span>
-<span class="c">// {"level":"info","msg":"server_started","data":..port = 3000}</span>
-<span class="c">// [[SPIDER]] | 200 | 0ns | GET "/drivers"</span>
-<span class="c">// [[SPIDER]] | 404 | 0ns | GET "/not-found"</span></pre></div>
-</div>
-{% end %}
-
-{% block "doc_pooling" %}
-<div class="detail-box">
-    <h3 class="title is-4 has-text-white">Pooling</h3>
-    <p class="has-text-grey-light mb-4">
-        Spider manages the PostgreSQL connection pool internally via <code>spider.pg</code>.
-        No manual acquire/release needed — <code>query()</code>, <code>queryParams()</code>, and <code>exec()</code> handle it automatically.
-        The pool size defaults to 10 and can be configured via <code>DbConfig</code>.
-    </p>
-    <div class="code-block"><pre>
-<span class="c">// Pool is invisible — Spider manages acquire/release internally</span>
-<span class="k">var</span> result = <span class="k">try</span> db.<span class="f">query</span>(<span class="s">"SELECT ..."</span>);   <span class="c">// acquires connection</span>
-<span class="k">defer</span> result.<span class="f">deinit</span>();                        <span class="c">// releases connection</span>
-
-<span class="c">// Configure pool size via DbConfig</span>
-<span class="k">try</span> spg.<span class="f">init</span>(allocator, .{
-    .host      = <span class="s">"localhost"</span>,
-    .database  = <span class="s">"spider_db"</span>,
-    .pool_size = <span class="n">20</span>,   <span class="c">// default: 10</span>
-});
-
-<span class="c">// Low-level API — available for advanced use cases</span>
-<span class="k">const</span> pool = spg.Pool;
-<span class="k">const</span> conn = <span class="k">try</span> pool.<span class="f">acquire</span>();
-<span class="k">defer</span> pool.<span class="f">release</span>(conn);
-<span class="k">var</span> result = <span class="k">try</span> spg.<span class="f">queryConn</span>(conn, <span class="s">"SELECT ..."</span>);</pre></div>
-</div>
-{% end %}
-
-{% block "doc_static" %}
-<div class="detail-box">
-    <h3 class="title is-4 has-text-white">Static Files</h3>
-    <p class="has-text-grey-light mb-4">
-        Serve static assets (images, CSS, JS) using a wildcard route and the Zig 0.16 file API.
-        MIME type is detected automatically by file extension.
-    </p>
-    <div class="code-block"><pre>
-<span class="c">// static_handler.zig</span>
-<span class="k">pub fn</span> <span class="f">serve</span>(alc: std.mem.Allocator, req: *spider.Request) !spider.Response {
-    <span class="k">const</span> path = req.path;
-    <span class="k">const</span> full_path = <span class="k">try</span> std.fs.path.<span class="f">join</span>(alc, &.{ <span class="s">"."</span>, path });
-    <span class="k">defer</span> alc.<span class="f">free</span>(full_path);
-
-    <span class="k">var</span> threaded = std.Io.Threaded.init_single_threaded;
-    <span class="k">const</span> io = threaded.<span class="f">io</span>();
-
-    <span class="k">const</span> content = std.Io.Dir.<span class="f">cwd</span>().<span class="f">readFileAlloc</span>(
-        io, full_path, alc, .limited(<span class="n">10</span> * <span class="n">1024</span> * <span class="n">1024</span>),
-    ) <span class="k">catch</span> {
-        <span class="k">return</span> spider.Response.<span class="f">text</span>(alc, <span class="s">"Not Found"</span>);
-    };
-
-    <span class="k">var</span> res = spider.Response.<span class="f">init</span>();
-    res.allocator = alc;
-    res.body = content;
-    res.body_allocated = <span class="k">true</span>;
-    <span class="k">try</span> res.headers.<span class="f">set</span>(alc, <span class="s">"content-type"</span>, <span class="f">mimeType</span>(path));
-    <span class="k">return</span> res;
-}
-
-<span class="c">// main.zig — register with wildcard</span>
-server.<span class="f">get</span>(<span class="s">"/assets/*"</span>, static.<span class="f">serve</span>);</pre></div>
-</div>
-{% end %}
-
-{% block "doc_shutdown" %}
-<div class="detail-box">
-    <h3 class="title is-4 has-text-white">Graceful Shutdown</h3>
-    <p class="has-text-grey-light mb-4">
-        Spider handles graceful shutdown automatically — no extra configuration needed.
-        Use <code>Ctrl+\</code> to stop the server (sends SIGQUIT). The server finishes in-flight requests before exiting.
-    </p>
-    <div class="code-block"><pre>
-<span class="c">// No setup needed — shutdown is handled automatically</span>
-server.<span class="f">get</span>(<span class="s">"/"</span>, homeHandler)
-      .<span class="f">listen</span>() <span class="k">catch</span> |err| <span class="k">return</span> err;
-
-<span class="c">// defer ensures cleanup runs on shutdown</span>
-<span class="k">defer</span> server.<span class="f">deinit</span>();
-<span class="k">defer</span> conn.<span class="f">deinit</span>();
-
-<span class="c">// Stop the server:</span>
-<span class="c">// Ctrl+\ (SIGQUIT) — graceful shutdown</span></pre></div>
-</div>
-{% end %}
-
-{% block "doc_groups" %}
-<div class="detail-box">
-    <h3 class="title is-4 has-text-white">Group Routes</h3>
-    <p class="has-text-grey-light mb-4">
-        Group routes let you add a shared prefix to multiple routes — useful for versioned APIs like <code>/api/v1</code>.
-        Two styles available: inline chaining with <code>.groupGet</code> / <code>.groupPost</code>, or a group object via <code>app.group(prefix)</code>.
-    </p>
-    <div class="code-block"><pre>
-<span class="c">// Style 1 — inline chaining</span>
-server.<span class="f">get</span>(<span class="s">"/"</span>, homeHandler)
-      .<span class="f">groupGet</span>(<span class="s">"/api/v1"</span>, <span class="s">"/users"</span>, usersHandler)
-      .<span class="f">groupGet</span>(<span class="s">"/api/v1"</span>, <span class="s">"/tasks"</span>, tasksHandler)
-      .<span class="f">groupPost</span>(<span class="s">"/api/v1"</span>, <span class="s">"/tasks"</span>, createTaskHandler)
-      .<span class="f">listen</span>() <span class="k">catch</span> |err| <span class="k">return</span> err;
-
-<span class="c">// Style 2 — group object</span>
-<span class="k">const</span> api = app.<span class="f">group</span>(<span class="s">"/api/v1"</span>);
-<span class="k">try</span> api.<span class="f">get</span>(<span class="s">"/users"</span>, usersHandler);
-<span class="k">try</span> api.<span class="f">post</span>(<span class="s">"/tasks"</span>, createTaskHandler);
-
-<span class="c">// Both register:  GET /api/v1/users</span>
-<span class="c">//                 GET /api/v1/tasks</span>
-<span class="c">//                 POST /api/v1/tasks</span></pre></div>
-</div>
-{% end %}
-
-{% block "doc_request" %}
-<div class="detail-box">
-    <h3 class="title is-4 has-text-white">Request</h3>
-    <p class="has-text-grey-light mb-4">
-        Access route parameters, parse JSON bodies, and read form or query string values directly from <code>*spider.Request</code>.
-    </p>
-    <div class="code-block"><pre>
-<span class="c">// Route parameter — /users/:id</span>
-<span class="k">const</span> id = req.<span class="f">param</span>(<span class="s">"id"</span>) <span class="k">orelse return</span> spider.Response.<span class="f">text</span>(alc, <span class="s">"missing id"</span>);
-
-<span class="c">// JSON body binding</span>
-<span class="k">const</span> Task = <span class="k">struct</span> { title: []<span class="k">const</span> u8, done: <span class="k">bool</span> };
-<span class="k">const</span> task = <span class="k">try</span> req.<span class="f">bindJson</span>(alc, Task);
-
-<span class="c">// Form parameter (POST application/x-www-form-urlencoded)</span>
-<span class="k">const</span> name = <span class="k">try</span> req.<span class="f">formParam</span>(<span class="s">"name"</span>, alc);
-
-<span class="c">// Query string (?page=2)</span>
-<span class="k">const</span> page = <span class="k">try</span> req.<span class="f">queryParam</span>(<span class="s">"page"</span>, alc);
-
-<span class="c">// Raw path (e.g. "/users/42")</span>
-<span class="k">const</span> path = req.path;</pre></div>
-</div>
-{% end %}
-
-{% block "doc_response" %}
-<div class="detail-box">
-    <h3 class="title is-4 has-text-white">Response</h3>
-    <p class="has-text-grey-light mb-4">
-        Build responses with JSON, HTML, plain text, or redirects. Set custom status codes and headers as needed.
-    </p>
-    <div class="code-block"><pre>
-<span class="c">// JSON</span>
-<span class="k">return</span> spider.Response.<span class="f">json</span>(alc, .{ .id = <span class="n">1</span>, .name = <span class="s">"Max"</span> });
-
-<span class="c">// HTML</span>
-<span class="k">return</span> spider.Response.<span class="f">html</span>(alc, <span class="s">"&lt;h1&gt;Hello&lt;/h1&gt;"</span>);
-
-<span class="c">// Plain text</span>
-<span class="k">return</span> spider.Response.<span class="f">text</span>(alc, <span class="s">"pong"</span>);
-
-<span class="c">// Redirect</span>
-<span class="k">return</span> spider.Response.<span class="f">redirect</span>(alc, <span class="s">"/dashboard"</span>);
-
-<span class="c">// Custom status + header</span>
-<span class="k">var</span> res = <span class="k">try</span> spider.Response.<span class="f">json</span>(alc, task);
-res.status = .created;
-<span class="k">try</span> res.headers.<span class="f">set</span>(alc, <span class="s">"X-Request-Id"</span>, <span class="s">"abc123"</span>);
-<span class="k">return</span> res;</pre></div>
-</div>
-{% end %}
-
-{% block "doc_middleware" %}
-<div class="detail-box">
-<h3 class="title is-4 has-text-white">Middleware</h3>
-<p class="has-text-grey-light mb-4">
-Middleware functions run before every request handler. Chain them with <code>server.use(fn)</code>.
-Each middleware receives the allocator, request, and a <code>next</code> function to continue the chain.
-Middleware is global — runs on every request.
-</p>
-<div class="code-block"><pre>
-<span class="c">// MiddlewareFn type signature</span>
-<span class="k">pub const</span> MiddlewareFn = *<span class="k">const</span> <span class="k">fn</span>(
-    std.mem.Allocator,
-    *spider.Request,
-    spider.NextFn,
-) anyerror!spider.Response;
-
-<span class="c">// Built-in middleware (from spider.web)</span>
-<span class="k">const</span> web = spider.web;
-
-server.<span class="f">use</span>(web.corsMiddleware)      <span class="c">// Adds CORS headers</span>
-    .<span class="f">use</span>(web.loggerMiddleware)    <span class="c">// Logs: [GET] /path</span>
-    .<span class="f">use</span>(web.authMiddleware)      <span class="c">// Checks x-api-key header</span>
-    .<span class="f">get</span>(<span class="s">"/"</span>, homeHandler)
-    .<span class="f">listen</span>() <span class="k">catch</span> |err| <span class="k">return</span> err;
-
-<span class="c">// Custom middleware — call next() to continue</span>
-<span class="k">fn</span> <span class="f">authMiddleware</span>(
-    alc: std.mem.Allocator,
-    req: *spider.Request,
-    next: spider.NextFn,
-) !spider.Response {
-    <span class="k">const</span> key = req.<span class="f">header</span>(<span class="s">"x-api-key"</span>);
-    <span class="k">if</span> (key == <span class="k">null</span>) {
-        <span class="k">var</span> res = <span class="k">try</span> spider.Response.<span class="f">text</span>(alc, <span class="s">"Unauthorized"</span>);
-        res.status = .unauthorized;
-        <span class="k">return</span> res;
-    }
-    <span class="k">return</span> <span class="f">next</span>(alc, req);
-}
-
-<span class="c">// Middleware that modifies response</span>
-<span class="k">fn</span> <span class="f">corsMiddleware</span>(alc: std.mem.Allocator, req: *spider.Request, next: spider.NextFn) !spider.Response {
-    <span class="k">var</span> res = <span class="k">try</span> <span class="f">next</span>(alc, req);
-    <span class="k">try</span> res.headers.<span class="f">set</span>(alc, <span class="s">"Access-Control-Allow-Origin"</span>, <span class="s">"*"</span>);
-    <span class="k">try</span> res.headers.<span class="f">set</span>(alc, <span class="s">"Access-Control-Allow-Methods"</span>, <span class="s">"GET,POST,PUT,DELETE"</span>);
-    <span class="k">return</span> res;
-}</pre></div>
-</div>
-{% end %}
-
-{% block "doc_templates" %}
-<div class="detail-box">
-<h3 class="title is-4 has-text-white">Templates</h3>
-<p class="has-text-grey-light mb-4">
-Spider's template engine supports named blocks, variable interpolation, loops, conditionals, and includes.
-Templates are embedded at compile time via <code>@embedFile</code>.
-</p>
-<div class="code-block"><pre>
-<span class="c">// docs_controller.zig — embed template and render blocks</span>
-<span class="k">const</span> tmpl = <span class="f">@embedFile</span>(<span class="s">"views/index.html"</span>);
-
-<span class="k">pub fn</span> <span class="f">index</span>(alc: std.mem.Allocator, _: *spider.Request) !spider.Response {
-    <span class="k">const</span> html = <span class="k">try</span> spider.template.<span class="f">renderBlock</span>(tmpl, <span class="s">"index"</span>, .{}, alc);
-    <span class="k">return</span> spider.Response.<span class="f">html</span>(alc, html);
-}
-
-<span class="k">pub fn</span> <span class="f">docRouter</span>(alc: std.mem.Allocator, _: *spider.Request) !spider.Response {
-    <span class="k">const</span> html = <span class="k">try</span> spider.template.<span class="f">renderBlock</span>(tmpl, <span class="s">"doc_router"</span>, .{}, alc);
-    <span class="k">return</span> spider.Response.<span class="f">html</span>(alc, html);
-}
-
-<span class="c">// Template with loop (e.g., listing drivers)</span>
-<span class="k">const</span> html = <span class="k">try</span> spider.template.<span class="f">renderBlock</span>(tmpl, <span class="s">"drivers"</span>, .{
-    .drivers = drivers,
-}, alc);
-
-<span class="c">&lt;!-- views/index.html — block definition --&gt;</span>
-{% block <span class="s">"drivers"</span> %}
-&lt;ul&gt;
-{% <span class="k">for</span> d <span class="k">in</span> drivers %}
-&lt;li&gt;{{ d.number }} — {{ d.name }} ({{ d.team }})&lt;/li&gt;
-{% endfor %}
-&lt;/ul&gt;
-{% end %}
-
-<span class="c">&lt;!-- Conditional rendering --&gt;</span>
-{% <span class="k">if</span> drivers.items.len &gt; <span class="n">0</span> %}
-{% <span class="k">for</span> d <span class="k">in</span> drivers %}...{% endfor %}
-{% <span class="k">else</span> %}
-&lt;p&gt;No drivers found&lt;/p&gt;
-{% endif %}
-
-<span class="c">&lt;!-- Include partial templates --&gt;</span>
-{% include <span class="s">"views/header.html"</span> %}</pre></div>
-</div>
-{% end %}
-
-{% block "doc_docker" %}
-<div class="detail-box">
-<h3 class="title is-4 has-text-white">Docker</h3>
-<p class="has-text-grey-light mb-4">
-Spider has an official Zig Docker image <code>llllollooll/zig:master</code> for fast multi-stage builds.
-</p>
-<div class="code-block"><pre>
-<span class="c"># Dockerfile</span>
-FROM llllollooll/zig:master AS builder
-WORKDIR /app
-COPY . .
-RUN apt-get update && apt-get install -y --no-install-recommends libpq-dev
-RUN zig build -Doptimize=ReleaseSmall
-
-FROM debian:bookworm-slim
-RUN apt-get update && apt-get install -y --no-install-recommends libpq5 curl
-WORKDIR /app
-COPY --from=builder /app/zig-out/bin/spiderme /app/spiderme
-EXPOSE 3000
-CMD ["./spiderme"]</pre></div>
-<p class="mt-4">
-<a href="https://hub.docker.com/repository/docker/llllollooll/zig/general" target="_blank" style="color:#ffc439;font-weight:bold;">→ Docker Hub</a>
-</p>
-</div>
-{% end %}
-
-{% block "doc_testing" %}
-<div class="detail-box">
-<h3 class="title is-4 has-text-white">Testing</h3>
-<p class="has-text-grey-light mb-4">
-Spider uses standard Zig testing. Run tests and format your code with these commands.
-</p>
-<div class="code-block"><pre>
-<span class="c"># Run all tests</span>
-zig test .
-
-<span class="c"># Format all source files</span>
-zig fmt .
-
-<span class="c"># Build optimized release</span>
-zig build -Doptimize=ReleaseSmall</pre></div>
-</div>
 {% end %}
