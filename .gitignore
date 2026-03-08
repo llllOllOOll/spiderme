@@ -3,3 +3,4 @@
 config/
 zig-out/
 DEPLOY.md
+zig-pkg/
