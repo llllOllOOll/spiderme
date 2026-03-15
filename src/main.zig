@@ -23,7 +23,7 @@ pub fn main(init: std.process.Init) !void {
     const io = init.io;
 
     try spider.loadEnv(allocator, ".env");
-    try spg.init(allocator, .{});
+    try spg.init(allocator, io, .{});
     defer spg.deinit();
     // try spg.init(allocator, .{
     //     .host = "postgres-main",
@@ -32,7 +32,7 @@ pub fn main(init: std.process.Init) !void {
     //     .database = "spider_db",
     // });
     // defer spg.deinit();
-    try db_migrate.run();
+    // try db_migrate.run();
 
     const repo = DriverRepository.init(allocator);
     const usecase = DriverUsecase.init(repo);
@@ -65,6 +65,8 @@ pub fn main(init: std.process.Init) !void {
         .get("/docs/templates", DocsController.docTemplates)
         .get("/docs/docker", DocsController.docDocker)
         .get("/docs/testing", DocsController.docTesting)
+        .get("/docs/auth", DocsController.docAuth)
+        .get("/docs/http-client", DocsController.docHttpClient)
         .get("/docs", DocsController.docs)
         .get("/docs/quickstart", DocsController.docQuickstart)
         .listen() catch |err| return err;

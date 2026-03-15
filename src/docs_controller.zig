@@ -77,3 +77,13 @@ pub fn docTesting(alc: std.mem.Allocator, _: *spider.Request) !spider.Response {
     const html = try spider.template.renderBlock(tmpl_docs, "doc_testing", .{}, alc);
     return spider.Response.html(alc, html);
 }
+
+pub fn docAuth(alc: std.mem.Allocator, _: *spider.Request) !spider.Response {
+    const html = try spider.template.renderBlock(tmpl_docs, "doc_auth", .{}, alc);
+    return spider.Response.html(alc, html);
+}
+
+pub fn docHttpClient(alc: std.mem.Allocator, _: *spider.Request) !spider.Response {
+    const html = try spider.template.renderBlock(tmpl_docs, "doc_http_client", .{}, alc);
+    return spider.Response.html(alc, html);
+}
