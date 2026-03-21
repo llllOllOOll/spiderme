@@ -235,6 +235,9 @@
             <a class="sidebar-link"
                hx-get="/docs/http-client" hx-target="#doc-content" hx-swap="innerHTML"
                onclick="setActive(this)">HTTP Client</a>
+            <a class="sidebar-link"
+               hx-get="/docs/forms" hx-target="#doc-content" hx-swap="innerHTML"
+               onclick="setActive(this)">FormData</a>
         </div>
         <div class="sidebar-group">
             <div class="sidebar-group-label">Deployment</div>
@@ -340,7 +343,9 @@ zig init</pre>
 <span class="k">pub fn</span> <span class="f">main</span>(init: std.process.Init) !<span class="k">void</span> {
     <span class="k">const</span> arena: std.mem.Allocator = init.arena.<span class="f">allocator</span>();
     <span class="k">const</span> io = init.io;
-    <span class="k">const</span> server = <span class="k">try</span> spider.Spider.<span class="f">init</span>(arena, io, <span class="s">"127.0.0.1"</span>, <span class="n">8080</span>);
+    <span class="k">const</span> server = <span class="k">try</span> spider.Spider.<span class="f">init</span>(arena, io, <span class="s">"127.0.0.1"</span>, <span class="n">8080</span>, .{
+        <span class="c">// .layout = @embedFile("views/layout.html"), // optional</span>
+    });
     <span class="k">defer</span> server.<span class="f">deinit</span>();
 
     server.<span class="f">get</span>(<span class="s">"/ping"</span>, pingHandler).<span class="f">listen</span>() <span class="k">catch</span> |err| {
@@ -719,100 +724,200 @@ ws.onmessage = (e) => {
 
 {% block "doc_templates" %}
 <h1>Templates</h1>
-<p>Spider's template engine is embedded at compile time via <code>@embedFile</code>. Use <code>render</code> for simple templates and <code>renderBlock</code> when your file contains named blocks.</p>
+<p>Spider's template engine is embedded at compile time via <code>@embedFile</code>. Supports variable interpolation, conditionals, loops, named blocks, filters, and HTMX-aware rendering.</p>
 
 <h2 id="interpolation">Variable interpolation</h2>
-<p>Create <code>src/views/index.html</code> and use <code>{{ }}</code> to interpolate values:</p>
+<p>Use <code>{{ }}</code> to interpolate values:</p>
 <div class="code-block">
     <div class="code-block-bar"><span class="code-block-lang">html</span></div>
-    <pre>&lt;!DOCTYPE html&gt;
-&lt;html lang="en"&gt;
-&lt;head&gt;
-    &lt;meta charset="UTF-8"&gt;
-    &lt;title&gt;Legends&lt;/title&gt;
-    &lt;link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@1.0.0/css/bulma.min.css"&gt;
-&lt;/head&gt;
-&lt;body&gt;
-&lt;section class="section"&gt;
-    &lt;div class="container"&gt;
-        &lt;h1 class="title"&gt;{{ name }}&lt;/h1&gt;
-        &lt;p class="subtitle"&gt;{{ band }}&lt;/p&gt;
-    &lt;/div&gt;
-&lt;/section&gt;
-&lt;/body&gt;
-&lt;/html&gt;</pre>
+    <pre>{% raw %}
+&lt;h1&gt;{{ title }}&lt;/h1&gt;
+&lt;p&gt;Welcome, {{ user_name }}!&lt;/p&gt;
+&lt;p&gt;Items: {{ count }}&lt;/p&gt;
+{% endraw %}</pre>
 </div>
-<p>In your handler, use <code>spider.template.render</code> and pass the data as a struct:</p>
 <div class="code-block">
     <div class="code-block-bar"><span class="code-block-lang">zig</span></div>
-    <pre><span class="k">const</span> tmpl = <span class="f">@embedFile</span>(<span class="s">"views/index.html"</span>);
-
-<span class="k">fn</span> <span class="f">indexHandler</span>(alc: std.mem.Allocator, _: *spider.Request) !spider.Response {
-    <span class="k">const</span> html = <span class="k">try</span> spider.template.<span class="f">render</span>(tmpl, .{
-        .name = <span class="s">"Lemmy Kilmister"</span>,
-        .band = <span class="s">"Motörhead"</span>,
-    }, alc);
-    <span class="k">return</span> spider.Response.<span class="f">html</span>(alc, html);
-}</pre>
+    <pre><span class="k">const</span> html = <span class="k">try</span> spider.template.<span class="f">render</span>(tmpl, .{
+    .title = <span class="s">"Dashboard"</span>,
+    .user_name = <span class="s">"Alice"</span>,
+    .count = <span class="n">42</span>,
+}, alc);</pre>
 </div>
+
+<h2 id="conditionals">Conditionals</h2>
+<p>Use <code>{% if %}</code> for conditional rendering:</p>
+<div class="code-block">
+    <div class="code-block-bar"><span class="code-block-lang">html</span></div>
+    <pre>{% raw %}
+<span class="c">&lt;!-- Basic condition --&gt;</span>
+{% if is_admin %}
+&lt;p&gt;Admin panel access&lt;/p&gt;
+{% endif %}
+
+<span class="c">&lt;!-- Negation --&gt;</span>
+{% if !is_guest %}
+&lt;p&gt;Welcome back!&lt;/p&gt;
+{% endif %}
+
+<span class="c">&lt;!-- Equality --&gt;</span>
+{% if status == "active" %}
+&lt;span class="badge green"&gt;Active&lt;/span&gt;
+{% endif %}
+
+<span class="c">&lt;!-- Inequality --&gt;</span>
+{% if role != "banned" %}
+&lt;a href="/profile"&gt;View Profile&lt;/a&gt;
+{% endif %}
+
+<span class="c">&lt;!-- Logical AND --&gt;</span>
+{% if is_logged_in and is_premium %}
+&lt;p&gt;Premium features unlocked!&lt;/p&gt;
+{% endif %}
+
+<span class="c">&lt;!-- Logical OR --&gt;</span>
+{% if is_admin or is_moderator %}
+&lt;button&gt;Moderate&lt;/button&gt;
+{% endif %}
+
+<span class="c">&lt;!-- Else branch --&gt;</span>
+{% if has_permission %}
+&lt;a href="/edit"&gt;Edit&lt;/a&gt;
+{% else %}
+&lt;p&gt;No edit access&lt;/p&gt;
+{% endif %}
+{% endraw %}</pre>
+</div>
+<p>Boolean strings <code>"true"</code>, <code>"1"</code>, <code>"yes"</code> evaluate to true. <code>"false"</code>, <code>"0"</code>, <code>"no"</code> evaluate to false.</p>
 
 <h2 id="loop">Loops</h2>
-<p>Use <code>{% for %}</code> to iterate over a slice. Here we fetch all legends from the database and render them in a table:</p>
+<p>Use <code>{% for %}</code> to iterate over a slice:</p>
 <div class="code-block">
     <div class="code-block-bar"><span class="code-block-lang">html</span></div>
-    <pre>&lt;tbody&gt;
-    {% for legend in legends %}
-    &lt;tr&gt;
-        &lt;td&gt;{{ legend.id }}&lt;/td&gt;
-        &lt;td&gt;{{ legend.name }}&lt;/td&gt;
-        &lt;td&gt;{{ legend.band }}&lt;/td&gt;
-        &lt;td&gt;{{ legend.instrument }}&lt;/td&gt;
-    &lt;/tr&gt;
+    <pre>{% raw %}
+&lt;ul&gt;
+    {% for item in items %}
+    &lt;li&gt;{{ item.name }} - {{ item.price }}&lt;/li&gt;
     {% endfor %}
-&lt;/tbody&gt;</pre>
+&lt;/ul&gt;
+{% endraw %}</pre>
 </div>
 <div class="code-block">
     <div class="code-block-bar"><span class="code-block-lang">zig</span></div>
-    <pre><span class="k">fn</span> <span class="f">indexHandler</span>(alc: std.mem.Allocator, _: *spider.Request) !spider.Response {
-    <span class="k">var</span> result = <span class="k">try</span> db.<span class="f">query</span>(<span class="s">"SELECT id, name, band, instrument FROM legends"</span>);
-    <span class="k">defer</span> result.<span class="f">deinit</span>();
-    <span class="k">const</span> legends = <span class="k">try</span> result.<span class="f">mapAll</span>(Legend, alc);
-    <span class="k">const</span> html = <span class="k">try</span> spider.template.<span class="f">render</span>(tmpl, .{ .legends = legends }, alc);
-    <span class="k">return</span> spider.Response.<span class="f">html</span>(alc, html);
-}</pre>
+    <pre><span class="k">const</span> html = <span class="k">try</span> spider.template.<span class="f">render</span>(tmpl, .{
+    .items = items,
+}, alc);</pre>
 </div>
 
-<h2 id="blocks">Named blocks</h2>
-<p>When your template file contains multiple named blocks, use <code>renderBlock</code> to render only one of them — useful for HTMX partial responses.</p>
+<h2 id="blocks">Named blocks &amp; includes</h2>
+<p>Define blocks with <code>{% block %}</code> and include them with <code>{% template %}</code>:</p>
 <div class="code-block">
     <div class="code-block-bar"><span class="code-block-lang">html</span></div>
-    <pre><span class="c">&lt;!-- views/index.html --&gt;</span>
-{% block "page" %}
-&lt;!DOCTYPE html&gt;
-...full page layout...
+    <pre>{% raw %}
+{% block "header" %}
+&lt;nav&gt;Site Navigation&lt;/nav&gt;
 {% end %}
 
-{% block "legends-table" %}
-&lt;tbody&gt;
-    {% for legend in legends %}
-    &lt;tr&gt;
-        &lt;td&gt;{{ legend.name }}&lt;/td&gt;
-        &lt;td&gt;{{ legend.band }}&lt;/td&gt;
-    &lt;/tr&gt;
-    {% endfor %}
-&lt;/tbody&gt;
-{% end %}</pre>
+{% block "content" %}
+&lt;p&gt;Page content here&lt;/p&gt;
+{% end %}
+{% endraw %}</pre>
+</div>
+<div class="code-block">
+    <div class="code-block-bar"><span class="code-block-lang">html</span></div>
+    <pre>{% raw %}
+&lt;!-- In your layout --&gt;
+&lt;header&gt;{% template "header" %}&lt;/header&gt;
+&lt;main&gt;{% template "content" %}&lt;/main&gt;
+{% endraw %}</pre>
 </div>
 <div class="code-block">
     <div class="code-block-bar"><span class="code-block-lang">zig</span></div>
-    <pre><span class="c">// full page</span>
-<span class="k">const</span> html = <span class="k">try</span> spider.template.<span class="f">renderBlock</span>(tmpl, <span class="s">"page"</span>, .{ .legends = legends }, alc);
+    <pre><span class="c">// Render a specific block</span>
+<span class="k">const</span> html = <span class="k">try</span> spider.template.<span class="f">renderBlock</span>(tmpl, <span class="s">"content"</span>, data, alc);</pre>
+</div>
 
-<span class="c">// partial — for HTMX swap</span>
-<span class="k">const</span> html = <span class="k">try</span> spider.template.<span class="f">renderBlock</span>(tmpl, <span class="s">"legends-table"</span>, .{ .legends = legends }, alc);</pre>
+<h2 id="filters">Filters</h2>
+<p>Apply filters with the <code>|</code> pipe operator:</p>
+<div class="code-block">
+    <div class="code-block-bar"><span class="code-block-lang">html</span></div>
+    <pre>{% raw %}
+&lt;p&gt;Hello {{ name | default:"Guest" }}!&lt;/p&gt;
+&lt;p&gt;Value: {{ amount | default:"0.00" }}&lt;/p&gt;
+{% endraw %}</pre>
+</div>
+<div class="code-block">
+    <div class="code-block-bar"><span class="code-block-lang">zig</span></div>
+    <pre><span class="c">// If name is empty/null, "Guest" is used instead</span>
+<span class="k">const</span> html = <span class="k">try</span> spider.template.<span class="f">render</span>(tmpl, .{
+    .name = <span class="s">""</span>,  <span class="c">// or null</span>
+}, alc);</pre>
+</div>
+
+<h2 id="rendering">Rendering</h2>
+<p>Spider provides three rendering functions:</p>
+<div class="code-block">
+    <div class="code-block-bar"><span class="code-block-lang">zig</span></div>
+    <pre><span class="c">// Simple template (no blocks)</span>
+<span class="k">const</span> html = <span class="k">try</span> spider.template.<span class="f">render</span>(tmpl, data, alc);
+
+<span class="c">// Render a specific named block</span>
+<span class="k">const</span> html = <span class="k">try</span> spider.template.<span class="f">renderBlock</span>(tmpl, <span class="s">"content"</span>, data, alc);
+
+<span class="c">// HTMX-aware rendering (automatic partial/full page)</span>
+<span class="k">return</span> spider.<span class="f">renderView</span>(alc, req, view_tmpl, data);</pre>
+</div>
+
+<h3 id="renderView">renderView — HTMX-Aware Rendering</h3>
+<p><code>renderView</code> automatically handles HTMX requests:</p>
+<ul>
+    <li><strong>HTMX request</strong> (<code>HX-Request</code> header): Renders only the <code>"content"</code> block</li>
+    <li><strong>Direct request</strong>: Prepends registered layout, renders <code>"base"</code> block</li>
+</ul>
+<div class="code-block">
+    <div class="code-block-bar"><span class="code-block-lang">zig</span></div>
+    <pre><span class="c">// main.zig — Register layout with AppConfig</span>
+<span class="k">const</span> server = <span class="k">try</span> spider.Spider.<span class="f">init</span>(allocator, io, host, port, .{
+    .layout = @<span class="f">embedFile</span>(<span class="s">"views/layout.html"</span>),
+});</pre>
+</div>
+<p>Template structure:</p>
+<div class="code-block">
+    <div class="code-block-bar"><span class="code-block-lang">html</span></div>
+    <pre>{% raw %}
+<span class="c">&lt;!-- views/layout.html --&gt;</span>
+{% block "base" %}
+&lt;!DOCTYPE html&gt;
+&lt;html&gt;
+&lt;body&gt;
+    &lt;nav&gt;Site Nav&lt;/nav&gt;
+    &lt;div id="content"&gt;
+        {% template "content" %}
+    &lt;/div&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+{% end %}
+
+<span class="c">&lt;!-- views/dashboard.html --&gt;</span>
+{% block "content" %}
+&lt;h1&gt;Dashboard&lt;/h1&gt;
+&lt;p&gt;Welcome!&lt;/p&gt;
+{% end %}
+{% endraw %}</pre>
+</div>
+<div class="code-block">
+    <div class="code-block-bar"><span class="code-block-lang">zig</span></div>
+    <pre><span class="c">// Handler — renderView handles both cases automatically</span>
+<span class="k">fn</span> <span class="f">dashboardHandler</span>(alc: std.mem.Allocator, req: *spider.Request) !spider.Response {
+    <span class="k">const</span> view = @<span class="f">embedFile</span>(<span class="s">"views/dashboard.html"</span>);
+    <span class="k">return</span> spider.<span class="f">renderView</span>(alc, req, view, .{});
+}</pre>
 </div>
 <div class="callout">
-    <strong>render vs renderBlock</strong> — use <code>render</code> when the file is a single template. Use <code>renderBlock</code> when the file contains multiple named <code>{% block %}</code> sections.
+    <strong>render vs renderBlock vs renderView:</strong><br>
+    • <code>render</code> — simple templates without blocks<br>
+    • <code>renderBlock</code> — render specific named block (HTMX partials)<br>
+    • <code>renderView</code> — HTMX-aware with layout support
 </div>
 
 <div class="pagination">
@@ -1080,6 +1185,111 @@ zig build -Doptimize=ReleaseSmall</pre>
 <div class="pagination">
     <a href="#" hx-get="/docs/auth" hx-target="#doc-content" hx-swap="innerHTML" onclick="setActive(document.querySelector('[hx-get=\'/docs/auth\']'))">
         ← Authentication
+    </a>
+    <a href="#" hx-get="/docs/forms" hx-target="#doc-content" hx-swap="innerHTML" onclick="setActive(document.querySelector('[hx-get=\'/docs/forms\']'))">
+        FormData →
+    </a>
+</div>
+{% end %}
+
+{% block "doc_forms" %}
+<h1>FormData</h1>
+<p>Spider provides a powerful <code>spider.form</code> module for parsing form submissions with support for arrays, dot notation for nested fields, and automatic URL decoding.</p>
+
+<h2 id="basic-usage">Basic Usage</h2>
+<p>Parse form data from a POST request using <code>req.form()</code>:</p>
+<div class="code-block">
+    <div class="code-block-bar"><span class="code-block-lang">zig</span></div>
+    <pre><span class="k">fn</span> <span class="f">handleSubmit</span>(alc: std.mem.Allocator, req: *spider.Request) !spider.Response {
+    <span class="k">var</span> form = <span class="k">try</span> req.<span class="f">form</span>(alc);
+    <span class="k">defer</span> form.<span class="f">deinit</span>();
+
+    <span class="k">const</span> name = form.<span class="f">get</span>(<span class="s">"name"</span>);
+    <span class="k">const</span> email = form.<span class="f">get</span>(<span class="s">"email"</span>);
+
+    <span class="k">return</span> spider.Response.<span class="f">json</span>(alc, .{ .name = name, .email = email });
+}</pre>
+</div>
+
+<h2 id="array-fields">Array Fields</h2>
+<p>Fields with <code>[]</code> suffix are parsed as arrays:</p>
+<div class="code-block">
+    <div class="code-block-bar"><span class="code-block-lang">html</span></div>
+    <pre>&lt;form method="POST"&gt;
+    &lt;input name="tags[]" value="zig"&gt;
+    &lt;input name="tags[]" value="web"&gt;
+    &lt;input name="tags[]" value="http"&gt;
+&lt;/form&gt;</pre>
+</div>
+<div class="code-block">
+    <div class="code-block-bar"><span class="code-block-lang">zig</span></div>
+    <pre><span class="k">fn</span> <span class="f">handleTags</span>(alc: std.mem.Allocator, req: *spider.Request) !spider.Response {
+    <span class="k">var</span> form = <span class="k">try</span> req.<span class="f">form</span>(alc);
+    <span class="k">defer</span> form.<span class="f">deinit</span>();
+
+    <span class="c">// Get all values as an array</span>
+    <span class="k">const</span> tags = form.<span class="f">getArray</span>(<span class="s">"tags"</span>);
+
+    <span class="c">// Returns ["zig", "web", "http"]</span>
+    <span class="k">return</span> spider.Response.<span class="f">json</span>(alc, .{ .tags = tags });
+}</pre>
+</div>
+
+<h2 id="nested-fields">Nested Fields (Dot Notation)</h2>
+<p>Access nested fields using dot notation:</p>
+<div class="code-block">
+    <div class="code-block-bar"><span class="code-block-lang">html</span></div>
+    <pre>&lt;form method="POST"&gt;
+    &lt;input name="user.name" value="John"&gt;
+    &lt;input name="user.email" value="john@example.com"&gt;
+    &lt;input name="user.roles[]" value="admin"&gt;
+    &lt;input name="user.roles[]" value="editor"&gt;
+&lt;/form&gt;</pre>
+</div>
+<div class="code-block">
+    <div class="code-block-bar"><span class="code-block-lang">zig</span></div>
+    <pre><span class="k">fn</span> <span class="f">handleUser</span>(alc: std.mem.Allocator, req: *spider.Request) !spider.Response {
+    <span class="k">var</span> form = <span class="k">try</span> req.<span class="f">form</span>(alc);
+    <span class="k">defer</span> form.<span class="f">deinit</span>();
+
+    <span class="k">const</span> name = form.<span class="f">get</span>(<span class="s">"user.name"</span>);       <span class="c">// "John"</span>
+    <span class="k">const</span> email = form.<span class="f">get</span>(<span class="s">"user.email"</span>);     <span class="c">// "john@example.com"</span>
+    <span class="k">const</span> roles = form.<span class="f">getArray</span>(<span class="s">"user.roles"</span>); <span class="c">// ["admin", "editor"]</span>
+
+    <span class="k">return</span> spider.Response.<span class="f">json</span>(alc, .{
+        .name = name,
+        .email = email,
+        .roles = roles,
+    });
+}</pre>
+</div>
+
+<h2 id="url-decoding">Automatic URL Decoding</h2>
+<p>Form values are automatically URL decoded:</p>
+<div class="code-block">
+    <div class="code-block-bar"><span class="code-block-lang">zig</span></div>
+    <pre><span class="c">// Input: "hello%20world" → Returns: "hello world"</span>
+<span class="c">// Input: "foo%2Fbar"    → Returns: "foo/bar"</span>
+<span class="c">// Input: "hello+world" → Returns: "hello world" (plus = space)</span>
+<span class="k">const</span> value = form.<span class="f">get</span>(<span class="s">"field"</span>);</pre>
+</div>
+
+<h2 id="form-method">Method Signature</h2>
+<div class="code-block">
+    <div class="code-block-bar"><span class="code-block-lang">zig</span></div>
+    <pre><span class="c">// req.form(allocator) returns spider.form.FormData</span>
+<span class="k">var</span> form = <span class="k">try</span> req.<span class="f">form</span>(allocator);
+<span class="k">defer</span> form.<span class="f">deinit</span>();
+
+<span class="c">// Methods:</span>
+form.<span class="f">get</span>(key)           <span class="c">// ?[]const u8 - first value or null</span>
+form.<span class="f">getArray</span>(key)      <span class="c">// ?[]const []const u8 - all values or null</span>
+form.<span class="f">getNested</span>(path)    <span class="c">// ?[]const u8 - alias for get() with dot path</span></pre>
+</div>
+
+<div class="pagination">
+    <a href="#" hx-get="/docs/http-client" hx-target="#doc-content" hx-swap="innerHTML" onclick="setActive(document.querySelector('[hx-get=\'/docs/http-client\']'))">
+        ← HTTP Client
     </a>
     <a href="#" hx-get="/docs/testing" hx-target="#doc-content" hx-swap="innerHTML" onclick="setActive(document.querySelector('[hx-get=\'/docs/testing\']'))">
         Testing →

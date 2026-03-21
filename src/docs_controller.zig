@@ -87,3 +87,8 @@ pub fn docHttpClient(alc: std.mem.Allocator, _: *spider.Request) !spider.Respons
     const html = try spider.template.renderBlock(tmpl_docs, "doc_http_client", .{}, alc);
     return spider.Response.html(alc, html);
 }
+
+pub fn docForms(alc: std.mem.Allocator, _: *spider.Request) !spider.Response {
+    const html = try spider.template.renderBlock(tmpl_docs, "doc_forms", .{}, alc);
+    return spider.Response.html(alc, html);
+}

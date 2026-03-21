@@ -13,11 +13,6 @@ fn getDrivers(alc: std.mem.Allocator, req: *spider.Request) !spider.Response {
     return driverController.getDrivers(alc, req);
 }
 
-// pub fn docs(alc: std.mem.Allocator, _: *spider.Request) !spider.Response {
-//     const tmpl = @embedFile("views/docs.html");
-//     return spider.Response.html(alc, tmpl);
-// }
-
 pub fn main(init: std.process.Init) !void {
     const allocator = init.gpa;
     const io = init.io;
@@ -25,14 +20,6 @@ pub fn main(init: std.process.Init) !void {
     try spider.loadEnv(allocator, ".env");
     try spg.init(allocator, io, .{});
     defer spg.deinit();
-    // try spg.init(allocator, .{
-    //     .host = "postgres-main",
-    //     .user = "n8n",
-    //     .password = "zivyarsql_n8n@5123",
-    //     .database = "spider_db",
-    // });
-    // defer spg.deinit();
-    // try db_migrate.run();
 
     const repo = DriverRepository.init(allocator);
     const usecase = DriverUsecase.init(repo);
@@ -41,7 +28,9 @@ pub fn main(init: std.process.Init) !void {
     try spider.initWsHub(allocator, io);
     defer spider.deinitWsHub(allocator);
 
-    const server = try spider.Spider.init(allocator, io, "0.0.0.0", 3000);
+    const server = try spider.Spider.init(allocator, io, "0.0.0.0", 3000, .{
+        .layout = null,
+    });
     defer server.deinit();
 
     server
@@ -67,6 +56,7 @@ pub fn main(init: std.process.Init) !void {
         .get("/docs/testing", DocsController.docTesting)
         .get("/docs/auth", DocsController.docAuth)
         .get("/docs/http-client", DocsController.docHttpClient)
+        .get("/docs/forms", DocsController.docForms)
         .get("/docs", DocsController.docs)
         .get("/docs/quickstart", DocsController.docQuickstart)
         .listen() catch |err| return err;

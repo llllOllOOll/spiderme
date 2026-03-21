@@ -11,7 +11,7 @@ pub fn init(allocator: std.mem.Allocator) DriverRepository {
 }
 
 pub fn findAll(self: DriverRepository) ![]Driver {
-    var result = spg.query("SELECT id, name, team, number FROM drivers ORDER BY number") catch |err| {
+    var result = spg.query("SELECT id, name, team, number FROM drivers ORDER BY number", .{}) catch |err| {
         std.log.err("findAll failed: {}", .{err});
         return err;
     };
