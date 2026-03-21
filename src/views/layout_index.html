@@ -1,0 +1,53 @@
+{% block "layout_index" %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Spider — Zig Web Framework</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@700;800;900&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@1.0.4/css/bulma.min.css">
+  <link rel="stylesheet" href="/assets/spider.css">
+  <script src="https://cdn.jsdelivr.net/npm/htmx.org@1.9.12/dist/htmx.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+</head>
+<body>
+
+<nav class="site-nav">
+  <div class="nav-inner"
+       style="display:flex;align-items:center;justify-content:space-between;max-width:1060px;margin:0 auto;padding:0 2rem;height:100%;">
+    <a href="/" class="nav-brand" style="display:flex;align-items:center;">
+      <img src="/assets/spider_logo.png" alt="Spider"
+           style="width:22px;height:22px;object-fit:contain;margin-right:8px;">
+      Spider
+    </a>
+    <div class="nav-links-desktop is-flex" style="gap:4px;">
+      <a href="/docs">Docs</a>
+      <a href="#features">Features</a>
+      <a href="https://github.com/llllOllOOll/spider" target="_blank">GitHub</a>
+    </div>
+    <button class="nav-hamburger" onclick="toggleMobileMenu()" aria-label="Menu">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+  <div class="nav-mobile-menu" id="mobile-menu">
+    <a href="/docs" onclick="toggleMobileMenu()">Docs</a>
+    <a href="#features" onclick="toggleMobileMenu()">Features</a>
+    <a href="https://github.com/llllOllOOll/spider" target="_blank">GitHub</a>
+  </div>
+</nav>
+
+{% template "content" %}
+
+<script>
+function toggleMobileMenu() {
+  const menu = document.getElementById('mobile-menu');
+  const btn = document.querySelector('.nav-hamburger');
+  menu.classList.toggle('open');
+  btn.classList.toggle('open');
+}
+</script>
+</body>
+</html>
+{% end %}
