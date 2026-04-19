@@ -25,4 +25,6 @@ RUN find /app/assets -type d -exec chmod 755 {} \; && \
 
 EXPOSE 3000
 
+ENV LOG_LEVEL=warn
+
 CMD ["./spiderme"]
