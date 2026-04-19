@@ -1,0 +1,28 @@
+{% extends "layout_docs" %}
+{% block "content" %}
+<h1>Router</h1>
+<p>Trie-based router supporting static routes, dynamic parameters (<code>:id</code>), and wildcards (<code>*</code>). Routes are chained directly on the server and dispatched per HTTP method.</p>
+
+<div class="code-block">
+<div class="code-block-bar"><span class="code-block-lang">zig</span></div>
+<pre><span class="c">// Static route</span>
+server.<span class="f">get</span>(<span class="s">"/"</span>, homeHandler);
+
+<span class="c">// Dynamic parameter — access via req.param("id")</span>
+server.<span class="f">get</span>(<span class="s">"/users/:id"</span>, userHandler);
+
+<span class="c">// Wildcard — matches /assets/logo.png, /assets/css/main.css, etc.</span>
+server.<span class="f">get</span>(<span class="s">"/assets/*"</span>, staticHandler);
+
+<span class="c">// Chained routes</span>
+server.<span class="f">get</span>(<span class="s">"/"</span>, homeHandler)
+.<span class="f">post</span>(<span class="s">"/users"</span>, createUser)
+.<span class="f">get</span>(<span class="s">"/users/:id"</span>, getUser)
+.<span class="f">listen</span>() <span class="k">catch</span> |err| <span class="k">return</span> err;
+
+<span class="k">fn</span> <span class="f">userHandler</span>(alc: std.mem.Allocator, req: *spider.Request) !spider.Response {
+<span class="k">const</span> id = req.<span class="f">param</span>(<span class="s">"id"</span>) <span class="k">orelse return</span> spider.Response.<span class="f">text</span>(alc, <span class="s">"missing id"</span>);
+<span class="k">return</span> spider.Response.<span class="f">json</span>(alc, .{ .id = id });
+}</pre>
+</div>
+{% end %}

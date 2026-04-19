@@ -123,7 +123,7 @@ sudo docker run -d \
     --label "traefik.http.routers.spiderme.tls.certresolver=letsencrypt" \
     --label "traefik.http.routers.spiderme.middlewares=spider-headers" \
     --label "traefik.http.services.spiderme.loadbalancer.server.port=3000" \
-    --label "traefik.http.middlewares.spider-headers.headers.customResponseHeaders.HX-Request=*" \
+    --label "traefik.http.middlewares.spider-headers.headers.customRequestHeaders.X-HX-Request=*" \
     "$IMAGE"
 
 echo "Deploy finished! Check https://spiderme.org"
@@ -162,7 +162,7 @@ sudo docker run -d \
     --label "traefik.http.routers.spiderme.tls.certresolver=letsencrypt" \
     --label "traefik.http.routers.spiderme.middlewares=spider-headers" \
     --label "traefik.http.services.spiderme.loadbalancer.server.port=3000" \
-    --label "traefik.http.middlewares.spider-headers.headers.customResponseHeaders.HX-Request=*" \
+    --label "traefik.http.middlewares.spider-headers.headers.customRequestHeaders.X-HX-Request=*" \
     "$IMAGE"
 
 echo "Deploy finished! Check https://spiderme.org"

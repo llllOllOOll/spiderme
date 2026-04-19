@@ -1,0 +1,25 @@
+{% extends "layout_docs" %}
+{% block "content" %}
+<h1>Pooling</h1>
+<p>Spider manages the PostgreSQL connection pool internally via <code>spider.pg</code>. No manual acquire/release needed — <code>query()</code>, <code>queryParams()</code>, and <code>exec()</code> handle it automatically. The pool size defaults to 10.</p>
+
+<div class="code-block">
+<div class="code-block-bar"><span class="code-block-lang">zig</span></div>
+<pre><span class="c">// Pool is invisible — Spider manages acquire/release internally</span>
+<span class="k">var</span> result = <span class="k">try</span> db.<span class="f">query</span>(<span class="s">"SELECT ..."</span>); <span class="c">// acquires connection</span>
+<span class="k">defer</span> result.<span class="f">deinit</span>(); <span class="c">// releases connection</span>
+
+<span class="c">// Configure pool size via DbConfig</span>
+<span class="k">try</span> spg.<span class="f">init</span>(allocator, io, .{
+.host = <span class="s">"localhost"</span>,
+.database = <span class="s">"spider_db"</span>,
+.pool_size = <span class="n">20</span>, <span class="c">// default: 10</span>
+});
+
+<span class="c">// Low-level API — for advanced use cases</span>
+<span class="k">const</span> pool = spg.Pool;
+<span class="k">const</span> conn = <span class="k">try</span> pool.<span class="f">acquire</span>();
+<span class="k">defer</span> pool.<span class="f">release</span>(conn);
+<span class="k">var</span> result = <span class="k">try</span> spg.<span class="f">queryConn</span>(conn, <span class="s">"SELECT ..."</span>);</pre>
+</div>
+{% end %}

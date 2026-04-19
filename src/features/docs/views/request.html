@@ -1,0 +1,24 @@
+{% extends "layout_docs" %}
+{% block "content" %}
+<h1>Request</h1>
+<p>Access route parameters, parse JSON bodies, and read form or query string values directly from <code>*spider.Request</code>.</p>
+
+<div class="code-block">
+<div class="code-block-bar"><span class="code-block-lang">zig</span></div>
+<pre><span class="c">// Route parameter — /users/:id</span>
+<span class="k">const</span> id = req.<span class="f">param</span>(<span class="s">"id"</span>) <span class="k">orelse return</span> spider.Response.<span class="f">text</span>(alc, <span class="s">"missing id"</span>);
+
+<span class="c">// JSON body binding</span>
+<span class="k">const</span> Task = <span class="k">struct</span> { title: []<span class="k">const</span> u8, done: <span class="k">bool</span> };
+<span class="k">const</span> task = <span class="k">try</span> req.<span class="f">bindJson</span>(alc, Task);
+
+<span class="c">// Form parameter (POST application/x-www-form-urlencoded)</span>
+<span class="k">const</span> name = <span class="k">try</span> req.<span class="f">formParam</span>(<span class="s">"name"</span>, alc);
+
+<span class="c">// Query string (?page=2)</span>
+<span class="k">const</span> page = <span class="k">try</span> req.<span class="f">queryParam</span>(<span class="s">"page"</span>, alc);
+
+<span class="c">// Raw path (e.g. "/users/42")</span>
+<span class="k">const</span> path = req.path;</pre>
+</div>
+{% end %}

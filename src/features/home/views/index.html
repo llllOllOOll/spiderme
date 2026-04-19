@@ -1,0 +1,174 @@
+{% extends "layout_home" %}
+{% block "content" %}
+
+<div class="hero-section">
+<div class="hero-content">
+<h1 class="hero-title">Web framework<br>for <span class="zig">Zig</span></h1>
+<p class="hero-sub">Fast, minimal, built for systems.<br>
+HTTP, WebSockets, PostgreSQL, Templates — batteries included.</p>
+<div class="hero-btns">
+<a href="/docs" class="btn-primary">Get Started</a>
+<a href="https://github.com/llllOllOOll/spider" target="_blank" class="btn-secondary">GitHub →</a>
+</div>
+</div>
+<div class="code-block">
+<div class="code-block-bar">
+<div class="dot dot-r"></div>
+<div class="dot dot-y"></div>
+<div class="dot dot-g"></div>
+</div>
+<pre><span class="k">const</span> std = <span class="f">@import</span>(<span class="s">"std"</span>);
+<span class="k">const</span> spider = <span class="f">@import</span>(<span class="s">"spider"</span>);
+<span class="k">pub fn</span> <span class="f">main</span>(init: std.process.Init) !<span class="k">void</span> {
+<span class="k">const</span> server = <span class="k">try</span> spider.Spider.<span class="f">init</span>(
+init.gpa, init.io, <span class="s">"127.0.0.1"</span>, <span class="n">8080</span>
+);
+<span class="k">defer</span> server.<span class="f">deinit</span>();
+<span class="k">try</span> server.<span class="f">get</span>(<span class="s">"/"</span>, pingHandler).<span class="f">listen</span>();
+}
+<span class="k">fn</span> <span class="f">pingHandler</span>(alc: std.mem.Allocator,
+_: *spider.Request) !spider.Response {
+<span class="k">return</span> spider.Response.<span class="f">json</span>(alc, .{ .msg = <span class="s">"pong"</span> });</pre>
+</div>
+</div>
+
+<section class="section" id="features" style="border-top: 1px solid var(--border);">
+<div style="max-width:1060px;margin:0 auto;">
+<h2 class="section-title has-text-centered mb-2">Everything you need</h2>
+<p class="section-subtitle has-text-centered mb-6" style="font-size:0.82rem;">Click any card to see docs and examples</p>
+<div class="columns is-multiline">
+<div class="column is-3">
+<div class="feature-card p-5"
+hx-get="/docs/router" hx-target="#feature-detail" hx-swap="innerHTML"
+onclick="document.querySelectorAll('.feature-card').forEach(c=>c.classList.remove('active'));this.classList.add('active')">
+<p class="accent has-text-weight-bold">Router</p>
+<p class="has-text-grey-light">Trie-based router with dynamic params <code>/users/:id</code></p>
+</div>
+</div>
+<div class="column is-3">
+<div class="feature-card p-5"
+hx-get="/docs/websocket" hx-target="#feature-detail" hx-swap="innerHTML"
+onclick="document.querySelectorAll('.feature-card').forEach(c=>c.classList.remove('active'));this.classList.add('active')">
+<p class="accent has-text-weight-bold">WebSocket</p>
+<p class="has-text-grey-light">WS support + hub broadcasting</p>
+<p class="mt-2"><a href="/chat" target="_blank" style="color:var(--accent);font-size:0.78rem;" onclick="event.stopPropagation()">→ Live Demo</a></p>
+</div>
+</div>
+<div class="column is-3">
+<div class="feature-card p-5"
+hx-get="/docs/postgres" hx-target="#feature-detail" hx-swap="innerHTML"
+onclick="document.querySelectorAll('.feature-card').forEach(c=>c.classList.remove('active'));this.classList.add('active')">
+<p class="accent has-text-weight-bold">PostgreSQL</p>
+<p class="has-text-grey-light">Built-in PG client with pooling</p>
+<p class="mt-2"><a href="https://spiderme.org/drivers" target="_blank" style="color:var(--accent);font-size:0.78rem;" onclick="event.stopPropagation()">→ Live Demo</a></p>
+</div>
+</div>
+<div class="column is-3">
+<div class="feature-card p-5"
+hx-get="/docs/metrics" hx-target="#feature-detail" hx-swap="innerHTML"
+onclick="document.querySelectorAll('.feature-card').forEach(c=>c.classList.remove('active'));this.classList.add('active')">
+<p class="accent has-text-weight-bold">Metrics</p>
+<p class="has-text-grey-light">Internal metrics + dashboard</p>
+<p class="mt-2"><a href="https://spiderme.org/_spider/dashboard" target="_blank" style="color:var(--accent);font-size:0.78rem;" onclick="event.stopPropagation()">→ Live Demo</a></p>
+</div>
+</div>
+<div class="column is-3">
+<div class="feature-card p-5"
+hx-get="/docs/logger" hx-target="#feature-detail" hx-swap="innerHTML"
+onclick="document.querySelectorAll('.feature-card').forEach(c=>c.classList.remove('active'));this.classList.add('active')">
+<p class="accent has-text-weight-bold">Logger</p>
+<p class="has-text-grey-light">Structured JSON logging</p>
+</div>
+</div>
+<div class="column is-3">
+<div class="feature-card p-5"
+hx-get="/docs/pooling" hx-target="#feature-detail" hx-swap="innerHTML"
+onclick="document.querySelectorAll('.feature-card').forEach(c=>c.classList.remove('active'));this.classList.add('active')">
+<p class="accent has-text-weight-bold">Pooling</p>
+<p class="has-text-grey-light">Connection &amp; buffer pooling</p>
+</div>
+</div>
+<div class="column is-3">
+<div class="feature-card p-5"
+hx-get="/docs/static" hx-target="#feature-detail" hx-swap="innerHTML"
+onclick="document.querySelectorAll('.feature-card').forEach(c=>c.classList.remove('active'));this.classList.add('active')">
+<p class="accent has-text-weight-bold">Static Files</p>
+<p class="has-text-grey-light">Built-in static file serving</p>
+</div>
+</div>
+<div class="column is-3">
+<div class="feature-card p-5"
+hx-get="/docs/shutdown" hx-target="#feature-detail" hx-swap="innerHTML"
+onclick="document.querySelectorAll('.feature-card').forEach(c=>c.classList.remove('active'));this.classList.add('active')">
+<p class="accent has-text-weight-bold">Graceful Shutdown</p>
+<p class="has-text-grey-light">Handles SIGINT / SIGTERM</p>
+</div>
+</div>
+<div class="column is-3">
+<div class="feature-card p-5"
+hx-get="/docs/groups" hx-target="#feature-detail" hx-swap="innerHTML"
+onclick="document.querySelectorAll('.feature-card').forEach(c=>c.classList.remove('active'));this.classList.add('active')">
+<p class="accent has-text-weight-bold">Group Routes</p>
+<p class="has-text-grey-light">Route prefixes via <code>.groupGet</code> / <code>.group</code></p>
+</div>
+</div>
+<div class="column is-3">
+<div class="feature-card p-5"
+hx-get="/docs/request" hx-target="#feature-detail" hx-swap="innerHTML"
+onclick="document.querySelectorAll('.feature-card').forEach(c=>c.classList.remove('active'));this.classList.add('active')">
+<p class="accent has-text-weight-bold">Request</p>
+<p class="has-text-grey-light">Params, JSON binding, form &amp; query</p>
+</div>
+</div>
+<div class="column is-3">
+<div class="feature-card p-5"
+hx-get="/docs/response" hx-target="#feature-detail" hx-swap="innerHTML"
+onclick="document.querySelectorAll('.feature-card').forEach(c=>c.classList.remove('active'));this.classList.add('active')">
+<p class="accent has-text-weight-bold">Response</p>
+<p class="has-text-grey-light">HTML, JSON, redirect, status, headers</p>
+</div>
+</div>
+<div class="column is-3">
+<div class="feature-card p-5"
+hx-get="/docs/middleware" hx-target="#feature-detail" hx-swap="innerHTML"
+onclick="document.querySelectorAll('.feature-card').forEach(c=>c.classList.remove('active'));this.classList.add('active')">
+<p class="accent has-text-weight-bold">Middleware</p>
+<p class="has-text-grey-light">Chain functions via <code>server.use(fn)</code></p>
+</div>
+</div>
+<div class="column is-3">
+<div class="feature-card p-5"
+hx-get="/docs/templates" hx-target="#feature-detail" hx-swap="innerHTML"
+onclick="document.querySelectorAll('.feature-card').forEach(c=>c.classList.remove('active'));this.classList.add('active')">
+<p class="accent has-text-weight-bold">Templates</p>
+<p class="has-text-grey-light">Blocks, variables, loops, if/else, include</p>
+</div>
+</div>
+<div class="column is-3">
+<div class="feature-card p-5"
+hx-get="/docs/docker" hx-target="#feature-detail" hx-swap="innerHTML"
+onclick="document.querySelectorAll('.feature-card').forEach(c=>c.classList.remove('active'));this.classList.add('active')">
+<p class="accent has-text-weight-bold">Docker</p>
+<p class="has-text-grey-light">Official Zig image for fast builds</p>
+</div>
+</div>
+<div class="column is-3">
+<div class="feature-card p-5"
+hx-get="/docs/testing" hx-target="#feature-detail" hx-swap="innerHTML"
+onclick="document.querySelectorAll('.feature-card').forEach(c=>c.classList.remove('active'));this.classList.add('active')">
+<p class="accent has-text-weight-bold">Testing</p>
+<p class="has-text-grey-light"><code>zig test .</code> + <code>zig fmt .</code></p>
+</div>
+</div>
+</div>
+<div id="feature-detail"></div>
+</div>
+</section>
+
+<footer class="footer has-background-black">
+<div class="content has-text-centered" style="color:var(--text-weak);font-size:0.78rem;">
+Spider · MIT License · Built with <span class="accent">Zig</span>
+</div>
+</footer>
+
+{% end %}

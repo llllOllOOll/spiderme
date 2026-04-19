@@ -1,0 +1,30 @@
+{% extends "layout_docs" %}
+{% block "content" %}
+<h1>Static Files</h1>
+<p>Serve static assets using a wildcard route. MIME type is detected automatically by file extension.</p>
+
+<div class="code-block">
+<div class="code-block-bar"><span class="code-block-lang">zig</span></div>
+<pre><span class="k">pub fn</span> <span class="f">serve</span>(alc: std.mem.Allocator, req: *spider.Request) !spider.Response {
+<span class="k">const</span> full_path = <span class="k">try</span> std.fs.path.<span class="f">join</span>(alc, &.{ <span class="s">"."</span>, req.path });
+<span class="k">defer</span> alc.<span class="f">free</span>(full_path);
+
+<span class="k">var</span> threaded = std.Io.Threaded.init_single_threaded;
+<span class="k">const</span> io = threaded.<span class="f">io</span>();
+<span class="k">const</span> content = std.Io.Dir.<span class="f">cwd</span>().<span class="f">readFileAlloc</span>(
+io, full_path, alc, .limited(<span class="n">10</span> * <span class="n">1024</span> * <span class="n">1024</span>),
+) <span class="k">catch</span> {
+<span class="k">return</span> spider.Response.<span class="f">text</span>(alc, <span class="s">"Not Found"</span>);
+};
+
+<span class="k">var</span> res = spider.Response.<span class="f">init</span>();
+res.body = content;
+res.body_allocated = <span class="k">true</span>;
+<span class="k">try</span> res.headers.<span class="f">set</span>(alc, <span class="s">"content-type"</span>, <span class="f">mimeType</span>(req.path));
+<span class="k">return</span> res;
+}
+
+<span class="c">// main.zig</span>
+server.<span class="f">get</span>(<span class="s">"/assets/*"</span>, static.<span class="f">serve</span>);</pre>
+</div>
+{% end %}

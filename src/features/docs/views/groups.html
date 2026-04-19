@@ -1,0 +1,20 @@
+{% extends "layout_docs" %}
+{% block "content" %}
+<h1>Group Routes</h1>
+<p>Group routes add a shared prefix to multiple routes — useful for versioned APIs like <code>/api/v1</code>.</p>
+
+<div class="code-block">
+<div class="code-block-bar"><span class="code-block-lang">zig</span></div>
+<pre><span class="c">// Style 1 — inline chaining</span>
+server.<span class="f">get</span>(<span class="s">"/"</span>, homeHandler)
+.<span class="f">groupGet</span>(<span class="s">"/api/v1"</span>, <span class="s">"/users"</span>, usersHandler)
+.<span class="f">groupGet</span>(<span class="s">"/api/v1"</span>, <span class="s">"/tasks"</span>, tasksHandler)
+.<span class="f">groupPost</span>(<span class="s">"/api/v1"</span>, <span class="s">"/tasks"</span>, createTaskHandler)
+.<span class="f">listen</span>() <span class="k">catch</span> |err| <span class="k">return</span> err;
+
+<span class="c">// Style 2 — group object</span>
+<span class="k">const</span> api = app.<span class="f">group</span>(<span class="s">"/api/v1"</span>);
+<span class="k">try</span> api.<span class="f">get</span>(<span class="s">"/users"</span>, usersHandler);
+<span class="k">try</span> api.<span class="f">post</span>(<span class="s">"/tasks"</span>, createTaskHandler);</pre>
+</div>
+{% end %}

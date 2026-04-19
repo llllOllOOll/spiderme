@@ -1,0 +1,73 @@
+{% extends "layout_docs" %}
+{% block "content" %}
+<h1>Authentication</h1>
+<p>Spider provides a complete authentication system with JWT, cookies, and Google OAuth integration.</p>
+
+<h2 id="jwt">JWT Authentication</h2>
+<p>Sign and verify JSON Web Tokens with built-in functions:</p>
+<div class="code-block">
+<div class="code-block-bar"><span class="code-block-lang">zig</span></div>
+<pre><span class="k">const</span> auth = spider.auth;
+
+<span class="c">// Sign a JWT token</span>
+<span class="k">const</span> claims = .{
+.sub = user_id,
+.email = user_email,
+.exp = std.time.timestamp() + 3600, <span class="c">// 1 hour expiration</span>
+};
+<span class="k">const</span> token = <span class="k">try</span> auth.jwtSign(allocator, claims, jwt_secret);
+<span class="k">defer</span> allocator.<span class="f">free</span>(token);
+
+<span class="c">// Verify a JWT token</span>
+<span class="k">const</span> verified_claims = <span class="k">try</span> auth.jwtVerify(allocator, token, jwt_secret);
+<span class="k">defer</span> {
+allocator.<span class="f">free</span>(verified_claims.email);
+}</pre>
+</div>
+
+<h2 id="cookies">Cookie Management</h2>
+<p>Handle cookies for authentication sessions:</p>
+<div class="code-block">
+<div class="code-block-bar"><span class="code-block-lang">zig</span></div>
+<pre><span class="c">// Set authentication cookie</span>
+<span class="k">const</span> cookie_value = <span class="k">try</span> auth.cookieSet(allocator, token);
+<span class="k">defer</span> allocator.<span class="f">free</span>(cookie_value);
+<span class="k">try</span> res.headers.<span class="f">set</span>(allocator, <span class="s">"Set-Cookie"</span>, cookie_value);
+
+<span class="c">// Get token from cookie</span>
+<span class="k">const</span> cookie_header = req.headers.<span class="f">get</span>(<span class="s">"Cookie"</span>) <span class="k">orelse return</span> error.Unauthorized;
+<span class="k">const</span> token = auth.cookieGet(cookie_header) <span class="k">orelse return</span> error.Unauthorized;
+
+<span class="c">// Clear authentication cookie</span>
+<span class="k">const</span> cleared_cookie = <span class="k">try</span> auth.cookieClear(allocator);
+<span class="k">defer</span> allocator.<span class="f">free</span>(cleared_cookie);</pre>
+</div>
+
+<h2 id="google-oauth">Google OAuth</h2>
+<p>Integrate Google authentication with built-in support:</p>
+<div class="code-block">
+<div class="code-block-bar"><span class="code-block-lang">zig</span></div>
+<pre><span class="k">const</span> google = spider.google;
+
+<span class="c">// Generate Google OAuth URL</span>
+<span class="k">const</span> config = google.GoogleConfig{
+.client_id = <span class="s">"your-client-id"</span>,
+.client_secret = <span class="s">"your-client-secret"</span>,
+.redirect_uri = <span class="s">"http://localhost:8080/auth/google/callback"</span>,
+};
+<span class="k">const</span> auth_url = <span class="k">try</span> google.authUrl(allocator, config);
+<span class="k">defer</span> allocator.<span class="f">free</span>(auth_url);
+
+<span class="c">// Handle callback and get user profile</span>
+<span class="k">const</span> profile = google.GoogleProfile{
+.id = <span class="s">"google-user-id"</span>,
+.email = <span class="s">"user@gmail.com"</span>,
+.name = <span class="s">"User Name"</span>,
+.picture = <span class="s">"https://..."</span>,
+};</pre>
+</div>
+
+<div class="callout">
+<strong>Example Project:</strong> Check the <code>smoney</code> project for a complete authentication implementation.
+</div>
+{% end %}

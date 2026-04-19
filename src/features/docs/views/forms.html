@@ -1,0 +1,105 @@
+{% extends "layout_docs" %}
+{% block "content" %}
+<h1>FormData</h1>
+<p>Spider provides a powerful <code>spider.form</code> module for parsing form submissions with support for arrays, dot notation for nested fields, and automatic URL decoding.</p>
+
+<h2 id="basic-usage">Basic Usage</h2>
+<p>Parse form data from a POST request using <code>req.form()</code>:</p>
+<div class="code-block">
+<div class="code-block-bar"><span class="code-block-lang">zig</span></div>
+<pre><span class="k">fn</span> <span class="f">handleSubmit</span>(alc: std.mem.Allocator, req: *spider.Request) !spider.Response {
+<span class="k">var</span> form = <span class="k">try</span> req.<span class="f">form</span>(alc);
+<span class="k">defer</span> form.<span class="f">deinit</span>();
+
+<span class="k">const</span> name = form.<span class="f">get</span>(<span class="s">"name"</span>);
+<span class="k">const</span> email = form.<span class="f">get</span>(<span class="s">"email"</span>);
+
+<span class="k">return</span> spider.Response.<span class="f">json</span>(alc, .{ .name = name, .email = email });
+}</pre>
+</div>
+
+<h2 id="array-fields">Array Fields</h2>
+<p>Fields with <code>[]</code> suffix are parsed as arrays:</p>
+<div class="code-block">
+<div class="code-block-bar"><span class="code-block-lang">html</span></div>
+<pre>&lt;form method="POST"&gt;
+&lt;input name="tags[]" value="zig"&gt;
+&lt;input name="tags[]" value="web"&gt;
+&lt;input name="tags[]" value="http"&gt;
+&lt;/form&gt;</pre>
+</div>
+<div class="code-block">
+<div class="code-block-bar"><span class="code-block-lang">zig</span></div>
+<pre><span class="k">fn</span> <span class="f">handleTags</span>(alc: std.mem.Allocator, req: *spider.Request) !spider.Response {
+<span class="k">var</span> form = <span class="k">try</span> req.<span class="f">form</span>(alc);
+<span class="k">defer</span> form.<span class="f">deinit</span>();
+
+<span class="c">// Get all values as an array</span>
+<span class="k">const</span> tags = form.<span class="f">getArray</span>(<span class="s">"tags"</span>);
+
+<span class="c">// Returns ["zig", "web", "http"]</span>
+<span class="k">return</span> spider.Response.<span class="f">json</span>(alc, .{ .tags = tags });
+}</pre>
+</div>
+
+<h2 id="nested-fields">Nested Fields (Dot Notation)</h2>
+<p>Access nested fields using dot notation:</p>
+<div class="code-block">
+<div class="code-block-bar"><span class="code-block-lang">html</span></div>
+<pre>&lt;form method="POST"&gt;
+&lt;input name="user.name" value="John"&gt;
+&lt;input name="user.email" value="john@example.com"&gt;
+&lt;input name="user.roles[]" value="admin"&gt;
+&lt;input name="user.roles[]" value="editor"&gt;
+&lt;/form&gt;</pre>
+</div>
+<div class="code-block">
+<div class="code-block-bar"><span class="code-block-lang">zig</span></div>
+<pre><span class="k">fn</span> <span class="f">handleUser</span>(alc: std.mem.Allocator, req: *spider.Request) !spider.Response {
+<span class="k">var</span> form = <span class="k">try</span> req.<span class="f">form</span>(alc);
+<span class="k">defer</span> form.<span class="f">deinit</span>();
+
+<span class="k">const</span> name = form.<span class="f">get</span>(<span class="s">"user.name"</span>); <span class="c">// "John"</span>
+<span class="k">const</span> email = form.<span class="f">get</span>(<span class="s">"user.email"</span>); <span class="c">// "john@example.com"</span>
+<span class="k">const</span> roles = form.<span class="f">getArray</span>(<span class="s">"user.roles"</span>); <span class="c">// ["admin", "editor"]</span>
+
+<span class="k">return</span> spider.Response.<span class="f">json</span>(alc, .{
+.name = name,
+.email = email,
+.roles = roles,
+});
+}</pre>
+</div>
+
+<h2 id="url-decoding">Automatic URL Decoding</h2>
+<p>Form values are automatically URL decoded:</p>
+<div class="code-block">
+<div class="code-block-bar"><span class="code-block-lang">zig</span></div>
+<pre><span class="c">// Input: "hello%20world" → Returns: "hello world"</span>
+<span class="c">// Input: "foo%2Fbar" → Returns: "foo/bar"</span>
+<span class="c">// Input: "hello+world" → Returns: "hello world" (plus = space)</span>
+<span class="k">const</span> value = form.<span class="f">get</span>(<span class="s">"field"</span>);</pre>
+</div>
+
+<h2 id="form-method">Method Signature</h2>
+<div class="code-block">
+<div class="code-block-bar"><span class="code-block-lang">zig</span></div>
+<pre><span class="c">// req.form(allocator) returns spider.form.FormData</span>
+<span class="k">var</span> form = <span class="k">try</span> req.<span class="f">form</span>(allocator);
+<span class="k">defer</span> form.<span class="f">deinit</span>();
+
+<span class="c">// Methods:</span>
+form.<span class="f">get</span>(key) <span class="c">// ?[]const u8 - first value or null</span>
+form.<span class="f">getArray</span>(key) <span class="c">// ?[]const []const u8 - all values or null</span>
+form.<span class="f">getNested</span>(path) <span class="c">// ?[]const u8 - alias for get() with dot path</span></pre>
+</div>
+
+<div class="pagination">
+<a href="#" hx-get="/docs/http-client" hx-target="#doc-content" hx-swap="innerHTML" onclick="setActive(document.querySelector('[hx-get=\'/docs/http-client\']'))">
+&#8592; HTTP Client
+</a>
+<a href="#" hx-get="/docs/testing" hx-target="#doc-content" hx-swap="innerHTML" onclick="setActive(document.querySelector('[hx-get=\'/docs/testing\']'))">
+Testing &#8594;
+</a>
+</div>
+{% end %}

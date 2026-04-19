@@ -1,0 +1,105 @@
+{% extends "layout_docs" %}
+{% block "content" %}
+<h1>Quick Start</h1>
+<p>Spider is a web framework for Zig. This guide gets you from zero to a running HTTP server in under 5 minutes.</p>
+
+<h2 id="prerequisites">Prerequisites</h2>
+<p>You need Zig <code>0.16.0-dev.2676+</code> or later. If you don't have it yet, download it at <a href="https://ziglang.org/download/" target="_blank">ziglang.org/download</a>.</p>
+
+<h2 id="create">Create a new project</h2>
+<div class="code-block">
+<div class="code-block-bar"><span class="code-block-lang">sh</span></div>
+<pre>mkdir myapp && cd myapp
+zig init</pre>
+</div>
+<p>This generates <code>build.zig</code>, <code>build.zig.zon</code>, and <code>src/main.zig</code>.</p>
+
+<h2 id="fetch">Fetch Spider</h2>
+<div class="code-block">
+<div class="code-block-bar"><span class="code-block-lang">sh</span></div>
+<pre>zig fetch --save git+https://github.com/llllOllOOll/spider</pre>
+</div>
+<p>Spider is added to your <code>build.zig.zon</code> automatically:</p>
+<div class="code-block">
+<div class="code-block-bar"><span class="code-block-lang">zig</span></div>
+<pre><span class="c">// build.zig.zon</span>
+.dependencies = .{
+    .spider = .{
+        .url = <span class="s">"git+https://github.com/llllOllOOll/spider#f79bfab69d1c99fa552583bd2cc627d34f894260"</span>,
+        .hash = <span class="s">"spider-0.3.0-RIctlSneAQAo31OblO8nx0AZLGT0-d5qjb4aAjdzp4lP"</span>,
+    },
+},</pre>
+</div>
+
+<h2 id="build">Configure build.zig</h2>
+<p>Open <code>build.zig</code> and add Spider as a dependency of your executable:</p>
+<div class="code-block">
+<div class="code-block-bar"><span class="code-block-lang">zig</span></div>
+<pre><span class="k">const</span> spider_dep = b.<span class="f">dependency</span>(<span class="s">"spider"</span>, .{ .target = target });
+
+<span class="k">const</span> exe = b.<span class="f">addExecutable</span>(.{
+    .name = <span class="s">"myapp"</span>,
+    .root_module = b.<span class="f">createModule</span>(.{
+        .root_source_file = b.<span class="f">path</span>(<span class="s">"src/main.zig"</span>),
+        .target = target,
+        .optimize = optimize,
+        .imports = &.{
+            .{ .name = <span class="s">"spider"</span>, .module = spider_dep.<span class="f">module</span>(<span class="s">"spider"</span>) },
+        },
+    }),
+});</pre>
+</div>
+
+<h2 id="example">Write your first handler</h2>
+<p>Replace <code>src/main.zig</code> with:</p>
+<div class="code-block">
+<div class="code-block-bar"><span class="code-block-lang">zig</span></div>
+<pre><span class="k">const</span> std = <span class="f">@import</span>(<span class="s">"std"</span>);
+<span class="k">const</span> spider = <span class="f">@import</span>(<span class="s">"spider"</span>);
+
+<span class="k">pub fn</span> <span class="f">main</span>(init: std.process.Init) !<span class="k">void</span> {
+    <span class="k">const</span> arena: std.mem.Allocator = init.arena.<span class="f">allocator</span>();
+    <span class="k">const</span> io = init.io;
+
+    <span class="k">const</span> server = <span class="k">try</span> spider.Spider.<span class="f">init</span>(
+        arena, io, <span class="s">"127.0.0.1"</span>, <span class="n">8080</span>, .{
+            <span class="c">// .layout = @embedFile("views/layout.html"), // optional</span>
+        }
+    );
+    <span class="k">defer</span> server.<span class="f">deinit</span>();
+
+    server.<span class="f">get</span>(<span class="s">"/ping"</span>, pingHandler).<span class="f">listen</span>() <span class="k">catch</span> |err| {
+        std.log.<span class="f">err</span>(<span class="s">"server error: {}"</span>, .{err});
+        <span class="k">return</span> err;
+    };
+}
+
+<span class="k">fn</span> <span class="f">pingHandler</span>(alc: std.mem.Allocator, _: *spider.Request) !spider.Response {
+    <span class="k">return</span> spider.Response.<span class="f">json</span>(alc, .{ .msg = <span class="s">"pong"</span> });
+}</pre>
+</div>
+
+<h2 id="run">Run</h2>
+<div class="code-block">
+<div class="code-block-bar"><span class="code-block-lang">sh</span></div>
+<pre>zig build run</pre>
+</div>
+<p>Test it in another terminal:</p>
+<div class="code-block">
+<div class="code-block-bar"><span class="code-block-lang">sh</span></div>
+<pre>curl http://localhost:8080/ping  <span class="c"># {"msg":"pong"}</span></pre>
+</div>
+
+<div class="callout">
+<strong>✓</strong> You should also see Spider logging each request in the terminal:<br>
+<code>[[SPIDER]] | 200 | 0ns | GET "/ping"</code>
+</div>
+
+<h2 id="next">Next Steps</h2>
+<p>Now that your server is running, explore what Spider can do:</p>
+<ul>
+<li><a href="#" hx-get="/docs/router" hx-target="#doc-content" hx-swap="innerHTML" onclick="setActive(document.querySelector('[hx-get=\'/docs/router\']'))">Router</a> — dynamic params, wildcards, chained routes</li>
+<li><a href="#" hx-get="/docs/postgres" hx-target="#doc-content" hx-swap="innerHTML" onclick="setActive(document.querySelector('[hx-get=\'/docs/postgres\']'))">PostgreSQL</a> — built-in PG client with struct mapping</li>
+<li><a href="#" hx-get="/docs/websocket" hx-target="#doc-content" hx-swap="innerHTML" onclick="setActive(document.querySelector('[hx-get=\'/docs/websocket\']'))">WebSocket</a> — real-time with hub broadcasting</li>
+</ul>
+{% end %}

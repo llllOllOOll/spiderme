@@ -8,7 +8,11 @@ const DriverUsecase = @import("driver_usecase.zig");
 const DocsController = @import("docs_controller.zig").DocsController;
 const IndexController = @import("index_controller.zig").IndexController;
 const ChatController = @import("chat_controller.zig").ChatController;
+const home = @import("features/home/controller.zig");
+const docs = @import("features/docs/controller.zig");
 var driverController: DriverController = undefined;
+
+const templates = @import("embedded_templates.zig").EmbeddedTemplates;
 
 fn getDrivers(alc: std.mem.Allocator, req: *spider.Request) !spider.Response {
     return driverController.getDrivers(alc, req);
@@ -30,36 +34,32 @@ pub fn main(init: std.process.Init) !void {
     defer spider.deinitWsHub(allocator);
 
     const server = try spider.Spider.init(allocator, io, "0.0.0.0", 3000, .{
-        .layout = null,
+        .templates = templates,
     });
     defer server.deinit();
 
     server
         .get("/assets/*", spider.static.serve)
-        .get("/drivers", getDrivers)
-        .get("/", IndexController.index)
-        .get("/ping", pingHandler)
-        .get("/chat", ChatController.chatPage)
-        .get("/docs/router", DocsController.docRouter)
-        .get("/docs/websocket", DocsController.docWebsocket)
-        .get("/docs/postgres", DocsController.docPostgres)
-        .get("/docs/metrics", DocsController.docMetrics)
-        .get("/docs/logger", DocsController.docLogger)
-        .get("/docs/pooling", DocsController.docPooling)
-        .get("/docs/static", DocsController.docStatic)
-        .get("/docs/shutdown", DocsController.docShutdown)
-        .get("/docs/groups", DocsController.docGroups)
-        .get("/docs/request", DocsController.docRequest)
-        .get("/docs/response", DocsController.docResponse)
-        .get("/docs/middleware", DocsController.docMiddleware)
-        .get("/docs/templates", DocsController.docTemplates)
-        .get("/docs/docker", DocsController.docDocker)
-        .get("/docs/testing", DocsController.docTesting)
-        .get("/docs/auth", DocsController.docAuth)
-        .get("/docs/http-client", DocsController.docHttpClient)
-        .get("/docs/forms", DocsController.docForms)
-        .get("/docs", DocsController.docs)
-        .get("/docs/quickstart", DocsController.docQuickstart)
+        .get("/", home.index)
+        .get("/docs", docs.index)
+        .get("/docs/router", docs.router)
+        .get("/docs/request", docs.request)
+        .get("/docs/response", docs.response)
+        .get("/docs/websocket", docs.websocket)
+        .get("/docs/postgres", docs.postgres)
+        .get("/docs/metrics", docs.metrics)
+        .get("/docs/logger", docs.logger)
+        .get("/docs/pooling", docs.pooling)
+        .get("/docs/static", docs.static)
+        .get("/docs/shutdown", docs.shutdown)
+        .get("/docs/groups", docs.groups)
+        .get("/docs/middleware", docs.middleware)
+        .get("/docs/templates", docs.templates)
+        .get("/docs/auth", docs.auth)
+        .get("/docs/http-client", docs.httpClient)
+        .get("/docs/forms", docs.forms)
+        .get("/docs/docker", docs.docker)
+        .get("/docs/testing", docs.testing)
         .listen() catch |err| return err;
 }
 

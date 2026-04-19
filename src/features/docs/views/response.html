@@ -1,0 +1,26 @@
+{% extends "layout_docs" %}
+{% block "content" %}
+<h1>Response</h1>
+<p>Build responses with JSON, HTML, plain text, or redirects. Set custom status codes and headers as needed.</p>
+
+<div class="code-block">
+<div class="code-block-bar"><span class="code-block-lang">zig</span></div>
+<pre><span class="c">// JSON</span>
+<span class="k">return</span> spider.Response.<span class="f">json</span>(alc, .{ .id = <span class="n">1</span>, .name = <span class="s">"Max"</span> });
+
+<span class="c">// HTML</span>
+<span class="k">return</span> spider.Response.<span class="f">html</span>(alc, <span class="s">"&lt;h1&gt;Hello&lt;/h1&gt;"</span>);
+
+<span class="c">// Plain text</span>
+<span class="k">return</span> spider.Response.<span class="f">text</span>(alc, <span class="s">"pong"</span>);
+
+<span class="c">// Redirect</span>
+<span class="k">return</span> spider.Response.<span class="f">redirect</span>(alc, <span class="s">"/dashboard"</span>);
+
+<span class="c">// Custom status + header</span>
+<span class="k">var</span> res = <span class="k">try</span> spider.Response.<span class="f">json</span>(alc, task);
+res.status = .created;
+<span class="k">try</span> res.headers.<span class="f">set</span>(alc, <span class="s">"X-Request-Id"</span>, <span class="s">"abc123"</span>);
+<span class="k">return</span> res;</pre>
+</div>
+{% end %}
