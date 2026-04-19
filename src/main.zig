@@ -56,7 +56,3 @@ pub fn main(init: std.process.Init) !void {
         .get("/docs/testing", docs.testing)
         .listen() catch |err| return err;
 }
-
-fn pingHandler(alc: std.mem.Allocator, _: *spider.Request) !spider.Response {
-    return spider.Response.json(alc, .{ .msg = "pong" });
-}
