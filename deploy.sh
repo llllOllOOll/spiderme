@@ -19,7 +19,7 @@ YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
-# Logging function
+# Logging functions
 log() {
     echo -e "${BLUE}[$(date +'%Y-%m-%d %H:%M:%S')]${NC} $1"
 }
@@ -39,9 +39,16 @@ error() {
 
 # Check if Docker is running
 check_docker() {
-    if ! docker info > /dev/null 2>&1; then
-        error "Docker is not running. Please start Docker daemon."
+    log "Checking Docker..."
+    
+    if ! command -v docker &> /dev/null; then
+        error "Docker is not installed"
     fi
+    
+    if ! docker info &> /dev/null; then
+        error "Docker is not running"
+    fi
+    
     success "Docker is running"
 }
 
@@ -82,95 +89,60 @@ push_image() {
     fi
 }
 
-# Deploy to production server (simulated - adjust for your environment)
+# Deploy to production server
 deploy_production() {
     log "Deploying to production server"
     
-    # This section would typically SSH into your production server
-    # For now, we'll simulate the deploy commands
+    # SSH into production server and deploy
+    ssh automacao "bash -s" << 'ENDSSH'
+        set -e
+        
+        IMAGE="llllollooll/spiderme:latest"
+        CONTAINER="spiderme-app"
+        NETWORK="network_public"
+        
+        echo "Pulling latest image..."
+        sudo docker pull "$IMAGE"
+        
+        echo "Stopping and removing old container..."
+        sudo docker rm -f "$CONTAINER" 2>/dev/null || true
+        
+        echo "Starting new container with Traefik labels..."
+        sudo docker run -d \
+            --name "$CONTAINER" \
+            --network "$NETWORK" \
+            -p 3000:3000 \
+            -e PORT=3000 \
+            -e POSTGRES_HOST=postgres \
+            -e POSTGRES_PORT=5432 \
+            -e POSTGRES_USER=spider \
+            -e POSTGRES_PASSWORD=spider \
+            -e POSTGRES_DB=spider_db \
+            --label "traefik.enable=true" \
+            --label "traefik.http.routers.spiderme.rule=Host(\`spiderme.org\`) || Host(\`www.spiderme.org\`)" \
+            --label "traefik.http.routers.spiderme.entrypoints=websecure" \
+            --label "traefik.http.routers.spiderme.tls=true" \
+            --label "traefik.http.routers.spiderme.tls.certresolver=letsencrypt" \
+            --label "traefik.http.routers.spiderme.middlewares=spider-headers" \
+            --label "traefik.http.services.spiderme.loadbalancer.server.port=3000" \
+            --label "traefik.http.middlewares.spider-headers.headers.customRequestHeaders.X-HX-Request=*" \
+            "$IMAGE"
+        
+        echo "Deploy finished!"
+ENDSSH
+}
+
+# Main execution
+main() {
+    log "Starting SpiderMe deployment..."
     
-    echo "Production deployment commands:"
-    echo "1. SSH into production server"
-    echo "2. Run: ./deploy.sh"  # Your existing deploy script
-    echo ""
+    check_docker
+    build_image
+    push_image
+    deploy_production
     
-    # Simulate the actual deploy script
-    cat << 'EOF'
-# On production server (automacao):
-IMAGE="llllollooll/spiderme:latest"
-CONTAINER="spiderme-app"
-NETWORK="network_public"
+    success "Deployment completed! Check https://spiderme.org"
+}
 
-echo "Pulling latest image..."
-sudo docker pull "$IMAGE"
-
-echo "Stopping and removing old container..."
-sudo docker rm -f "$CONTAINER" 2>/dev/null
-
-echo "Starting new container with Traefik labels..."
-sudo docker run -d \
-    --name "$CONTAINER" \
-    --network "$NETWORK" \
-    -p 3000:3000 \
-    -e POSTGRES_HOST=postgres-main \
-    -e POSTGRES_USER=n8n \
-    -e POSTGRES_PASSWORD="zivyarsql_n8n@5123" \
-    -e POSTGRES_DB=spider_db \
-    --label "traefik.enable=true" \
-    --label "traefik.http.routers.spiderme.rule=Host(\`spiderme.org\`) || Host(\`www.spiderme.org\`)" \
-    --label "traefik.http.routers.spiderme.entrypoints=websecure" \
-    --label "traefik.http.routers.spiderme.tls=true" \
-    --label "traefik.http.routers.spiderme.tls.certresolver=letsencrypt" \
-    --label "traefik.http.routers.spiderme.middlewares=spider-headers" \
-    --label "traefik.http.services.spiderme.loadbalancer.server.port=3000" \
-    --label "traefik.http.middlewares.spider-headers.headers.customRequestHeaders.X-HX-Request=*" \
-    "$IMAGE"
-
-echo "Deploy finished! Check https://spiderme.org"
-
-# Instructions for server deployment
-cat << 'EOF'
-
-📋 SERVER DEPLOYMENT INSTRUCTIONS:
-
-1. On your production server (automacao), create ~/deploy.sh:
-
-#!/bin/bash
-IMAGE="llllollooll/spiderme:latest"
-CONTAINER="spiderme-app"
-NETWORK="network_public"
-
-echo "Pulling latest image..."
-sudo docker pull "$IMAGE"
-
-echo "Stopping and removing old container..."
-sudo docker rm -f "$CONTAINER" 2>/dev/null
-
-echo "Starting new container with Traefik labels..."
-sudo docker run -d \
-    --name "$CONTAINER" \
-    --network "$NETWORK" \
-    -p 3000:3000 \
-    -e POSTGRES_HOST=postgres-main \
-    -e POSTGRES_USER=n8n \
-    -e POSTGRES_PASSWORD="zivyarsql_n8n@5123" \
-    -e POSTGRES_DB=spider_db \
-    --label "traefik.enable=true" \
-    --label "traefik.http.routers.spiderme.rule=Host(\`spiderme.org\`) || Host(\`www.spiderme.org\`)" \
-    --label "traefik.http.routers.spiderme.entrypoints=websecure" \
-    --label "traefik.http.routers.spiderme.tls=true" \
-    --label "traefik.http.routers.spiderme.tls.certresolver=letsencrypt" \
-    --label "traefik.http.routers.spiderme.middlewares=spider-headers" \
-    --label "traefik.http.services.spiderme.loadbalancer.server.port=3000" \
-    --label "traefik.http.middlewares.spider-headers.headers.customRequestHeaders.X-HX-Request=*" \
-    "$IMAGE"
-
-echo "Deploy finished! Check https://spiderme.org"
-
-2. Make it executable:
-chmod +x ~/deploy.sh
-
-3. Run deployment:
-./deploy.sh
-
-EOF
+# Run main function
+main
