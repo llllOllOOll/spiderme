@@ -5,7 +5,6 @@
 pub const EmbeddedTemplates = struct {
 
     home_index: []const u8 = @embedFile("features/home/views/index.html"),
-    docs_quickstart: []const u8 = @embedFile("features/docs/views/quickstart.html"),
     docs_router: []const u8 = @embedFile("features/docs/views/router.html"),
     docs_request: []const u8 = @embedFile("features/docs/views/request.html"),
     docs_response: []const u8 = @embedFile("features/docs/views/response.html"),
@@ -24,6 +23,7 @@ pub const EmbeddedTemplates = struct {
     docs_forms: []const u8 = @embedFile("features/docs/views/forms.html"),
     docs_docker: []const u8 = @embedFile("features/docs/views/docker.html"),
     docs_testing: []const u8 = @embedFile("features/docs/views/testing.html"),
+    docs_quickstart: []const u8 = @embedFile("features/docs/views/quickstart.html"),
     layout_home: []const u8 = @embedFile("shared/templates/layout_home.html"),
     layout_docs: []const u8 = @embedFile("shared/templates/layout_docs.html"),
     _auth: []const u8 = @embedFile("views/docs/auth.html"),
@@ -42,9 +42,9 @@ pub const EmbeddedTemplates = struct {
     _templates: []const u8 = @embedFile("views/docs/templates.html"),
     _testing: []const u8 = @embedFile("views/docs/testing.html"),
     _websocket: []const u8 = @embedFile("views/docs/websocket.html"),
-    _quickstart: []const u8 = @embedFile("views/docs/quickstart.html"),
     _request: []const u8 = @embedFile("views/docs/request.html"),
     _router: []const u8 = @embedFile("views/docs/router.html"),
+    _quickstart: []const u8 = @embedFile("views/docs/quickstart.html"),
     _chat: []const u8 = @embedFile("views/chat.html"),
     _layout_docs: []const u8 = @embedFile("views/layout_docs.html"),
     _layout_index: []const u8 = @embedFile("views/layout_index.html"),

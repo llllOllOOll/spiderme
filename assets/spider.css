@@ -100,15 +100,14 @@ body { background: var(--bg); color: var(--text); font-family: var(--mono); }
 
 /* Hero */
 .hero-section {
-  min-height: calc(100vh - 52px) !important;
-  display: grid !important;
-  grid-template-columns: 1fr 1.2fr !important;
-  align-items: center !important;
-  gap: 3rem;
-  max-width: 1060px;
-  margin: 0 auto;
-  padding: 2rem 2rem;
-  border-bottom: 1px solid var(--border);
+   min-height: calc(100vh - 52px) !important;
+   display: grid !important;
+   grid-template-columns: 1fr 1.2fr !important;
+   align-items: center !important;
+   gap: 3rem;
+   max-width: 1060px;
+   margin: 0 auto;
+   padding: 2rem 2rem;
 }
 .hero-title {
   font-family: var(--display); font-weight: 900;
