@@ -16,14 +16,14 @@
 <div class="code-block">
 <div class="code-block-bar"><span class="code-block-lang">zig</span></div>
 <pre><span class="k">const</span> html = <span class="k">try</span> spider.template.<span class="f">render</span>(tmpl, .{
-.title = <span class="s">"Dashboard"</span>,
-.user_name = <span class="s">"Alice"</span>,
-.count = <span class="n">42</span>,
+    .title = <span class="s">"Dashboard"</span>,
+    .user_name = <span class="s">"Alice"</span>,
+    .count = <span class="n">42</span>,
 }, alc);</pre>
 </div>
 
 <h2 id="conditionals">Conditionals</h2>
-<p>Use <code>{% if %}</code> for conditional rendering:</p>
+<p>Use <code>&#123;% if %&#125;</code> for conditional rendering:</p>
 <div class="code-block">
 <div class="code-block-bar"><span class="code-block-lang">html</span></div>
 <pre>{% raw %}
@@ -68,7 +68,7 @@
 <p>Boolean strings <code>"true"</code>, <code>"1"</code>, <code>"yes"</code> evaluate to true. <code>"false"</code>, <code>"0"</code>, <code>"no"</code> evaluate to false.</p>
 
 <h2 id="loop">Loops</h2>
-<p>Use <code>{% for %}</code> to iterate over a slice:</p>
+<p>Use <code>&#123;% for %&#125;</code> to iterate over a slice:</p>
 <div class="code-block">
 <div class="code-block-bar"><span class="code-block-lang">html</span></div>
 <pre>{% raw %}
@@ -82,12 +82,12 @@
 <div class="code-block">
 <div class="code-block-bar"><span class="code-block-lang">zig</span></div>
 <pre><span class="k">const</span> html = <span class="k">try</span> spider.template.<span class="f">render</span>(tmpl, .{
-.items = items,
+    .items = items,
 }, alc);</pre>
 </div>
 
 <h2 id="blocks">Named blocks &amp; includes</h2>
-<p>Define blocks with <code>{% block %}</code> and include them with <code>{% template %}</code>:</p>
+<p>Define blocks with <code>&#123;% block %&#125;</code> and include them with <code>&#123;% template %&#125;</code>:</p>
 <div class="code-block">
 <div class="code-block-bar"><span class="code-block-lang">html</span></div>
 <pre>{% raw %}
@@ -108,11 +108,6 @@
 &lt;main&gt;{% template "content" %}&lt;/main&gt;
 {% endraw %}</pre>
 </div>
-<div class="code-block">
-<div class="code-block-bar"><span class="code-block-lang">zig</span></div>
-<pre><span class="c">// Render a specific block</span>
-<span class="k">const</span> html = <span class="k">try</span> spider.template.<span class="f">renderBlock</span>(tmpl, <span class="s">"content"</span>, data, alc);</pre>
-</div>
 
 <h2 id="filters">Filters</h2>
 <p>Apply filters with the <code>|</code> pipe operator:</p>
@@ -127,74 +122,64 @@
 <div class="code-block-bar"><span class="code-block-lang">zig</span></div>
 <pre><span class="c">// If name is empty/null, "Guest" is used instead</span>
 <span class="k">const</span> html = <span class="k">try</span> spider.template.<span class="f">render</span>(tmpl, .{
-.name = <span class="s">""</span>, <span class="c">// or null</span>
+    .name = <span class="s">""</span>, <span class="c">// or null</span>
 }, alc);</pre>
 </div>
 
 <h2 id="rendering">Rendering</h2>
 <p>Spider provides three rendering functions:</p>
+
+<h3 id="render">render</h3>
+<p>Renders a template string directly. No layout, no blocks.</p>
 <div class="code-block">
 <div class="code-block-bar"><span class="code-block-lang">zig</span></div>
-<pre><span class="c">// Simple template (no blocks)</span>
-<span class="k">const</span> html = <span class="k">try</span> spider.template.<span class="f">render</span>(tmpl, data, alc);
-
-<span class="c">// Render a specific named block</span>
-<span class="k">const</span> html = <span class="k">try</span> spider.template.<span class="f">renderBlock</span>(tmpl, <span class="s">"content"</span>, data, alc);
-
-<span class="c">// HTMX-aware rendering (automatic partial/full page)</span>
-<span class="k">return</span> spider.<span class="f">renderView</span>(alc, req, view_tmpl, data);</pre>
+<pre><span class="k">const</span> html = <span class="k">try</span> spider.template.<span class="f">render</span>(tmpl, data, alc);</pre>
 </div>
 
-<h3 id="renderView">renderView — HTMX-Aware Rendering</h3>
-<p><code>renderView</code> automatically handles HTMX requests:</p>
+<h3 id="response-html">Response.html</h3>
+<p>Wraps a raw <code>[]const u8</code> in an HTML response. No template rendering.</p>
+<div class="code-block">
+<div class="code-block-bar"><span class="code-block-lang">zig</span></div>
+<pre><span class="k">return</span> spider.Response.<span class="f">html</span>(alc, content);</pre>
+</div>
+
+<h3 id="chuckberry">chuckBerry</h3>
+<p>The recommended function for handlers. Resolves the template by name, handles <code>&#123;% extends %&#125;</code>, and detects HTMX requests automatically:</p>
+<div class="code-block">
+<div class="code-block-bar"><span class="code-block-lang">zig</span></div>
+<pre><span class="k">pub fn</span> <span class="f">index</span>(alc: std.mem.Allocator, req: *spider.Request) !spider.Response {
+    <span class="k">const</span> context = <span class="k">try</span> buildContext(alc, req);
+    <span class="k">return</span> spider.<span class="f">chuckBerry</span>(alc, req, <span class="s">"home_index"</span>, context);
+}</pre>
+</div>
+<p><code>chuckBerry</code> automatically:</p>
 <ul>
-<li><strong>HTMX request</strong> (<code>HX-Request</code> header): Renders only the <code>"content"</code> block</li>
-<li><strong>Direct request</strong>: Prepends registered layout, renders <code>"base"</code> block</li>
+<li>Normalizes template name (<code>"home/index"</code> → <code>"home_index"</code>)</li>
+<li>Resolves <code>&#123;% extends %&#125;</code> and merges layout</li>
+<li>HTMX request (<code>HX-Request</code>): returns <code>&#123;% block "content" %&#125;</code> only</li>
+<li>Normal request or <code>HX-Boosted</code>: returns <code>&#123;% block "base" %&#125;</code> with full layout</li>
 </ul>
 <div class="code-block">
 <div class="code-block-bar"><span class="code-block-lang">zig</span></div>
-<pre><span class="c">// main.zig — Register layout with AppConfig</span>
-<span class="k">const</span> server = <span class="k">try</span> spider.Spider.<span class="f">init</span>(allocator, io, host, port, .{
-.layout = @<span class="f">embedFile</span>(<span class="s">"views/layout.html"</span>),
-});</pre>
-</div>
-<p>Template structure:</p>
-<div class="code-block">
-<div class="code-block-bar"><span class="code-block-lang">html</span></div>
-<pre>{% raw %}
-<span class="c">&lt;!-- views/layout.html --&gt;</span>
-{% block "base" %}
-&lt;!DOCTYPE html&gt;
-&lt;html&gt;
-&lt;body&gt;
-&lt;nav&gt;Site Nav&lt;/nav&gt;
-&lt;div id="content"&gt;
-{% template "content" %}
-&lt;/div&gt;
-&lt;/body&gt;
-&lt;/html&gt;
-{% end %}
-
-<span class="c">&lt;!-- views/dashboard.html --&gt;</span>
-{% block "content" %}
-&lt;h1&gt;Dashboard&lt;/h1&gt;
-&lt;p&gt;Welcome!&lt;/p&gt;
-{% end %}
-{% endraw %}</pre>
-</div>
-<div class="code-block">
-<div class="code-block-bar"><span class="code-block-lang">zig</span></div>
-<pre><span class="c">// Handler — renderView handles both cases automatically</span>
-<span class="k">fn</span> <span class="f">dashboardHandler</span>(alc: std.mem.Allocator, req: *spider.Request) !spider.Response {
-<span class="k">const</span> view = @<span class="f">embedFile</span>(<span class="s">"views/dashboard.html"</span>);
-<span class="k">return</span> spider.<span class="f">renderView</span>(alc, req, view, .{});
+<pre><span class="c">// How chuckBerry handles requests internally (simplified)</span>
+<span class="k">const</span> is_htmx = req.headers.get(<span class="s">"HX-Request"</span>) != <span class="k">null</span>;
+<span class="k">const</span> is_boosted = req.headers.get(<span class="s">"HX-Boosted"</span>) != <span class="k">null</span>;
+<span class="k">if</span> (is_htmx <span class="k">and</span> !is_boosted) {
+    <span class="c">// Partial update: returns &#123;% block "content" %&#125; only</span>
+    <span class="k">return</span> renderBlock(<span class="s">"content"</span>, data, alc);
+} <span class="k">else</span> {
+    <span class="c">// Full page: returns &#123;% block "base" %&#125; with layout</span>
+    <span class="k">return</span> renderBlock(<span class="s">"base"</span>, data, alc);
 }</pre>
 </div>
-<div class="callout">
-<strong>render vs renderBlock vs renderView:</strong><br>
-• <code>render</code> — simple templates without blocks<br>
-• <code>renderBlock</code> — render specific named block (HTMX partials)<br>
-• <code>renderView</code> — HTMX-aware with layout support
+
+<h2 id="auto">Auto-generate Templates</h2>
+<p>Add to <code>build.zig</code> to embed all <code>.html</code> files at build time:</p>
+<div class="code-block">
+<div class="code-block-bar"><span class="code-block-lang">zig</span></div>
+<pre><span class="k">const</span> gen = b.addRunArtifact(spider_dep.artifact(<span class="s">"generate-templates"</span>));
+gen.addArg(<span class="s">"src/"</span>);
+gen.addArg(<span class="s">"src/embedded_templates.zig"</span>);</pre>
 </div>
 
 <div class="pagination">
