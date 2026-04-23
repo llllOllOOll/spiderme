@@ -6,10 +6,8 @@ pub const EmbeddedTemplates = struct {
 
     home_index: []const u8 = @embedFile("features/home/views/index.html"),
     docs_router: []const u8 = @embedFile("features/docs/views/router.html"),
-    docs_request: []const u8 = @embedFile("features/docs/views/request.html"),
     docs_response: []const u8 = @embedFile("features/docs/views/response.html"),
     docs_websocket: []const u8 = @embedFile("features/docs/views/websocket.html"),
-    docs_postgres: []const u8 = @embedFile("features/docs/views/postgres.html"),
     docs_metrics: []const u8 = @embedFile("features/docs/views/metrics.html"),
     docs_logger: []const u8 = @embedFile("features/docs/views/logger.html"),
     docs_static: []const u8 = @embedFile("features/docs/views/static.html"),
@@ -22,9 +20,11 @@ pub const EmbeddedTemplates = struct {
     docs_docker: []const u8 = @embedFile("features/docs/views/docker.html"),
     docs_testing: []const u8 = @embedFile("features/docs/views/testing.html"),
     docs_quickstart: []const u8 = @embedFile("features/docs/views/quickstart.html"),
-    docs_pooling_test: []const u8 = @embedFile("features/docs/views/pooling_test.html"),
     docs_pooling: []const u8 = @embedFile("features/docs/views/pooling.md"),
+    docs_pooling_test: []const u8 = @embedFile("features/docs/views/pooling_test.html"),
+    docs_request: []const u8 = @embedFile("features/docs/views/request.html"),
     docs_templates: []const u8 = @embedFile("features/docs/views/templates.md"),
+    docs_postgres: []const u8 = @embedFile("features/docs/views/postgres.md"),
     layout_home: []const u8 = @embedFile("shared/templates/layout_home.html"),
     layout_docs: []const u8 = @embedFile("shared/templates/layout_docs.html"),
 

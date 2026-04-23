@@ -9,13 +9,45 @@
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800;900&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@1.0.4/css/bulma.min.css">
 <link rel="stylesheet" href="/assets/spider.css">
-<script src="https://cdn.jsdelivr.net/npm/htmx.org@1.9.12/dist/htmx.min.js"></script>
-<script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
-
+<link rel="stylesheet" href="https://unpkg.com/nprogress@0.2.0/nprogress.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+<style>
+  .skeleton {
+    background: linear-gradient(90deg, #2a2a2a 25%, #333 50%, #2a2a2a 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+    border-radius: 4px;
+  }
+  @keyframes shimmer {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+  }
+</style>
+<script src="https://cdn.jsdelivr.net/npm/htmx.org@1.9.12/dist/htmx.min.js"></script>
+<script src="https://unpkg.com/nprogress@0.2.0/nprogress.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
-<script>hljs.highlightAll();</script>
-
+<script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+<script>
+  hljs.highlightAll();
+  document.addEventListener("htmx:beforeRequest", () => {
+    NProgress.start();
+    document.getElementById("doc-content").innerHTML = `
+      <div class="skeleton" style="height:32px; width:50%; margin-bottom:24px;"></div>
+      <div class="skeleton" style="height:16px; width:90%; margin-bottom:8px;"></div>
+      <div class="skeleton" style="height:16px; width:85%; margin-bottom:8px;"></div>
+      <div class="skeleton" style="height:16px; width:80%; margin-bottom:32px;"></div>
+      <div class="skeleton" style="height:120px; width:100%; margin-bottom:24px;"></div>
+      <div class="skeleton" style="height:16px; width:88%; margin-bottom:8px;"></div>
+      <div class="skeleton" style="height:16px; width:75%; margin-bottom:8px;"></div>
+    `;
+  });
+  document.addEventListener("htmx:afterRequest", () => NProgress.done());
+  document.addEventListener("htmx:afterSwap", (e) => {
+    e.detail.target.querySelectorAll("pre code").forEach((block) => {
+      hljs.highlightElement(block);
+    });
+  });
+</script>
 </head>
 <body>
 
@@ -81,10 +113,12 @@ onclick="setActive(this)">Pooling</a>
 hx-get="/docs/websocket" hx-target="#doc-content" hx-swap="innerHTML" hx-select="#doc-content"
 onclick="setActive(this)">WebSocket</a>
 <a class="sidebar-link"
-hx-get="/docs/templates" hx-target="#doc-content" hx-swap="innerHTML" hx-select="#doc-content"
+hx-get="/docs/templates" hx-target="#doc-content" hx-swap="innerHTML"
+            hx-select="#doc-content"
 onclick="setActive(this)">Templates</a>
 <a class="sidebar-link"
-hx-get="/docs/static" hx-target="#doc-content" hx-swap="innerHTML" hx-select="#doc-content"
+hx-get="/docs/static" hx-target="#doc-content" hx-swap="innerHTML" 
+            hx-select="#doc-content"
 onclick="setActive(this)">Static Files</a>
 <a class="sidebar-link"
 hx-get="/docs/metrics" hx-target="#doc-content" hx-swap="innerHTML" hx-select="#doc-content"
@@ -139,14 +173,14 @@ onclick="setActive(this)">Testing</a>
 
 <script>
 function setActive(el) {
-document.querySelectorAll('.sidebar-link').forEach(l => l.classList.remove('active'));
-el.classList.add('active');
+  document.querySelectorAll('.sidebar-link').forEach(l => l.classList.remove('active'));
+  el.classList.add('active');
 }
 function toggleMobileMenu() {
-const menu = document.getElementById('mobile-menu');
-const btn = document.querySelector('.nav-hamburger');
-menu.classList.toggle('open');
-btn.classList.toggle('open');
+  const menu = document.getElementById('mobile-menu');
+  const btn = document.querySelector('.nav-hamburger');
+  menu.classList.toggle('open');
+  btn.classList.toggle('open');
 }
 </script>
 </body>

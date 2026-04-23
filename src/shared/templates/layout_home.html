@@ -9,11 +9,15 @@
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@700;800;900&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@1.0.4/css/bulma.min.css">
 <link rel="stylesheet" href="/assets/spider.css">
+<link rel="stylesheet" href="https://unpkg.com/nprogress@0.2.0/nprogress.css">
 <script src="https://cdn.jsdelivr.net/npm/htmx.org@1.9.12/dist/htmx.min.js"></script>
+<script src="https://unpkg.com/nprogress@0.2.0/nprogress.js"></script>
 <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+<script>
+  window.addEventListener("beforeunload", () => NProgress.start());
+</script>
 </head>
 <body>
-
 <nav class="site-nav">
 <div class="nav-inner"
 style="display:flex;align-items:center;justify-content:space-between;max-width:1060px;margin:0 auto;padding:0 2rem;height:100%;">
@@ -37,15 +41,13 @@ Spider
 <a href="https://github.com/llllOllOOll/spider" target="_blank">GitHub</a>
 </div>
 </nav>
-
 {% template "content" %}
-
 <script>
 function toggleMobileMenu() {
-const menu = document.getElementById('mobile-menu');
-const btn = document.querySelector('.nav-hamburger');
-menu.classList.toggle('open');
-btn.classList.toggle('open');
+  const menu = document.getElementById('mobile-menu');
+  const btn = document.querySelector('.nav-hamburger');
+  menu.classList.toggle('open');
+  btn.classList.toggle('open');
 }
 </script>
 </body>
