@@ -1,0 +1,23 @@
+{% extends "layout_docs" %}
+{% block "content" %}
+<h1>Pooling</h1>
+<p>Spider manages the PostgreSQL connection pool internally via <code>spider.pg</code>. No manual acquire/release needed — <code>query()</code>, <code>queryParams()</code>, and <code>exec()</code> handle it automatically. The pool size defaults to 10.</p>
+<pre><code class="zig">
+// Pool is invisible — Spider manages acquire/release internally
+var result = try db.query("SELECT ..."); // acquires connection
+defer result.deinit(); // releases connection
+
+// Configure pool size via DbConfig
+try spg.init(allocator, io, .{
+    .host = "localhost",
+    .database = "spider_db",
+    .pool_size = 20, // default: 10
+});
+
+// Low-level API — for advanced use cases
+const pool = spg.Pool;
+const conn = try pool.acquire();
+defer pool.release(conn);
+var result = try spg.queryConn(conn, "SELECT ...");
+</code></pre>
+{% end %}
