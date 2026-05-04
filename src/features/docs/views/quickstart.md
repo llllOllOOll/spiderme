@@ -74,7 +74,7 @@ pub fn main() void {
 
     server
         .get("/", homeHandler)
-        .listen(3000) catch {};
+        .listen(.{ .port = 3000 }) catch {};
 }
 
 fn homeHandler(c: *spider.Ctx) !spider.Response {
@@ -92,6 +92,15 @@ zig build run
 Speed server starting on port 3000...
 Server listening on http://127.0.0.1:3000
 Starting 12 worker threads
+```
+
+`listen` accepts `port` and `host` — any omitted field falls back to `spider.config.zig`:
+
+```zig
+.listen(.{ .port = 3000 })                    // override port only
+.listen(.{ .host = "0.0.0.0" })               // override host only
+.listen(.{ .port = 3000, .host = "0.0.0.0" }) // override both
+.listen(.{})                                   // use config values
 ```
 
 Test it:
@@ -137,7 +146,7 @@ pub fn main() void {
 
     server
         .get("/", home)
-        .listen(3000) catch {};
+        .listen(.{ .port = 3000 }) catch {};
 }
 
 fn home(c: *spider.Ctx) !spider.Response {

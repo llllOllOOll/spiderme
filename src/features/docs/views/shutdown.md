@@ -18,7 +18,7 @@ pub fn main(init: std.process.Init) !void {
     var server = spider.app();
     defer server.deinit();
     
-    server.get("/", handler).listen(8080) catch |err| {
+    server.get("/", handler).listen(.{ .port = 8080 }) catch |err| {
         if (err == error.SigTerm) {
             std.debug.print("Shutting down gracefully...\n", .{});
             return;
@@ -58,7 +58,7 @@ pub fn main(init: std.process.Init) !void {
         // ... other cleanup
     }
     
-    server.get("/", handler).listen(8080) catch {};
+    server.get("/", handler).listen(.{ .port = 8080 }) catch {};
 }
 ```
 

@@ -4,9 +4,8 @@ pub fn build(b: *std.Build) void {
     const target = b.standardTargetOptions(.{});
     const optimize = b.standardOptimizeOption(.{});
 
-    const spider_dep = b.dependency("spider", .{
-        .target = target,
-    });
+    const spider_dep = b.dependency("spider", .{ .target = target });
+    const spider_mod = spider_dep.module("spider");
 
     const exe = b.addExecutable(.{
         .name = "spiderme",
@@ -16,7 +15,7 @@ pub fn build(b: *std.Build) void {
             .optimize = optimize,
             .link_libc = true,
             .imports = &.{
-                .{ .name = "spider", .module = spider_dep.module("spider") },
+                .{ .name = "spider", .module = spider_mod },
             },
         }),
     });

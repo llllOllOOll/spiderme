@@ -47,7 +47,7 @@ pub fn index(c: *spider.Ctx) !spider.Response {
 ```zig
 var server = spider.app();
 server.get("/", index);
-server.listen(8080) catch {};
+server.listen(.{ .port = 8080 }) catch {};
 ```
 
 Visit `http://localhost:8080/` — you'll see `Hello, Seven!`.
@@ -76,75 +76,87 @@ Missing variables render as empty string — no errors, no crashes.
 
 ## Conditionals
 
-Use `{ if condition }` to conditionally render content:
+Use `if (condition) { }` to conditionally render content:
 
 **Basic condition:**
 
 ```html
-{ if is_admin }
+if (is_admin) {
   <a href="/admin">Admin Panel</a>
-{ endif }
+}
 ```
 
 **Negation:**
 
 ```html
-{ if !is_guest }
+if (!is_guest) {
   <p>Welcome back!</p>
-{ endif }
+}
 ```
 
 **Else branch:**
 
 ```html
-{ if logged_in }
+if (logged_in) {
   <a href="/logout">Logout</a>
-{ else }
+} else {
   <a href="/login">Login</a>
-{ endif }
+}
 ```
 
-**Equality:**
+**Else if chain:**
 
 ```html
-{ if status == "active" }
-  <span class="badge green">Active</span>
-{ endif }
+if (role == "admin") {
+  <li>Admin Panel</li>
+} else if (role == "moderator") {
+  <li>Moderator Tools</li>
+} else {
+  <li>Standard User</li>
+}
 ```
 
-**Comparison operators:**
+**Comparison operators:** `==`, `!=`, `<`, `<=`, `>`, `>=`
 
 ```html
-{ if age >= 18 }
+if (age >= 18) {
   <p>You can vote!</p>
-{ endif }
+}
+```
+
+**List length:**
+
+```html
+if (users.len > 0) {
+  <p>{ users.len } users found</p>
+}
 ```
 
 **Logical AND / OR:**
 
 ```html
-{ if is_admin or is_moderator }
+if (is_admin or is_moderator) {
   <button>Moderate</button>
-{ endif }
+}
 
-{ if is_logged_in and is_premium }
+if (is_logged_in and is_premium) {
   <p>Premium features unlocked!</p>
-{ endif }
+}
 ```
 
 Boolean strings `"true"`, `"1"`, `"yes"` evaluate to true. `"false"`, `"0"`, `"no"` evaluate to false. Empty string and missing variables evaluate to false.
 
 ## Loops
 
-Use `{ for item in items }` to iterate over a slice:
+Use `for (items) |item| { }` to iterate over a slice:
 
 **Template:**
 
 ```html
 <ul>
-{ for item in items }
+for (items) |item| {
   <li>{ item.value }</li>
-{ endfor }
+}
 </ul>
 ```
 
@@ -166,8 +178,8 @@ pub fn data(c: *spider.Ctx) !spider.Response {
 
 ```html
 <ul>
-  <li>Lunas</li>
-  <li>Maylla</li>
+<li>Lunas</li>
+<li>Maylla</li>
 </ul>
 ```
 
@@ -291,17 +303,6 @@ This is **markdown** and it gets converted to HTML automatically.
 
 Use `c.view("docs/quickstart", .{}, .{})` — Spider detects the `<!-- md -->` signature and converts markdown to HTML before rendering.
 
-## Filters
-
-Apply filters with the `??` coalescing operator (more filters coming soon):
-
-```html
-<p>Hello { name ?? "Guest" }!</p>
-<p>Total: { amount ?? "0.00" }</p>
-```
-
-If `name` is empty or missing, `"Guest"` is used instead.
-
 ## Template modes
 
 ### Embed mode (recommended)
@@ -334,18 +335,15 @@ Files are discovered automatically — add a new `.html` or `.md` file, rebuild,
 ## Tag reference
 
 | Tag | Syntax | Description |
-|-----|---------|-------------|
+|-----|--------|-------------|
 | Interpolation | `{ variable }` | Render variable value |
 | Coalescing | `{ var ?? "default" }` | Fallback for empty/missing values |
-| If | `{ if condition }` | Conditional block |
-| Else if | `{ elif condition }` | Else-if branch |
-| Else | `{ else }` | Else branch |
-| End if | `{ endif }` | Close if block |
-| For loop | `{ for item in items }` | Iterate over slice |
-| End for | `{ endfor }` | Close for loop |
+| Conditional | `if (condition) { ... }` | Conditional block |
+| Else if | `} else if (condition) {` | Else-if branch |
+| Else | `} else {` | Else branch |
+| For loop | `for (items) \|item\| { ... }` | Iterate over slice with capture |
 | Extends | `extends "layout"` | Use a layout (first line only) |
-| Slot | `{ slot }` | Placeholder in layout |
+| Slot | `{ slot }` | Placeholder in layout/component |
 | Named slot | `{ slot_header }` | Named placeholder |
-| Component | `<ComponentName />` | Reusable PascalCase component |
-| Raw | `{ raw }` | Output content literally |
-| End raw | `{ endraw }` | Close raw block |
+| Component | `<ComponentName />` | Self-closing PascalCase component |
+| Component with slot | `<ComponentName>...</ComponentName>` | PascalCase component with slot content |

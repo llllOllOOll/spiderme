@@ -45,5 +45,5 @@ pub fn main(init: std.process.Init) !void {
         .get("/docs/forms", docs.forms)
         .get("/docs/docker", docs.docker)
         .get("/docs/testing", docs.testing)
-        .listen(3000) catch |err| return err;
+        .listen(.{ .port = 3000, .host = "0.0.0.0" }) catch |err| return err;
 }

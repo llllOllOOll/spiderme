@@ -17,11 +17,11 @@ WORKDIR /app
 COPY --from=builder /app/zig-out/bin/spiderme /app/spiderme
 
 # Copy static assets (critical for /assets/* routes)
-COPY --from=builder /app/assets /app/assets
+COPY --from=builder /app/public /app/public
 
 # Ensure assets are readable and directories are traversable
-RUN find /app/assets -type d -exec chmod 755 {} \; && \
-    find /app/assets -type f -exec chmod 644 {} \;
+RUN find /app/public -type d -exec chmod 755 {} \; && \
+    find /app/public -type f -exec chmod 644 {} \;
 
 EXPOSE 3000
 

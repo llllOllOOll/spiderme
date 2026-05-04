@@ -19,7 +19,7 @@ Metrics are exposed at `/spider/metrics` automatically when using `spider.app()`
 
 ```zig
 var server = spider.app();
-server.listen(8080) catch {};
+server.listen(.{ .port = 8080 }) catch {};
 
 // GET /spider/metrics returns:
 // spider_requests_total 42
@@ -59,7 +59,7 @@ Spider includes a built-in metrics dashboard at `/spider/dashboard` when using `
 
 ```zig
 var server = spider.app();
-server.listen(8080) catch {};
+server.listen(.{ .port = 8080 }) catch {};
 
 // Visit http://localhost:8080/spider/dashboard
 ```

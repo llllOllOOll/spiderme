@@ -17,7 +17,7 @@ pub fn main(init: std.process.Init) !void {
         .get("/", homeHandler)
         .post("/users", createUser)
         .get("/users/:id", getUser)
-        .listen(8080) catch {};
+        .listen(.{ .port = 8080 }) catch {};
 }
 ```
 
