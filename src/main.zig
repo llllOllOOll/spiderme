@@ -6,7 +6,7 @@ const home = @import("features/home/controller.zig");
 const docs = @import("features/docs/controller.zig");
 const drivers = @import("features/drivers/controller.zig");
 
-const templates = @import("embedded_templates.zig").EmbeddedTemplates;
+// const templates = @import("embedded_templates.zig").EmbeddedTemplates;
 
 pub fn main(init: std.process.Init) !void {
     const allocator = init.arena.allocator();
