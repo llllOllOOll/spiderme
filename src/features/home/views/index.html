@@ -24,7 +24,7 @@ extends "layout"
 
     server
         .<span class="f">get</span>(<span class="s">"/"</span>, homeHandler)
-        .<span class="f">listen</span>(<span class="n">3000</span>) <span class="k">catch</span> {};
+        .<span class="f">listen</span>(.{ .port = <span class="n">3000</span> }) <span class="k">catch</span> {};
 }
 
 <span class="k">fn</span> <span class="f">homeHandler</span>(c: *spider.Ctx) !spider.Response {
