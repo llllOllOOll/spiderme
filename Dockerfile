@@ -16,12 +16,12 @@ WORKDIR /app
 # Copy the binary
 COPY --from=builder /app/zig-out/bin/spiderme /app/spiderme
 
-# Copy static assets (critical for /assets/* routes)
+# Copy static assets
 COPY --from=builder /app/public /app/public
 
-# Ensure assets are readable and directories are traversable
-RUN find /app/public -type d -exec chmod 755 {} \; && \
-    find /app/public -type f -exec chmod 644 {} \;
+# Copy views for runtime template mode (html + md only, no source)
+COPY --from=builder /app/src /app/src
+RUN find /app/src -name "*.zig" -delete
 
 EXPOSE 3000
 
