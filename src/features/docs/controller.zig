@@ -1,78 +1,86 @@
 const std = @import("std");
 const spider = @import("spider");
 
-pub fn index(alloc: std.mem.Allocator, req: *spider.Request) !spider.Response {
-    return spider.chuckBerry(alloc, req, "docs/quickstart", .{});
+pub fn index(c: *spider.Ctx) !spider.Response {
+    return c.view("docs/index", .{}, .{});
 }
 
-pub fn router(alloc: std.mem.Allocator, req: *spider.Request) !spider.Response {
-    return spider.chuckBerry(alloc, req, "docs/router", .{});
+pub fn quickstart(c: *spider.Ctx) !spider.Response {
+    return c.view("docs/quickstart", .{}, .{});
 }
 
-pub fn request(alloc: std.mem.Allocator, req: *spider.Request) !spider.Response {
-    return spider.chuckBerry(alloc, req, "docs/request", .{});
+pub fn templates(c: *spider.Ctx) !spider.Response {
+    return c.view("docs/templates", .{}, .{});
 }
 
-pub fn response(alloc: std.mem.Allocator, req: *spider.Request) !spider.Response {
-    return spider.chuckBerry(alloc, req, "docs/response", .{});
+pub fn mdTest(c: *spider.Ctx) !spider.Response {
+    return c.view("docs/templates", .{ .name = "World" }, .{});
 }
 
-pub fn websocket(alloc: std.mem.Allocator, req: *spider.Request) !spider.Response {
-    return spider.chuckBerry(alloc, req, "docs/websocket", .{});
+pub fn router(c: *spider.Ctx) !spider.Response {
+    return c.view("docs/router", .{}, .{});
 }
 
-pub fn postgres(alloc: std.mem.Allocator, req: *spider.Request) !spider.Response {
-    return spider.chuckBerry(alloc, req, "docs/postgres", .{});
+pub fn request(c: *spider.Ctx) !spider.Response {
+    return c.view("docs/request", .{}, .{});
 }
 
-pub fn metrics(alloc: std.mem.Allocator, req: *spider.Request) !spider.Response {
-    return spider.chuckBerry(alloc, req, "docs/metrics", .{});
+pub fn response(c: *spider.Ctx) !spider.Response {
+    return c.view("docs/response", .{}, .{});
 }
 
-pub fn logger(alloc: std.mem.Allocator, req: *spider.Request) !spider.Response {
-    return spider.chuckBerry(alloc, req, "docs/logger", .{});
+pub fn websocket(c: *spider.Ctx) !spider.Response {
+    return c.view("docs/websocket", .{}, .{});
 }
 
-pub fn pooling(alloc: std.mem.Allocator, req: *spider.Request) !spider.Response {
-    return spider.chuckBerry(alloc, req, "docs/pooling", .{});
+pub fn postgres(c: *spider.Ctx) !spider.Response {
+    return c.view("docs/postgres", .{}, .{});
 }
 
-pub fn static(alloc: std.mem.Allocator, req: *spider.Request) !spider.Response {
-    return spider.chuckBerry(alloc, req, "docs/static", .{});
+pub fn metrics(c: *spider.Ctx) !spider.Response {
+    return c.view("docs/metrics", .{}, .{});
 }
 
-pub fn shutdown(alloc: std.mem.Allocator, req: *spider.Request) !spider.Response {
-    return spider.chuckBerry(alloc, req, "docs/shutdown", .{});
+pub fn logger(c: *spider.Ctx) !spider.Response {
+    return c.view("docs/logger", .{}, .{});
 }
 
-pub fn groups(alloc: std.mem.Allocator, req: *spider.Request) !spider.Response {
-    return spider.chuckBerry(alloc, req, "docs/groups", .{});
+pub fn pooling(c: *spider.Ctx) !spider.Response {
+    return c.view("docs/pooling", .{}, .{});
 }
 
-pub fn middleware(alloc: std.mem.Allocator, req: *spider.Request) !spider.Response {
-    return spider.chuckBerry(alloc, req, "docs/middleware", .{});
+pub fn static(c: *spider.Ctx) !spider.Response {
+    return c.view("docs/static", .{}, .{});
 }
 
-pub fn templates(alloc: std.mem.Allocator, req: *spider.Request) !spider.Response {
-    return spider.chuckBerry(alloc, req, "docs/templates", .{});
+pub fn shutdown(c: *spider.Ctx) !spider.Response {
+    return c.view("docs/shutdown", .{}, .{});
 }
 
-pub fn auth(alloc: std.mem.Allocator, req: *spider.Request) !spider.Response {
-    return spider.chuckBerry(alloc, req, "docs/auth", .{});
+pub fn groups(c: *spider.Ctx) !spider.Response {
+    return c.view("docs/groups", .{}, .{});
 }
 
-pub fn httpClient(alloc: std.mem.Allocator, req: *spider.Request) !spider.Response {
-    return spider.chuckBerry(alloc, req, "docs/http_client", .{});
+pub fn middleware(c: *spider.Ctx) !spider.Response {
+    return c.view("docs/middleware", .{}, .{});
 }
 
-pub fn forms(alloc: std.mem.Allocator, req: *spider.Request) !spider.Response {
-    return spider.chuckBerry(alloc, req, "docs/forms", .{});
+pub fn auth(c: *spider.Ctx) !spider.Response {
+    return c.view("docs/auth", .{}, .{});
 }
 
-pub fn docker(alloc: std.mem.Allocator, req: *spider.Request) !spider.Response {
-    return spider.chuckBerry(alloc, req, "docs/docker", .{});
+pub fn httpClient(c: *spider.Ctx) !spider.Response {
+    return c.view("docs/http_client", .{}, .{});
 }
 
-pub fn testing(alloc: std.mem.Allocator, req: *spider.Request) !spider.Response {
-    return spider.chuckBerry(alloc, req, "docs/testing", .{});
+pub fn forms(c: *spider.Ctx) !spider.Response {
+    return c.view("docs/forms", .{}, .{});
+}
+
+pub fn docker(c: *spider.Ctx) !spider.Response {
+    return c.view("docs/docker", .{}, .{});
+}
+
+pub fn testing(c: *spider.Ctx) !spider.Response {
+    return c.view("docs/testing", .{}, .{});
 }

@@ -5,5 +5,5 @@ config/
 zig-out/
 DEPLOY.md
 zig-pkg/
-docs/
 deploy.sh
+HTMX_BUG_FIX.md

@@ -1,5 +1,5 @@
 const std = @import("std");
-const spg = @import("spider").pg;
+const db = @import("spider").pg;
 const db_migrate = @import("db/migrate.zig");
 const spider = @import("spider");
 const home = @import("features/home/controller.zig");
@@ -9,26 +9,23 @@ const drivers = @import("features/drivers/controller.zig");
 const templates = @import("embedded_templates.zig").EmbeddedTemplates;
 
 pub fn main(init: std.process.Init) !void {
-    const allocator = init.gpa;
+    const allocator = init.arena.allocator();
     const io = init.io;
 
-    try spider.loadEnv(allocator, ".env");
-    try spg.init(allocator, io, .{});
-    defer spg.deinit();
+    try db.init(allocator, io, .{});
+    defer db.deinit();
 
-    try spider.initWsHub(allocator, io);
-    defer spider.deinitWsHub(allocator);
+    // try spider.initWsHub(allocator, io);
+    // defer spider.deinitWsHub(allocator);
 
-    const server = try spider.Spider.init(allocator, io, "0.0.0.0", 3000, .{
-        .templates = templates,
-    });
+    var server = spider.app();
     defer server.deinit();
 
     server
-        .get("/assets/*", spider.static.serve)
         .get("/drivers", drivers.index)
         .get("/", home.index)
         .get("/docs", docs.index)
+        .get("/docs/quickstart", docs.quickstart)
         .get("/docs/router", docs.router)
         .get("/docs/request", docs.request)
         .get("/docs/response", docs.response)
@@ -42,10 +39,11 @@ pub fn main(init: std.process.Init) !void {
         .get("/docs/groups", docs.groups)
         .get("/docs/middleware", docs.middleware)
         .get("/docs/templates", docs.templates)
+        .get("/docs/md-test", docs.mdTest)
         .get("/docs/auth", docs.auth)
         .get("/docs/http-client", docs.httpClient)
         .get("/docs/forms", docs.forms)
         .get("/docs/docker", docs.docker)
         .get("/docs/testing", docs.testing)
-        .listen() catch |err| return err;
+        .listen(3000) catch |err| return err;
 }

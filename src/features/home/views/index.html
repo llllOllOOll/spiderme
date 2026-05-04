@@ -1,217 +1,142 @@
-{% extends "layout_home" %}
-{% block "content" %}
+extends "layout"
 
-<div class="hero-section">
-<div class="hero-content">
-<h1 class="hero-title">Web framework<br>for <span class="zig">Zig</span></h1>
-<p class="hero-sub">Fast, minimal, built for systems.<br>
-HTTP, WebSockets, PostgreSQL, Templates — batteries included.</p>
-<div class="hero-btns">
-<a href="/docs" class="btn-primary">Get Started</a>
-<a href="https://github.com/llllOllOOll/spider" target="_blank" class="btn-secondary">GitHub →</a>
-</div>
-</div>
-<div class="code-block">
-<div class="code-block-bar">
-<div class="dot dot-r"></div>
-<div class="dot dot-y"></div>
-<div class="dot dot-g"></div>
-</div>
-<pre><span class="k">const</span> std = <span class="f">@import</span>(<span class="s">"std"</span>);
+<section class="hero">
+  <div class="hero-content">
+    <div class="hero-eyebrow"><span class="hero-eyebrow-dot"></span>Zig 0.17-dev</div>
+    <h1 class="hero-title">Web framework<br>for <span class="zig">Zig</span></h1>
+    <p class="hero-sub">Fast, minimal, built for systems.<br>
+    HTTP, WebSockets, PostgreSQL, Templates — batteries included.</p>
+    <div class="hero-btns">
+      <a href="/docs" class="btn-primary">Get Started</a>
+      <a href="https://github.com/llllOllOOll/spider" target="_blank" class="btn-ghost">GitHub →</a>
+    </div>
+  </div>
+  <div class="code-win">
+    <div class="code-bar">
+      <div class="dot dot-r"></div><div class="dot dot-y"></div><div class="dot dot-g"></div>
+    </div>
+    <pre><span class="k">const</span> std = <span class="f">@import</span>(<span class="s">"std"</span>);
 <span class="k">const</span> spider = <span class="f">@import</span>(<span class="s">"spider"</span>);
 
 <span class="k">pub fn</span> <span class="f">main</span>(init: std.process.Init) !<span class="k">void</span> {
-    <span class="k">var</span> server = <span class="k">try</span> spider.Spider.init(
-        init.arena.allocator(), init.io, <span class="s">"127.0.0.1"</span>, <span class="n">8080</span>, .{}
-    );
-    <span class="k">defer</span> server.deinit();
+    <span class="k">var</span> server = spider.<span class="f">app</span>();
+    <span class="k">defer</span> server.<span class="f">deinit</span>();
 
-    <span class="k">try</span> server.<span class="f">get</span>(<span class="s">"/"</span>, pingHandler).<span class="f">listen</span>();
+    server
+        .<span class="f">get</span>(<span class="s">"/"</span>, homeHandler)
+        .<span class="f">listen</span>(<span class="n">3000</span>) <span class="k">catch</span> {};
 }
 
-<span class="k">fn</span> <span class="f">pingHandler</span>(alc: std.mem.Allocator,
-               _: *spider.Request) !spider.Response {
-    <span class="k">return</span> spider.Response.<span class="f">json</span>(alc, .{ .msg = <span class="s">"pong"</span> });
+<span class="k">fn</span> <span class="f">homeHandler</span>(c: *spider.Ctx) !spider.Response {
+    <span class="k">return</span> c.<span class="f">json</span>(.{ .msg = <span class="s">"pong"</span> }, .{});
 }</pre>
-</div>
-</div>
+  </div>
+</section>
 
-<section class="section" style="padding-top:2rem;padding-bottom:0;">
-<div style="max-width:1060px;margin:0 auto;padding:0 0.75rem;">
-  <div style="border:0.5px solid #2a2a2e;border-radius:16px;padding:2rem 2.5rem;background:#111113;">
-    <div style="display:flex;align-items:center;gap:10px;margin-bottom:0.75rem;">
-      <div style="width:7px;height:7px;border-radius:50%;background:#facc15;"></div>
-      <span style="font-size:11px;letter-spacing:0.08em;text-transform:uppercase;color:#facc15;font-weight:500;">New</span>
+<div class="banner">
+  <div class="banner-inner">
+    <div>
+      <div class="banner-new"><span class="banner-new-dot"></span>New</div>
+      <div class="banner-title">SpiderStack — Starter Kit</div>
+      <p class="banner-desc">Production-ready boilerplate. Auth, CRUD, PWA, HTMX, Alpine.js, dark theme — batteries included.</p>
+      <div class="tags">
+        <span class="tag">Auth</span>
+        <span class="tag">CRUD</span>
+        <span class="tag">PWA</span>
+        <span class="tag">HTMX</span>
+        <span class="tag">Alpine.js</span>
+        <span class="tag">PostgreSQL</span>
+        <span class="tag">Tailwind</span>
+        <span class="tag">Zig 0.17</span>
+      </div>
     </div>
-    <div style="display:grid;grid-template-columns:1fr auto;gap:2rem;align-items:center;">
-      <div>
-        <h2 style="font-size:20px;font-weight:600;color:#f4f4f5;margin:0 0 0.4rem;">SpiderStack — Starter Kit</h2>
-        <p style="font-size:13.5px;color:#888;margin:0 0 1rem;line-height:1.6;">
-          Production-ready boilerplate for Spider. Auth with Google OAuth, CRUD, PWA, HTMX, Alpine.js, dark theme — batteries included.
-        </p>
-        <div style="display:flex;gap:6px;flex-wrap:wrap;">
-          <span style="font-size:11px;background:#1a1a1d;border:0.5px solid #2e2e32;border-radius:5px;padding:3px 9px;color:#999;">Auth</span>
-          <span style="font-size:11px;background:#1a1a1d;border:0.5px solid #2e2e32;border-radius:5px;padding:3px 9px;color:#999;">CRUD</span>
-          <span style="font-size:11px;background:#1a1a1d;border:0.5px solid #2e2e32;border-radius:5px;padding:3px 9px;color:#999;">PWA</span>
-          <span style="font-size:11px;background:#1a1a1d;border:0.5px solid #2e2e32;border-radius:5px;padding:3px 9px;color:#999;">HTMX</span>
-          <span style="font-size:11px;background:#1a1a1d;border:0.5px solid #2e2e32;border-radius:5px;padding:3px 9px;color:#999;">Alpine.js</span>
-          <span style="font-size:11px;background:#1a1a1d;border:0.5px solid #2e2e32;border-radius:5px;padding:3px 9px;color:#999;">PostgreSQL</span>
-          <span style="font-size:11px;background:#1a1a1d;border:0.5px solid #2e2e32;border-radius:5px;padding:3px 9px;color:#999;">Tailwind</span>
-          <span style="font-size:11px;background:#1a1a1d;border:0.5px solid #2e2e32;border-radius:5px;padding:3px 9px;color:#999;">Zig 0.17</span>
-        </div>
-      </div>
-      <div style="display:flex;flex-direction:column;gap:8px;min-width:148px;">
-        <a href="https://github.com/llllOllOOll/spiderstack" target="_blank"
-           style="background:#facc15;color:#09090b;border-radius:8px;padding:10px 18px;font-size:13px;font-weight:600;white-space:nowrap;text-decoration:none;text-align:center;display:block;">
-          View SpiderStack →
-        </a>
-        <a href="https://ziglang.org/download/0.17.0/release-notes.html" target="_blank"
-           style="background:transparent;color:#777;border:0.5px solid #2e2e32;border-radius:8px;padding:10px 18px;font-size:13px;white-space:nowrap;text-decoration:none;text-align:center;display:block;">
-          Zig 0.17 →
-        </a>
-      </div>
+    <div class="banner-cta">
+      <a href="https://github.com/llllOllOOll/spiderstack" target="_blank" class="btn-cta btn-cta-yellow">View SpiderStack →</a>
+      <a href="https://ziglang.org/download/0.17.0/release-notes.html" target="_blank" class="btn-cta btn-cta-ghost">Zig 0.17 →</a>
     </div>
   </div>
 </div>
+
+<section class="features" id="features">
+  <div class="features-header">
+    <h2 class="features-title">Everything you need</h2>
+    <p class="features-sub">Click any card to see docs and examples</p>
+  </div>
+  <div class="features-grid" id="feat-grid">
+    <div class="feat" hx-get="/docs/router" hx-target="#feature-detail" hx-swap="innerHTML" onclick="setActive(this)">
+      <div class="feat-name">Router</div>
+      <div class="feat-desc">Trie-based with dynamic params <code>/users/:id</code></div>
+    </div>
+    <div class="feat" hx-get="/docs/websocket" hx-target="#feature-detail" hx-swap="innerHTML" onclick="setActive(this)">
+      <div class="feat-name">WebSocket</div>
+      <div class="feat-desc">WS support + hub broadcasting</div>
+      <a class="feat-link" href="/chat" target="_blank" onclick="event.stopPropagation()">→ Live Demo</a>
+    </div>
+    <div class="feat" hx-get="/docs/postgres" hx-target="#feature-detail" hx-swap="innerHTML" onclick="setActive(this)">
+      <div class="feat-name">PostgreSQL</div>
+      <div class="feat-desc">Built-in PG client with pooling</div>
+      <a class="feat-link" href="https://spiderme.org/drivers" target="_blank" onclick="event.stopPropagation()">→ Live Demo</a>
+    </div>
+    <div class="feat" hx-get="/docs/metrics" hx-target="#feature-detail" hx-swap="innerHTML" onclick="setActive(this)">
+      <div class="feat-name">Metrics</div>
+      <div class="feat-desc">Internal metrics + dashboard</div>
+      <a class="feat-link" href="https://spiderme.org/_spider/dashboard" target="_blank" onclick="event.stopPropagation()">→ Live Demo</a>
+    </div>
+    <div class="feat" hx-get="/docs/logger" hx-target="#feature-detail" hx-swap="innerHTML" onclick="setActive(this)">
+      <div class="feat-name">Logger</div>
+      <div class="feat-desc">Structured JSON logging</div>
+    </div>
+    <div class="feat" hx-get="/docs/pooling" hx-target="#feature-detail" hx-swap="innerHTML" onclick="setActive(this)">
+      <div class="feat-name">Pooling</div>
+      <div class="feat-desc">Connection &amp; buffer pooling</div>
+    </div>
+    <div class="feat" hx-get="/docs/static" hx-target="#feature-detail" hx-swap="innerHTML" onclick="setActive(this)">
+      <div class="feat-name">Static Files</div>
+      <div class="feat-desc">Built-in static file serving</div>
+    </div>
+    <div class="feat" hx-get="/docs/shutdown" hx-target="#feature-detail" hx-swap="innerHTML" onclick="setActive(this)">
+      <div class="feat-name">Graceful Shutdown</div>
+      <div class="feat-desc">Handles SIGINT / SIGTERM</div>
+    </div>
+    <div class="feat" hx-get="/docs/groups" hx-target="#feature-detail" hx-swap="innerHTML" onclick="setActive(this)">
+      <div class="feat-name">Group Routes</div>
+      <div class="feat-desc">Route prefixes via <code>.group</code></div>
+    </div>
+    <div class="feat" hx-get="/docs/request" hx-target="#feature-detail" hx-swap="innerHTML" onclick="setActive(this)">
+      <div class="feat-name">Request</div>
+      <div class="feat-desc">Params, JSON binding, form &amp; query</div>
+    </div>
+    <div class="feat" hx-get="/docs/response" hx-target="#feature-detail" hx-swap="innerHTML" onclick="setActive(this)">
+      <div class="feat-name">Response</div>
+      <div class="feat-desc">HTML, JSON, redirect, status, headers</div>
+    </div>
+    <div class="feat" hx-get="/docs/middleware" hx-target="#feature-detail" hx-swap="innerHTML" onclick="setActive(this)">
+      <div class="feat-name">Middleware</div>
+      <div class="feat-desc">Chain via <code>server.use(fn)</code></div>
+    </div>
+    <div class="feat" hx-get="/docs/templates" hx-target="#feature-detail" hx-swap="innerHTML" onclick="setActive(this)">
+      <div class="feat-name">Templates</div>
+      <div class="feat-desc">Variables, loops, if/else, extends</div>
+    </div>
+    <div class="feat" hx-get="/docs/docker" hx-target="#feature-detail" hx-swap="innerHTML" onclick="setActive(this)">
+      <div class="feat-name">Docker</div>
+      <div class="feat-desc">Official Zig image for fast builds</div>
+    </div>
+    <div class="feat" hx-get="/docs/testing" hx-target="#feature-detail" hx-swap="innerHTML" onclick="setActive(this)">
+      <div class="feat-name">Testing</div>
+      <div class="feat-desc"><code>zig test .</code> + <code>zig fmt .</code></div>
+    </div>
+  </div>
+  <div id="feature-detail"></div>
 </section>
 
-<section class="section" id="features">
-<div style="max-width:1060px;margin:0 auto;">
-<h2 class="section-title has-text-centered mb-2">Everything you need</h2>
-<p class="section-subtitle has-text-centered mb-6" style="font-size:0.82rem;">Click any card to see docs and examples</p>
-<div class="columns is-multiline">
-<div class="column is-3">
-<div class="feature-card p-5"
-hx-get="/docs/router" hx-target="#feature-detail" hx-swap="innerHTML"
-onclick="document.querySelectorAll('.feature-card').forEach(c=>c.classList.remove('active'));this.classList.add('active')">
-<p class="accent has-text-weight-bold">Router</p>
-<p class="has-text-grey-light">Trie-based router with dynamic params <code>/users/:id</code></p>
-</div>
-</div>
-<div class="column is-3">
-<div class="feature-card p-5"
-hx-get="/docs/websocket" hx-target="#feature-detail" hx-swap="innerHTML"
-onclick="document.querySelectorAll('.feature-card').forEach(c=>c.classList.remove('active'));this.classList.add('active')">
-<p class="accent has-text-weight-bold">WebSocket</p>
-<p class="has-text-grey-light">WS support + hub broadcasting</p>
-<p class="mt-2"><a href="/chat" target="_blank" style="color:var(--accent);font-size:0.78rem;" onclick="event.stopPropagation()">→ Live Demo</a></p>
-</div>
-</div>
-<div class="column is-3">
-<div class="feature-card p-5"
-hx-get="/docs/postgres" hx-target="#feature-detail" hx-swap="innerHTML"
-onclick="document.querySelectorAll('.feature-card').forEach(c=>c.classList.remove('active'));this.classList.add('active')">
-<p class="accent has-text-weight-bold">PostgreSQL</p>
-<p class="has-text-grey-light">Built-in PG client with pooling</p>
-<p class="mt-2"><a href="https://spiderme.org/drivers" target="_blank" style="color:var(--accent);font-size:0.78rem;" onclick="event.stopPropagation()">→ Live Demo</a></p>
-</div>
-</div>
-<div class="column is-3">
-<div class="feature-card p-5"
-hx-get="/docs/metrics" hx-target="#feature-detail" hx-swap="innerHTML"
-onclick="document.querySelectorAll('.feature-card').forEach(c=>c.classList.remove('active'));this.classList.add('active')">
-<p class="accent has-text-weight-bold">Metrics</p>
-<p class="has-text-grey-light">Internal metrics + dashboard</p>
-<p class="mt-2"><a href="https://spiderme.org/_spider/dashboard" target="_blank" style="color:var(--accent);font-size:0.78rem;" onclick="event.stopPropagation()">→ Live Demo</a></p>
-</div>
-</div>
-<div class="column is-3">
-<div class="feature-card p-5"
-hx-get="/docs/logger" hx-target="#feature-detail" hx-swap="innerHTML"
-onclick="document.querySelectorAll('.feature-card').forEach(c=>c.classList.remove('active'));this.classList.add('active')">
-<p class="accent has-text-weight-bold">Logger</p>
-<p class="has-text-grey-light">Structured JSON logging</p>
-</div>
-</div>
-<div class="column is-3">
-<div class="feature-card p-5"
-hx-get="/docs/pooling" hx-target="#feature-detail" hx-swap="innerHTML"
-onclick="document.querySelectorAll('.feature-card').forEach(c=>c.classList.remove('active'));this.classList.add('active')">
-<p class="accent has-text-weight-bold">Pooling</p>
-<p class="has-text-grey-light">Connection &amp; buffer pooling</p>
-</div>
-</div>
-<div class="column is-3">
-<div class="feature-card p-5"
-hx-get="/docs/static" hx-target="#feature-detail" hx-swap="innerHTML"
-onclick="document.querySelectorAll('.feature-card').forEach(c=>c.classList.remove('active'));this.classList.add('active')">
-<p class="accent has-text-weight-bold">Static Files</p>
-<p class="has-text-grey-light">Built-in static file serving</p>
-</div>
-</div>
-<div class="column is-3">
-<div class="feature-card p-5"
-hx-get="/docs/shutdown" hx-target="#feature-detail" hx-swap="innerHTML"
-onclick="document.querySelectorAll('.feature-card').forEach(c=>c.classList.remove('active'));this.classList.add('active')">
-<p class="accent has-text-weight-bold">Graceful Shutdown</p>
-<p class="has-text-grey-light">Handles SIGINT / SIGTERM</p>
-</div>
-</div>
-<div class="column is-3">
-<div class="feature-card p-5"
-hx-get="/docs/groups" hx-target="#feature-detail" hx-swap="innerHTML"
-onclick="document.querySelectorAll('.feature-card').forEach(c=>c.classList.remove('active'));this.classList.add('active')">
-<p class="accent has-text-weight-bold">Group Routes</p>
-<p class="has-text-grey-light">Route prefixes via <code>.groupGet</code> / <code>.group</code></p>
-</div>
-</div>
-<div class="column is-3">
-<div class="feature-card p-5"
-hx-get="/docs/request" hx-target="#feature-detail" hx-swap="innerHTML"
-onclick="document.querySelectorAll('.feature-card').forEach(c=>c.classList.remove('active'));this.classList.add('active')">
-<p class="accent has-text-weight-bold">Request</p>
-<p class="has-text-grey-light">Params, JSON binding, form &amp; query</p>
-</div>
-</div>
-<div class="column is-3">
-<div class="feature-card p-5"
-hx-get="/docs/response" hx-target="#feature-detail" hx-swap="innerHTML"
-onclick="document.querySelectorAll('.feature-card').forEach(c=>c.classList.remove('active'));this.classList.add('active')">
-<p class="accent has-text-weight-bold">Response</p>
-<p class="has-text-grey-light">HTML, JSON, redirect, status, headers</p>
-</div>
-</div>
-<div class="column is-3">
-<div class="feature-card p-5"
-hx-get="/docs/middleware" hx-target="#feature-detail" hx-swap="innerHTML"
-onclick="document.querySelectorAll('.feature-card').forEach(c=>c.classList.remove('active'));this.classList.add('active')">
-<p class="accent has-text-weight-bold">Middleware</p>
-<p class="has-text-grey-light">Chain functions via <code>server.use(fn)</code></p>
-</div>
-</div>
-<div class="column is-3">
-<div class="feature-card p-5"
-hx-get="/docs/templates" hx-target="#feature-detail" hx-swap="innerHTML"
-onclick="document.querySelectorAll('.feature-card').forEach(c=>c.classList.remove('active'));this.classList.add('active')">
-<p class="accent has-text-weight-bold">Templates</p>
-<p class="has-text-grey-light">Blocks, variables, loops, if/else, include</p>
-</div>
-</div>
-<div class="column is-3">
-<div class="feature-card p-5"
-hx-get="/docs/docker" hx-target="#feature-detail" hx-swap="innerHTML"
-onclick="document.querySelectorAll('.feature-card').forEach(c=>c.classList.remove('active'));this.classList.add('active')">
-<p class="accent has-text-weight-bold">Docker</p>
-<p class="has-text-grey-light">Official Zig image for fast builds</p>
-</div>
-</div>
-<div class="column is-3">
-<div class="feature-card p-5"
-hx-get="/docs/testing" hx-target="#feature-detail" hx-swap="innerHTML"
-onclick="document.querySelectorAll('.feature-card').forEach(c=>c.classList.remove('active'));this.classList.add('active')">
-<p class="accent has-text-weight-bold">Testing</p>
-<p class="has-text-grey-light"><code>zig test .</code> + <code>zig fmt .</code></p>
-</div>
-</div>
-</div>
-<div id="feature-detail"></div>
-</div>
-</section>
-
-<footer class="footer has-background-black">
-<div class="content has-text-centered" style="color:var(--text-weak);font-size:0.78rem;">
-Spider · MIT License · Built with <span class="accent">Zig</span>
-</div>
+<footer class="footer">
+  Spider · MIT License · Built with <span class="zig">spider</span>
 </footer>
 
-{% end %}
+<script>
+function setActive(el) {
+  document.querySelectorAll('.feat').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+}
+</script>

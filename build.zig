@@ -21,9 +21,6 @@ pub fn build(b: *std.Build) void {
         }),
     });
 
-    // Link against system-wide libpq
-    exe.root_module.linkSystemLibrary("pq", .{});
-
     const gen = b.addRunArtifact(spider_dep.artifact("generate-templates"));
     gen.addArg("src/");
     gen.addArg("src/embedded_templates.zig");

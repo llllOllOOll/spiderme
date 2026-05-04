@@ -4,3 +4,7 @@ pub const Driver = struct {
     team: []const u8,
     number: i32,
 };
+
+pub const Drivers = struct {
+    drivers: []const u8,
+};

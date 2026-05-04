@@ -1,4 +1,3 @@
-{% block "layout_docs" %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -6,169 +5,87 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Spider — Docs</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800;900&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@1.0.4/css/bulma.min.css">
-<link rel="stylesheet" href="/assets/spider.css">
-<link rel="stylesheet" href="https://unpkg.com/nprogress@0.2.0/nprogress.css">
+<link href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;500;600&family=Geist:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/spider.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
-<style>
-  .skeleton {
-    background: linear-gradient(90deg, #2a2a2a 25%, #333 50%, #2a2a2a 75%);
-    background-size: 200% 100%;
-    animation: shimmer 1.5s infinite;
-    border-radius: 4px;
-  }
-  @keyframes shimmer {
-    0% { background-position: 200% 0; }
-    100% { background-position: -200% 0; }
-  }
-</style>
 <script src="https://cdn.jsdelivr.net/npm/htmx.org@1.9.12/dist/htmx.min.js"></script>
-<script src="https://unpkg.com/nprogress@0.2.0/nprogress.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
-<script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 <script>
-  hljs.highlightAll();
-  document.addEventListener("htmx:beforeRequest", () => {
-    NProgress.start();
-    document.getElementById("doc-content").innerHTML = `
-      <div class="skeleton" style="height:32px; width:50%; margin-bottom:24px;"></div>
-      <div class="skeleton" style="height:16px; width:90%; margin-bottom:8px;"></div>
-      <div class="skeleton" style="height:16px; width:85%; margin-bottom:8px;"></div>
-      <div class="skeleton" style="height:16px; width:80%; margin-bottom:32px;"></div>
-      <div class="skeleton" style="height:120px; width:100%; margin-bottom:24px;"></div>
-      <div class="skeleton" style="height:16px; width:88%; margin-bottom:8px;"></div>
-      <div class="skeleton" style="height:16px; width:75%; margin-bottom:8px;"></div>
-    `;
+hljs.highlightAll();
+document.addEventListener("htmx:beforeRequest", () => {
+  document.getElementById("doc-content").innerHTML = `
+    <div class="skeleton" style="height:28px;width:45%;margin-bottom:20px;"></div>
+    <div class="skeleton" style="height:14px;width:90%;margin-bottom:8px;"></div>
+    <div class="skeleton" style="height:14px;width:82%;margin-bottom:8px;"></div>
+    <div class="skeleton" style="height:14px;width:87%;margin-bottom:28px;"></div>
+    <div class="skeleton" style="height:110px;width:100%;margin-bottom:20px;"></div>
+    <div class="skeleton" style="height:14px;width:78%;margin-bottom:8px;"></div>
+    <div class="skeleton" style="height:14px;width:85%;"></div>
+  `;
+});
+document.addEventListener("htmx:afterSwap", (e) => {
+  e.detail.target.querySelectorAll("pre code").forEach((block) => {
+    hljs.highlightElement(block);
   });
-  document.addEventListener("htmx:afterRequest", () => NProgress.done());
-  document.addEventListener("htmx:afterSwap", (e) => {
-    e.detail.target.querySelectorAll("pre code").forEach((block) => {
-      hljs.highlightElement(block);
-    });
-  });
+});
 </script>
 </head>
 <body>
-
-<nav class="site-nav">
-<div class="nav-inner is-flex is-align-items-center is-justify-content-space-between"
-style="max-width:1600px;margin:0 auto;padding:0 2rem;height:100%;">
-<a href="/" class="nav-brand is-flex is-align-items-center">
-<img src="/assets/spider_logo.png" alt="Spider"
-style="width:22px;height:22px;object-fit:contain;margin-right:8px;">
-Spider
-</a>
-<div class="nav-links-desktop" style="gap:4px;">
-<a href="/docs">Docs</a>
-<a href="#">Examples</a>
-<a href="https://github.com/llllOllOOll/spider" target="_blank">GitHub</a>
-</div>
-<button class="nav-hamburger" onclick="toggleMobileMenu()" aria-label="Menu">
-<span></span><span></span><span></span>
-</button>
-</div>
-<div class="nav-mobile-menu" id="mobile-menu">
-<a href="/docs" onclick="toggleMobileMenu()">Docs</a>
-<a href="#" onclick="toggleMobileMenu()">Examples</a>
-<a href="https://github.com/llllOllOOll/spider" target="_blank">GitHub</a>
-</div>
-</nav>
+<SiteNav />
 
 <div class="docs-layout">
-<aside class="docs-sidebar">
-<div class="sidebar-group">
-<div class="sidebar-group-label">Getting Started</div>
-<a class="sidebar-link active"
-hx-get="/docs/quickstart" hx-target="#doc-content" hx-swap="innerHTML" hx-select="#doc-content"
-onclick="setActive(this)">Quick Start</a>
-</div>
-<div class="sidebar-group">
-<div class="sidebar-group-label">Core</div>
-<a class="sidebar-link"
-hx-get="/docs/router" hx-target="#doc-content" hx-swap="innerHTML" hx-select="#doc-content"
-onclick="setActive(this)">Router</a>
-<a class="sidebar-link"
-hx-get="/docs/request" hx-target="#doc-content" hx-swap="innerHTML" hx-select="#doc-content"
-onclick="setActive(this)">Request</a>
-<a class="sidebar-link"
-hx-get="/docs/response" hx-target="#doc-content" hx-swap="innerHTML" hx-select="#doc-content"
-onclick="setActive(this)">Response</a>
-<a class="sidebar-link"
-hx-get="/docs/middleware" hx-target="#doc-content" hx-swap="innerHTML" hx-select="#doc-content"
-onclick="setActive(this)">Middleware</a>
-<a class="sidebar-link"
-hx-get="/docs/groups" hx-target="#doc-content" hx-swap="innerHTML" hx-select="#doc-content"
-onclick="setActive(this)">Group Routes</a>
-</div>
-<div class="sidebar-group">
-<div class="sidebar-group-label">Features</div>
-<a class="sidebar-link"
-hx-get="/docs/postgresql" hx-target="#doc-content" hx-swap="innerHTML" hx-select="#doc-content"
-onclick="setActive(this)">PostgreSQL</a>
-<a class="sidebar-link"
-hx-get="/docs/pooling" hx-target="#doc-content" hx-swap="innerHTML" hx-select="#doc-content"
-onclick="setActive(this)">Pooling</a>
-<a class="sidebar-link"
-hx-get="/docs/websocket" hx-target="#doc-content" hx-swap="innerHTML" hx-select="#doc-content"
-onclick="setActive(this)">WebSocket</a>
-<a class="sidebar-link"
-hx-get="/docs/templates" hx-target="#doc-content" hx-swap="innerHTML"
-            hx-select="#doc-content"
-onclick="setActive(this)">Templates</a>
-<a class="sidebar-link"
-hx-get="/docs/static" hx-target="#doc-content" hx-swap="innerHTML" 
-            hx-select="#doc-content"
-onclick="setActive(this)">Static Files</a>
-<a class="sidebar-link"
-hx-get="/docs/metrics" hx-target="#doc-content" hx-swap="innerHTML" hx-select="#doc-content"
-onclick="setActive(this)">Metrics</a>
-<a class="sidebar-link"
-hx-get="/docs/logger" hx-target="#doc-content" hx-swap="innerHTML" hx-select="#doc-content"
-onclick="setActive(this)">Logger</a>
-<a class="sidebar-link"
-hx-get="/docs/shutdown" hx-target="#doc-content" hx-swap="innerHTML" hx-select="#doc-content"
-onclick="setActive(this)">Graceful Shutdown</a>
-</div>
-<div class="sidebar-group">
-<div class="sidebar-group-label">New Features</div>
-<a class="sidebar-link"
-hx-get="/docs/auth" hx-target="#doc-content" hx-swap="innerHTML" hx-select="#doc-content"
-onclick="setActive(this)">Authentication</a>
-<a class="sidebar-link"
-hx-get="/docs/http-client" hx-target="#doc-content" hx-swap="innerHTML" hx-select="#doc-content"
-onclick="setActive(this)">HTTP Client</a>
-<a class="sidebar-link"
-hx-get="/docs/forms" hx-target="#doc-content" hx-swap="innerHTML" hx-select="#doc-content"
-onclick="setActive(this)">FormData</a>
-</div>
-<div class="sidebar-group">
-<div class="sidebar-group-label">Deployment</div>
-<a class="sidebar-link"
-hx-get="/docs/docker" hx-target="#doc-content" hx-swap="innerHTML" hx-select="#doc-content"
-onclick="setActive(this)">Docker</a>
-<a class="sidebar-link"
-hx-get="/docs/testing" hx-target="#doc-content" hx-swap="innerHTML" hx-select="#doc-content"
-onclick="setActive(this)">Testing</a>
-</div>
-</aside>
 
-<main class="docs-content">
-<div id="doc-content">
-{% template "content" %}
-</div>
-</main>
+  <aside class="docs-sidebar">
+    <div class="sidebar-group">
+      <div class="sidebar-group-label">Getting Started</div>
+      <a class="sidebar-link active" hx-get="/docs/quickstart" hx-target="#doc-content" hx-swap="innerHTML" onclick="setActive(this)">Quick Start</a>
+    </div>
 
-<aside class="on-this-page">
-<div class="on-this-page-label">On this page</div>
-<a href="#prerequisites">Prerequisites</a>
-<a href="#create">Create a project</a>
-<a href="#fetch">Fetch Spider</a>
-<a href="#build">Configure build.zig</a>
-<a href="#example">Write your first handler</a>
-<a href="#run">Run</a>
-<a href="#next">Next Steps</a>
-</aside>
+    <div class="sidebar-group">
+      <div class="sidebar-group-label">Core</div>
+      <a class="sidebar-link" hx-get="/docs/router"     hx-target="#doc-content" hx-swap="innerHTML" onclick="setActive(this)">Router</a>
+      <a class="sidebar-link" hx-get="/docs/request"    hx-target="#doc-content" hx-swap="innerHTML" onclick="setActive(this)">Request</a>
+      <a class="sidebar-link" hx-get="/docs/response"   hx-target="#doc-content" hx-swap="innerHTML" onclick="setActive(this)">Response</a>
+      <a class="sidebar-link" hx-get="/docs/middleware" hx-target="#doc-content" hx-swap="innerHTML" onclick="setActive(this)">Middleware</a>
+      <a class="sidebar-link" hx-get="/docs/groups"     hx-target="#doc-content" hx-swap="innerHTML" onclick="setActive(this)">Group Routes</a>
+    </div>
+
+    <div class="sidebar-group">
+      <div class="sidebar-group-label">Features</div>
+      <a class="sidebar-link" hx-get="/docs/postgresql" hx-target="#doc-content" hx-swap="innerHTML" onclick="setActive(this)">PostgreSQL</a>
+      <a class="sidebar-link" hx-get="/docs/pooling"    hx-target="#doc-content" hx-swap="innerHTML" onclick="setActive(this)">Pooling</a>
+      <a class="sidebar-link" hx-get="/docs/websocket"  hx-target="#doc-content" hx-swap="innerHTML" onclick="setActive(this)">WebSocket</a>
+      <a class="sidebar-link" hx-get="/docs/templates"  hx-target="#doc-content" hx-swap="innerHTML" onclick="setActive(this)">Templates</a>
+      <a class="sidebar-link" hx-get="/docs/static"     hx-target="#doc-content" hx-swap="innerHTML" onclick="setActive(this)">Static Files</a>
+      <a class="sidebar-link" hx-get="/docs/metrics"    hx-target="#doc-content" hx-swap="innerHTML" onclick="setActive(this)">Metrics</a>
+      <a class="sidebar-link" hx-get="/docs/logger"     hx-target="#doc-content" hx-swap="innerHTML" onclick="setActive(this)">Logger</a>
+      <a class="sidebar-link" hx-get="/docs/shutdown"   hx-target="#doc-content" hx-swap="innerHTML" onclick="setActive(this)">Graceful Shutdown</a>
+    </div>
+
+    <div class="sidebar-group">
+      <div class="sidebar-group-label">New Features</div>
+      <a class="sidebar-link" hx-get="/docs/auth"        hx-target="#doc-content" hx-swap="innerHTML" onclick="setActive(this)">Authentication</a>
+      <a class="sidebar-link" hx-get="/docs/http-client" hx-target="#doc-content" hx-swap="innerHTML" onclick="setActive(this)">HTTP Client</a>
+      <a class="sidebar-link" hx-get="/docs/forms"       hx-target="#doc-content" hx-swap="innerHTML" onclick="setActive(this)">FormData</a>
+    </div>
+
+    <div class="sidebar-group">
+      <div class="sidebar-group-label">Deployment</div>
+      <a class="sidebar-link" hx-get="/docs/docker"  hx-target="#doc-content" hx-swap="innerHTML" onclick="setActive(this)">Docker</a>
+      <a class="sidebar-link" hx-get="/docs/testing" hx-target="#doc-content" hx-swap="innerHTML" onclick="setActive(this)">Testing</a>
+    </div>
+  </aside>
+
+  <main class="docs-content">
+    <div id="doc-content">
+      { slot }
+    </div>
+  </main>
+
+  <aside class="on-this-page" id="on-this-page">
+    { slot_toc }
+  </aside>
+
 </div>
 
 <script>
@@ -176,13 +93,13 @@ function setActive(el) {
   document.querySelectorAll('.sidebar-link').forEach(l => l.classList.remove('active'));
   el.classList.add('active');
 }
-function toggleMobileMenu() {
+function toggleMenu() {
   const menu = document.getElementById('mobile-menu');
-  const btn = document.querySelector('.nav-hamburger');
+  const btn  = document.getElementById('hamburger');
   menu.classList.toggle('open');
   btn.classList.toggle('open');
 }
 </script>
+
 </body>
 </html>
-{% end %}

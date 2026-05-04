@@ -1,0 +1,102 @@
+extends "layout_docs"
+
+
+<h1>Spider</h1>
+<p>Minimal web framework for Zig 0.17-dev. Routing, middleware, PostgreSQL, WebSockets — compiled into a single binary, no runtime, no GC.</p>
+
+<h2>What's included</h2>
+
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--border);border:0.5px solid var(--border);border-radius:var(--r-lg);overflow:hidden;margin-bottom:2rem;">
+  <div style="background:var(--bg);padding:1.1rem 1.25rem;">
+    <div style="font-size:13px;font-weight:600;color:#f4f4f5;margin-bottom:4px;">Trie router</div>
+    <div style="font-size:12px;color:var(--muted);line-height:1.55;">Dynamic params, route groups, scoped middleware. No allocations on the hot path.</div>
+  </div>
+  <div style="background:var(--bg);padding:1.1rem 1.25rem;">
+    <div style="font-size:13px;font-weight:600;color:#f4f4f5;margin-bottom:4px;">Middleware chain</div>
+    <div style="font-size:12px;color:var(--muted);line-height:1.55;">Composable via <code>next()</code>. Auth, CORS, logging — plug in what you need.</div>
+  </div>
+  <div style="background:var(--bg);padding:1.1rem 1.25rem;border-top:0.5px solid var(--border);">
+    <div style="font-size:13px;font-weight:600;color:#f4f4f5;margin-bottom:4px;">PostgreSQL & MySQL</div>
+    <div style="font-size:12px;color:var(--muted);line-height:1.55;">Native wire protocol, connection pooling, typed queries. No libpq dependency.</div>
+  </div>
+  <div style="background:var(--bg);padding:1.1rem 1.25rem;border-top:0.5px solid var(--border);">
+    <div style="font-size:13px;font-weight:600;color:#f4f4f5;margin-bottom:4px;">Template engine</div>
+    <div style="font-size:12px;color:var(--muted);line-height:1.55;">Loops, conditionals, components, layouts. Embedded at compile time or loaded at runtime.</div>
+  </div>
+</div>
+
+<h2>Where to go next</h2>
+
+<div style="display:flex;flex-direction:column;gap:0;background:var(--border);border:0.5px solid var(--border);border-radius:var(--r-lg);overflow:hidden;">
+  <a hx-get="/docs/quickstart" hx-target="#doc-content" hx-swap="innerHTML"
+     onclick="setActive(document.querySelector('[hx-get=\'/docs/quickstart\']'))"
+     style="display:flex;align-items:center;justify-content:space-between;padding:0.85rem 1.25rem;background:var(--bg);cursor:pointer;text-decoration:none;"
+     onmouseover="this.style.background='var(--bg-s)'"
+     onmouseout="this.style.background='var(--bg)'">
+    <div>
+      <div style="font-size:13px;font-weight:500;color:#f4f4f5;">Quick Start</div>
+      <div style="font-size:12px;color:var(--muted);margin-top:1px;">Install, first route, running server</div>
+    </div>
+    <span style="color:var(--hint);font-family:var(--mono);font-size:12px;">→</span>
+  </a>
+
+  <a hx-get="/docs/router" hx-target="#doc-content" hx-swap="innerHTML"
+     onclick="setActive(document.querySelector('[hx-get=\'/docs/router\']'))"
+     style="display:flex;align-items:center;justify-content:space-between;padding:0.85rem 1.25rem;background:var(--bg);cursor:pointer;border-top:0.5px solid var(--border);text-decoration:none;"
+     onmouseover="this.style.background='var(--bg-s)'"
+     onmouseout="this.style.background='var(--bg)'">
+    <div>
+      <div style="font-size:13px;font-weight:500;color:#f4f4f5;">Router</div>
+      <div style="font-size:12px;color:var(--muted);margin-top:1px;">Params, groups, method matching</div>
+    </div>
+    <span style="color:var(--hint);font-family:var(--mono);font-size:12px;">→</span>
+  </a>
+
+  <a hx-get="/docs/middleware" hx-target="#doc-content" hx-swap="innerHTML"
+     onclick="setActive(document.querySelector('[hx-get=\'/docs/middleware\']'))"
+     style="display:flex;align-items:center;justify-content:space-between;padding:0.85rem 1.25rem;background:var(--bg);cursor:pointer;border-top:0.5px solid var(--border);text-decoration:none;"
+     onmouseover="this.style.background='var(--bg-s)'"
+     onmouseout="this.style.background='var(--bg)'">
+    <div>
+      <div style="font-size:13px;font-weight:500;color:#f4f4f5;">Middleware</div>
+      <div style="font-size:12px;color:var(--muted);margin-top:1px;">Auth, CORS, logging — compose anything</div>
+    </div>
+    <span style="color:var(--hint);font-family:var(--mono);font-size:12px;">→</span>
+  </a>
+
+  <a hx-get="/docs/postgresql" hx-target="#doc-content" hx-swap="innerHTML"
+     onclick="setActive(document.querySelector('[hx-get=\'/docs/postgresql\']'))"
+     style="display:flex;align-items:center;justify-content:space-between;padding:0.85rem 1.25rem;background:var(--bg);cursor:pointer;border-top:0.5px solid var(--border);text-decoration:none;"
+     onmouseover="this.style.background='var(--bg-s)'"
+     onmouseout="this.style.background='var(--bg)'">
+    <div>
+      <div style="font-size:13px;font-weight:500;color:#f4f4f5;">PostgreSQL</div>
+      <div style="font-size:12px;color:var(--muted);margin-top:1px;">Connection pooling and typed queries</div>
+    </div>
+    <span style="color:var(--hint);font-family:var(--mono);font-size:12px;">→</span>
+  </a>
+
+  <a hx-get="/docs/templates" hx-target="#doc-content" hx-swap="innerHTML"
+     onclick="setActive(document.querySelector('[hx-get=\'/docs/templates\']'))"
+     style="display:flex;align-items:center;justify-content:space-between;padding:0.85rem 1.25rem;background:var(--bg);cursor:pointer;border-top:0.5px solid var(--border);text-decoration:none;"
+     onmouseover="this.style.background='var(--bg-s)'"
+     onmouseout="this.style.background='var(--bg)'">
+    <div>
+      <div style="font-size:13px;font-weight:500;color:#f4f4f5;">Templates</div>
+      <div style="font-size:12px;color:var(--muted);margin-top:1px;">Loops, conditionals, components, layouts</div>
+    </div>
+    <span style="color:var(--hint);font-family:var(--mono);font-size:12px;">→</span>
+  </a>
+
+  <a hx-get="/docs/auth" hx-target="#doc-content" hx-swap="innerHTML"
+     onclick="setActive(document.querySelector('[hx-get=\'/docs/auth\']'))"
+     style="display:flex;align-items:center;justify-content:space-between;padding:0.85rem 1.25rem;background:var(--bg);cursor:pointer;border-top:0.5px solid var(--border);text-decoration:none;"
+     onmouseover="this.style.background='var(--bg-s)'"
+     onmouseout="this.style.background='var(--bg)'">
+    <div>
+      <div style="font-size:13px;font-weight:500;color:#f4f4f5;">Authentication</div>
+      <div style="font-size:12px;color:var(--muted);margin-top:1px;">JWT, cookies, Google OAuth</div>
+    </div>
+    <span style="color:var(--hint);font-family:var(--mono);font-size:12px;">→</span>
+  </a>
+</div>

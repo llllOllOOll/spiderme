@@ -1,24 +1,22 @@
--- md
-{% extends "layout_docs" %}
-{% block "content" %}
+-- doc
+
 # Templates
 
-Spider's template engine is embedded at compile time via `@embedFile`. Templates are discovered automatically and rendered server-side — no JavaScript build step, no dependencies.
+Spider's template engine renders `.html` and `.md` files server-side via `c.view()`. Templates are embedded at compile time with `@embedFile` — no JavaScript build step, no dependencies.
 
 ## How it works
 
-At build time, `generate-templates` scans your `src/` directory and embeds all `.html` and `.md` files into a single Zig struct:
+At build time, `generate-templates` scans `src/` and embeds all `.html` and `.md` files into a single Zig struct:
 
 ```zig
 // src/embedded_templates.zig — auto-generated, do not edit
 pub const EmbeddedTemplates = struct {
     index: []const u8 = @embedFile("index.html"),
-    data: []const u8 = @embedFile("data.md"),
     layout_docs: []const u8 = @embedFile("layout_docs.html"),
 };
 ```
 
-Spider loads this struct at startup and resolves templates by name at request time.
+Spider loads this struct at startup. Templates are resolved by name at request time via `c.view()`.
 
 ## Quick Start
 
@@ -26,13 +24,10 @@ Spider loads this struct at startup and resolves templates by name at request ti
 
 ```html
 <!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>Spider App</title>
-</head>
+<html>
+<head><title>Spider App</title></head>
 <body>
-  <h1>Hello, {{ name }}!</h1>
+  <h1>Hello, { name }!</h1>
 </body>
 </html>
 ```
@@ -40,131 +35,130 @@ Spider loads this struct at startup and resolves templates by name at request ti
 **2. Create the handler in `src/main.zig`:**
 
 ```zig
-fn home(alloc: std.mem.Allocator, req: *spider.Request) !spider.Response {
-    return spider.chuckBerry(alloc, req, "index", .{
-        .name = "Seven",
-    });
+const spider = @import("spider");
+
+pub fn index(c: *spider.Ctx) !spider.Response {
+    return c.view("index", .{ .name = "Seven" }, .{});
 }
 ```
 
 **3. Register the route:**
 
 ```zig
-server.get("/home", home).listen();
+var server = spider.app();
+server.get("/", index);
+server.listen(8080) catch {};
 ```
 
-**4. Enable auto-generate in `build.zig`:**
-
-```zig
-const gen = b.addRunArtifact(spider_dep.artifact("generate-templates"));
-gen.addArg("src/");
-gen.addArg("src/embedded_templates.zig");
-exe.step.dependOn(&gen.step);
-```
-
-Visit `http://localhost:8080/home` — you'll see `Hello, Seven!`.
+Visit `http://localhost:8080/` — you'll see `Hello, Seven!`.
 
 ## Variable interpolation
 
-Use `{{ variable }}` to render values from your handler context:
+Use `{ variable }` to render values from your handler context:
 
 ```html
-<h1>{{ title }}</h1>
-<p>Welcome, {{ user_name }}!</p>
-<p>Items in cart: {{ count }}</p>
+<h1>{ title }</h1>
+<p>Welcome, { user_name }!</p>
+<p>Items in cart: { count }</p>
 ```
 
 ```zig
-return spider.chuckBerry(alloc, req, "page", .{
-    .title = "Dashboard",
-    .user_name = "Alice",
-    .count = "42",
-});
+pub fn page(c: *spider.Ctx) !spider.Response {
+    return c.view("page", .{
+        .title = "Dashboard",
+        .user_name = "Alice",
+        .count = "42",
+    }, .{});
+}
 ```
 
 Missing variables render as empty string — no errors, no crashes.
 
 ## Conditionals
 
-Use `{· if ·}` to conditionally render content:
-
-> **Note:** In these examples, `·` represents `%`. So `{· if condition ·}` means `{% if condition %}`. The `·` is used here because `{% %}` inside code examples would be interpreted by Spider's template engine.
+Use `{ if condition }` to conditionally render content:
 
 **Basic condition:**
 
 ```html
-{· if is_admin ·}
-<a href="/admin">Admin Panel</a>
-{· endif ·}
+{ if is_admin }
+  <a href="/admin">Admin Panel</a>
+{ endif }
 ```
 
 **Negation:**
 
 ```html
-{· if !is_guest ·}
-<p>Welcome back!</p>
-{· endif ·}
+{ if !is_guest }
+  <p>Welcome back!</p>
+{ endif }
 ```
 
 **Else branch:**
 
 ```html
-{· if logged_in ·}
-<a href="/logout">Logout</a>
-{· else ·}
-<a href="/login">Login</a>
-{· endif ·}
+{ if logged_in }
+  <a href="/logout">Logout</a>
+{ else }
+  <a href="/login">Login</a>
+{ endif }
 ```
 
 **Equality:**
 
 ```html
-{· if status == "active" ·}
-<span class="badge green">Active</span>
-{· endif ·}
+{ if status == "active" }
+  <span class="badge green">Active</span>
+{ endif }
+```
+
+**Comparison operators:**
+
+```html
+{ if age >= 18 }
+  <p>You can vote!</p>
+{ endif }
 ```
 
 **Logical AND / OR:**
 
 ```html
-{· if is_admin or is_moderator ·}
-<button>Moderate</button>
-{· endif ·}
+{ if is_admin or is_moderator }
+  <button>Moderate</button>
+{ endif }
 
-{· if is_logged_in and is_premium ·}
-<p>Premium features unlocked!</p>
-{· endif ·}
+{ if is_logged_in and is_premium }
+  <p>Premium features unlocked!</p>
+{ endif }
 ```
 
 Boolean strings `"true"`, `"1"`, `"yes"` evaluate to true. `"false"`, `"0"`, `"no"` evaluate to false. Empty string and missing variables evaluate to false.
 
 ## Loops
 
-Use `{· for ·}` to iterate over a slice:
+Use `{ for item in items }` to iterate over a slice:
 
-**`src/data.md`:**
+**Template:**
 
 ```html
 <ul>
-{· for item in items ·}
-<li>{{ item.value }}</li>
-{· endfor ·}
+{ for item in items }
+  <li>{ item.value }</li>
+{ endfor }
 </ul>
 ```
 
 **Handler:**
 
 ```zig
-fn dataPage(alloc: std.mem.Allocator, req: *spider.Request) !spider.Response {
-    const Item = struct { value: []const u8 };
-    const Data = struct { items: []const Item };
+const Item = struct { value: []const u8 };
 
-    return spider.chuckBerry(alloc, req, "data", Data{
-        .items = &[_]Item{
-            .{ .value = "Lunas" },
-            .{ .value = "Maylla" },
-        },
-    });
+pub fn data(c: *spider.Ctx) !spider.Response {
+    const items = &[_]Item{
+        .{ .value = "Lunas" },
+        .{ .value = "Maylla" },
+    };
+    return c.view("data", .{ .items = items }, .{});
 }
 ```
 
@@ -177,83 +171,152 @@ fn dataPage(alloc: std.mem.Allocator, req: *spider.Request) !spider.Response {
 </ul>
 ```
 
-## HTMX fragments
+## Coalescing operator
 
-Spider detects `HX-Request` headers automatically. When a request comes from HTMX, `chuckBerry` returns only the `{· block "content" ·}` fragment — not the full layout. This means the same handler works for both full page loads and HTMX partial updates.
-
-**`src/index.html`:**
+Use `{ expr ?? "default" }` to provide a fallback value when a variable is empty or missing:
 
 ```html
-<button
-  hx-get="/data"
-  hx-swap="innerHTML"
-  hx-target="#container"
->
-  Load data
-</button>
-<div id="container"></div>
+<h1>{ title ?? "Default Title" }</h1>
+<p>{ description ?? "No description available" }</p>
 ```
 
-**`src/data.md`:**
-
-```html
-{· for item in items ·}
-<p>{{ item.value }}</p>
-{· endfor ·}
-```
-
-Click the button — HTMX fetches `/data` and injects the fragment into `#container`. No page reload, no extra handler code.
+Quoted strings as body content (e.g., `if (x) { "my-class" } else { "other" }`) are emitted as plain text without quotes.
 
 ## Layouts & extends
 
-Use layouts to share structure across pages.
+Use layouts to share structure across pages. The first line of a template must be `extends "layout_name"`.
 
-**`src/layout_docs.html`:**
+**`src/shared/templates/layout.html`:**
 
 ```html
-{· block "base" ·}
 <!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>Spider Docs</title>
-</head>
+<html>
+<head><title>{ title ?? "Spider App" }</title></head>
 <body>
   <nav>...</nav>
   <main>
-    {· template "content" ·}
+    { slot }
   </main>
 </body>
 </html>
-{· end ·}
 ```
 
-**`src/page.md`:**
+**`src/features/home/views/index.html`:**
 
-```
--- md
-{· extends "layout_docs" ·}
-{· block "content" ·}
-# My Page
+```html
+extends "layout"
 
-Content goes here.
-{· end ·}
+<h1>Welcome!</h1>
+<p>This page uses the layout above.</p>
 ```
 
-`chuckBerry` resolves the `{· extends ·}`, merges the blocks, and returns the full HTML. For HTMX requests it returns only the `content` block.
+The `{ slot }` placeholder in the layout is replaced with the child template's content.
+
+## Layout per Route
+
+Spider supports multiple layouts for different routes:
+
+**1. Create a custom layout:** `src/shared/templates/layout_docs.html` → normalizes to `layout_docs`
+
+**2. Use `extends` in templates:**
+
+```html
+extends "layout_docs"
+
+<h1>Docs Page</h1>
+<p>This uses the docs-specific layout.</p>
+```
+
+## Components (PascalCase)
+
+Create reusable components in `shared/templates/`. They are automatically available as PascalCase in any template.
+
+**`src/shared/templates/site-nav.html`:**
+
+```html
+<nav class="site-nav">
+  <a href="/">Home</a>
+  <a href="/docs">Docs</a>
+</nav>
+```
+
+Normalizes to `site_nav`. Use in any template as:
+
+```html
+<SiteNav />
+```
+
+The template engine converts `<SiteNav />` to `site_nav` automatically (PascalCase → snake_case).
+
+## Named slots
+
+Components can have named slots for injecting content:
+
+**Component with slot:**
+
+```html
+<div class="card">
+  { slot_header }
+  <div class="card-body">
+    { slot }
+  </div>
+</div>
+```
+
+**Using the component:**
+
+```html
+<Card>
+  <h2 slot="header">Title</h2>
+  Body content goes here
+</Card>
+```
+
+## Markdown support
+
+Templates ending with `.md` (or starting with `<!-- md -->`) are automatically converted from Markdown to HTML.
+
+**`src/features/docs/views/quickstart.md`:**
+
+```markdown
+<!-- md -->
+
+# Quick Start
+
+This is **markdown** and it gets converted to HTML automatically.
+
+- Item 1
+- Item 2
+```
+
+Use `c.view("docs/quickstart", .{}, .{})` — Spider detects the `<!-- md -->` signature and converts markdown to HTML before rendering.
 
 ## Filters
 
-Apply filters with the `|` pipe operator:
+Apply filters with the `??` coalescing operator (more filters coming soon):
 
 ```html
-<p>Hello {{ name | default:"Guest" }}!</p>
-<p>Total: {{ amount | default:"0.00" }}</p>
+<p>Hello { name ?? "Guest" }!</p>
+<p>Total: { amount ?? "0.00" }</p>
 ```
 
-If `name` is empty or missing, `"Guest"` is used instead. Currently supported filters:
+If `name` is empty or missing, `"Guest"` is used instead.
 
-- `default:"value"` — fallback when variable is empty or missing
+## Template modes
+
+### Embed mode (recommended)
+
+Templates are compiled into the binary. Declare in `main.zig`:
+
+```zig
+pub const spider_templates = @import("embedded_templates.zig").EmbeddedTemplates;
+```
+
+Spider detects this via `@hasDecl(@import("root"), "spider_templates")`.
+
+### Runtime mode
+
+Reads templates from disk. No config needed — just don't declare `spider_templates`.
 
 ## Auto-generate templates
 
@@ -266,71 +329,23 @@ gen.addArg("src/embedded_templates.zig");
 exe.step.dependOn(&gen.step);
 ```
 
-Then import in `main.zig`:
-
-```zig
-const templates = @import("embedded_templates.zig").EmbeddedTemplates;
-
-const server = try spider.Spider.init(arena, io, "127.0.0.1", 8080, .{
-    .templates = templates,
-});
-```
-
-Files are discovered automatically — add a new `.html` or `.md` file, rebuild, and it's available by name via `chuckBerry`.
-
-
-## Rendering
-
-Spider provides three rendering functions.
-
-### render
-
-Renders a template string directly. No layout, no blocks.
-
-```zig
-const html = try spider.template.render(tmpl, data, alc);
-```
-
-### Response.html
-
-Wraps a raw `[]const u8` in an HTML response. No template rendering.
-
-```zig
-return spider.Response.html(alc, content);
-```
-
-### chuckBerry
-
-The recommended function for handlers. Resolves the template by name, handles `{· extends ·}`, and detects HTMX requests automatically:
-
-```zig
-pub fn index(alc: std.mem.Allocator, req: *spider.Request) !spider.Response {
-    const context = try buildContext(alc, req);
-    return spider.chuckBerry(alc, req, "home/index", context);
-}
-```
-
-
+Files are discovered automatically — add a new `.html` or `.md` file, rebuild, and it's available by name via `c.view()`.
 
 ## Tag reference
 
-> **Note:** In this table, `·` represents `%` in real usage.
-
-| Tag | Usage | Description |
-|-----|-------|-------------|
-| `{{ variable }}` | `{{ name }}` | Interpolate variable value |
-| `{{ \| filter }}` | `{{ name \| default:"Guest" }}` | Apply filter to variable |
-| `{· if ·}` | `{· if is_admin ·}` | Conditional block |
-| `{· elif ·}` | `{· elif is_mod ·}` | Else-if branch |
-| `{· else ·}` | `{· else ·}` | Else branch |
-| `{· endif ·}` | `{· endif ·}` | Close if block |
-| `{· for ·}` | `{· for item in items ·}` | Loop over slice |
-| `{· endfor ·}` | `{· endfor ·}` | Close for loop |
-| `{· block ·}` | `{· block "content" ·}` | Define named block |
-| `{· end ·}` | `{· end ·}` | Close block |
-| `{· template ·}` | `{· template "content" ·}` | Include named block |
-| `{· extends ·}` | `{· extends "layout" ·}` | Extend a layout |
-| `{· include ·}` | `{· include "partial" ·}` | Include a template file |
-| `{· raw ·}` | `{· raw ·}` | Output content literally |
-| `{· endraw ·}` | `{· endraw ·}` | Close raw block |
-{% end %}
+| Tag | Syntax | Description |
+|-----|---------|-------------|
+| Interpolation | `{ variable }` | Render variable value |
+| Coalescing | `{ var ?? "default" }` | Fallback for empty/missing values |
+| If | `{ if condition }` | Conditional block |
+| Else if | `{ elif condition }` | Else-if branch |
+| Else | `{ else }` | Else branch |
+| End if | `{ endif }` | Close if block |
+| For loop | `{ for item in items }` | Iterate over slice |
+| End for | `{ endfor }` | Close for loop |
+| Extends | `extends "layout"` | Use a layout (first line only) |
+| Slot | `{ slot }` | Placeholder in layout |
+| Named slot | `{ slot_header }` | Named placeholder |
+| Component | `<ComponentName />` | Reusable PascalCase component |
+| Raw | `{ raw }` | Output content literally |
+| End raw | `{ endraw }` | Close raw block |

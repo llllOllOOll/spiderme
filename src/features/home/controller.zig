@@ -1,6 +1,6 @@
 const std = @import("std");
 const spider = @import("spider");
 
-pub fn index(alloc: std.mem.Allocator, req: *spider.Request) !spider.Response {
-    return spider.chuckBerry(alloc, req, "home/index", .{});
+pub fn index(c: *spider.Ctx) !spider.Response {
+    return c.view("home/index", .{}, .{});
 }
