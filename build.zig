@@ -20,6 +20,16 @@ pub fn build(b: *std.Build) void {
         }),
     });
 
+    const config_exists = blk: {
+        std.Io.Dir.cwd().access(b.graph.io, "spider.config.zig", .{}) catch break :blk false;
+        break :blk true;
+    };
+    if (config_exists) {
+        spider_mod.addAnonymousImport("spider_config", .{
+            .root_source_file = b.path("spider.config.zig"),
+        });
+    }
+
     const gen = b.addRunArtifact(spider_dep.artifact("generate-templates"));
     gen.addArg("src/");
     gen.addArg("src/embedded_templates.zig");

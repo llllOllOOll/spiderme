@@ -305,19 +305,110 @@ Use `c.view("docs/quickstart", .{}, .{})` — Spider detects the `<!-- md -->` s
 
 ## Template modes
 
-### Embed mode (recommended)
+Spider has two template modes. Both produce **byte-identical output** — the only difference is when and where templates are loaded.
 
-Templates are compiled into the binary. Declare in `main.zig`:
+### Embed mode (recommended for production)
+
+Templates are compiled into the binary — no files needed at runtime, ideal for Docker and production deployments.
+
+Declare in `main.zig` or `root.zig` (must be in the root file of the executable):
 
 ```zig
 pub const spider_templates = @import("embedded_templates.zig").EmbeddedTemplates;
 ```
 
-Spider detects this via `@hasDecl(@import("root"), "spider_templates")`.
+Spider detects this via `@hasDecl(@import("root"), "spider_templates")` — same pattern as `std_options` in the Zig stdlib.
 
 ### Runtime mode
 
-Reads templates from disk. No config needed — just don't declare `spider_templates`.
+Reads templates from disk at request time. Useful in development. Just don't declare `spider_templates` — Spider will scan `views_dir` automatically.
+
+**Runtime mode requires `spider.config.zig`.**
+
+Without it, Spider uses `views_dir = "./views"` as default, which rarely matches the actual project structure and causes `TemplateNotFound` errors.
+
+Create `spider.config.zig` in your project root:
+
+```zig
+const spider = @import("spider");
+
+pub const config = spider.Config{
+    .views_dir = "./src",   // point to where your .html/.md files live
+    .layout = "layout",
+    .env = .development,
+    .port = 3000,
+    .host = "0.0.0.0",
+};
+```
+
+Spider prints warnings to help diagnose configuration issues:
+
+```
+[spider] WARNING: views_dir "./views" not found.
+[spider]          Templates will not load in runtime mode.
+[spider]          Check your spider.config.zig -> views_dir setting.
+
+[spider] WARNING: No templates found in "./views".
+[spider]          Make sure your .html/.md files are inside views_dir.
+[spider]          Check your spider.config.zig -> views_dir setting.
+
+[spider] runtime templates: 5 loaded from "./src"
+```
+
+### Template name normalization
+
+Both modes apply the same normalization rules. The name passed to `c.view()` is normalized the same way in both modes:
+
+| File path (relative to views_dir) | Normalized name | Call with |
+|---|---|---|
+| `views/bills/index.html` | `bills_index` | `c.view("bills/index", ...)` |
+| `views/home/index.html` | `home_index` | `c.view("home/index", ...)` |
+| `shared/templates/layout.html` | `layout` | layout (auto, via config) |
+| `shared/templates/Card.html` | `Card` | `c.view("Card", ...)` |
+| `shared/templates/site-nav.html` | `site_nav` | `<SiteNav />` in templates |
+
+Rules: strip extension → use segment after `views/` or `templates/` → replace `/` and `-` with `_`.
+
+**Common mistake:** calling `c.view("index", ...)` when the file is at `views/bills/index.html`.
+The correct call is `c.view("bills/index", ...)` which normalizes to `bills_index`.
+
+### Embed mode in Docker
+
+In embed mode, templates are inside the binary — no extra files needed:
+
+```dockerfile
+FROM <zig-image>:master AS builder
+WORKDIR /app
+COPY . .
+RUN zig build -Doptimize=ReleaseSmall
+
+FROM debian:bookworm-slim
+WORKDIR /app
+COPY --from=builder /app/zig-out/bin/<app> /app/<app>
+COPY --from=builder /app/public /app/public
+EXPOSE 3000
+CMD ["./<app>"]
+```
+
+### Runtime mode in Docker
+
+In runtime mode, templates must be copied into the container alongside the binary:
+
+```dockerfile
+FROM <zig-image>:master AS builder
+WORKDIR /app
+COPY . .
+RUN zig build -Doptimize=ReleaseSmall
+
+FROM debian:bookworm-slim
+WORKDIR /app
+COPY --from=builder /app/zig-out/bin/<app> /app/<app>
+COPY --from=builder /app/public /app/public
+COPY --from=builder /app/src /app/src
+COPY --from=builder /app/spider.config.zig /app/spider.config.zig
+EXPOSE 3000
+CMD ["./<app>"]
+```
 
 ## Auto-generate templates
 
@@ -331,6 +422,28 @@ exe.step.dependOn(&gen.step);
 ```
 
 Files are discovered automatically — add a new `.html` or `.md` file, rebuild, and it's available by name via `c.view()`.
+
+### Registering spider.config.zig in build.zig
+
+For Spider to read your `spider.config.zig`, register it as an anonymous import on `spider_mod`. Spider's `build.zig` provides a default config fallback — your project overrides it:
+
+```zig
+const spider_dep = b.dependency("spider", .{ .target = target });
+const spider_mod = spider_dep.module("spider");
+
+// Register spider.config.zig if it exists — overrides Spider's default config
+const config_exists = blk: {
+    std.Io.Dir.cwd().access(b.graph.io, "spider.config.zig", .{}) catch break :blk false;
+    break :blk true;
+};
+if (config_exists) {
+    spider_mod.addAnonymousImport("spider_config", .{
+        .root_source_file = b.path("spider.config.zig"),
+    });
+}
+```
+
+> **Note:** Use `b.graph.io` to check file existence in `build.zig` — this is the correct Zig 0.17 API. `b.pathExists()` does not exist and `std.fs.cwd().access()` is the old API.
 
 ## Tag reference
 

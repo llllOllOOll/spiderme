@@ -6,7 +6,8 @@ const home = @import("features/home/controller.zig");
 const docs = @import("features/docs/controller.zig");
 const drivers = @import("features/drivers/controller.zig");
 
-// const templates = @import("embedded_templates.zig").EmbeddedTemplates;
+// EMBEDED MODE
+pub const spider_templates = @import("embedded_templates.zig").EmbeddedTemplates;
 
 pub fn main(init: std.process.Init) !void {
     const allocator = init.arena.allocator();
@@ -45,5 +46,16 @@ pub fn main(init: std.process.Init) !void {
         .get("/docs/forms", docs.forms)
         .get("/docs/docker", docs.docker)
         .get("/docs/testing", docs.testing)
+        .onError(errorHandler)
         .listen(.{ .port = 3000, .host = "0.0.0.0" }) catch |err| return err;
+}
+
+fn errorHandler(c: *spider.Ctx, err: anyerror) !spider.Response {
+    return switch (err) {
+        error.TemplateNotFound => c.text(
+            try std.fmt.allocPrint(c.arena, "Template not found: {s}", .{c._last_template orelse "unknown"}),
+            .{ .status = .not_found },
+        ),
+        else => c.text(@errorName(err), .{ .status = .internal_server_error }),
+    };
 }

@@ -20,8 +20,8 @@ COPY --from=builder /app/zig-out/bin/spiderme /app/spiderme
 COPY --from=builder /app/public /app/public
 
 # Copy views for runtime template mode (html + md only, no source)
-COPY --from=builder /app/src /app/src
-RUN find /app/src -name "*.zig" -delete
+#COPY --from=builder /app/src /app/src
+#RUN find /app/src -name "*.zig" -delete
 
 EXPOSE 3000
 
