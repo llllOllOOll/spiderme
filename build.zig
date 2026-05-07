@@ -27,6 +27,9 @@ pub fn build(b: *std.Build) void {
     if (config_exists) {
         spider_mod.addAnonymousImport("spider_config", .{
             .root_source_file = b.path("spider.config.zig"),
+            .imports = &.{
+                .{ .name = "spider", .module = spider_mod },
+            },
         });
     }
 

@@ -6,22 +6,103 @@ Spider is a web framework for Zig. This guide gets you from zero to a running HT
 
 ## Prerequisites
 
-You need Zig `0.17.0-dev` or later. Download it at [ziglang.org/download](https://ziglang.org/download/).
+- **Zig 0.17.0-dev** or later — [ziglang.org/download](https://ziglang.org/download/)
+- **Docker** — for PostgreSQL (optional, needed for database features)
+- **curl** — for CLI install (optional, only for Flow A)
 
-## Create a new project
+---
+
+There are two ways to start a Spider project:
+
+- **Flow A — CLI (recommended):** Install via `curl` and use `spider new` to scaffold
+- **Flow B — Manual:** Add Spider as a dependency with `zig fetch`
+
+Both produce the same result. Choose the one that fits your workflow.
+
+---
+
+## Flow A — CLI Install
+
+### 1. Install Spider CLI
+
+```bash
+curl -fsSL https://spiderme.org/install.sh | bash
+```
+
+This installs the `spider` command to `~/.local/bin/spider`. Verify it works:
+
+```bash
+spider help
+```
+
+### 2. Create a project
+
+```bash
+spider new myapp
+cd myapp
+```
+
+This generates a complete project with:
+
+- `build.zig` + `build.zig.zon` — build configuration
+- `spider.config.zig` — runtime configuration
+- `src/main.zig` — entry point with route setup
+- `src/shared/templates/` — layout, nav, sidebar, toast components
+- `src/features/home/` — sample controller + view
+- `Dockerfile` + `docker-compose.yml` — PostgreSQL and deployment
+- `.env.example` — environment variables template
+- `public/` — static assets (CSS, JS, images)
+- `bin/` — Tailwind CSS CLI (auto-downloaded)
+
+### 3. Setup environment
+
+```bash
+cp .env.example .env
+docker compose up -d   # starts PostgreSQL
+```
+
+### 4. Generate a feature (optional)
+
+```bash
+spider g feature todo
+```
+
+This creates `src/features/todo/` with controller, view, and module registration.
+
+### 5. Run
+
+```bash
+zig build run
+```
+
+```
+Spider server starting on port 3000...
+Server listening on http://127.0.0.1:3000
+Starting 12 worker threads
+```
+
+Visit [http://localhost:3000](http://localhost:3000).
+
+---
+
+## Flow B — Manual Setup
+
+### 1. Start a Zig project
 
 ```bash
 mkdir myapp && cd myapp
 zig init
 ```
 
-## Fetch Spider
+### 2. Add Spider dependency
 
 ```bash
 zig fetch --save git+https://github.com/llllOllOOll/spider
 ```
 
-## Configure build.zig
+### 3. Configure build.zig
+
+Replace `build.zig` with:
 
 ```zig
 const std = @import("std");
@@ -47,7 +128,6 @@ pub fn build(b: *std.Build) void {
         }),
     });
 
-    // Auto-generate embedded templates (required for embed mode)
     const gen = b.addRunArtifact(spider_dep.artifact("generate-templates"));
     gen.addArg("src/");
     gen.addArg("src/embedded_templates.zig");
@@ -62,7 +142,9 @@ pub fn build(b: *std.Build) void {
 }
 ```
 
-## Write your first handler
+### 4. Create entry point
+
+`src/main.zig`:
 
 ```zig
 const std = @import("std");
@@ -82,34 +164,68 @@ fn homeHandler(c: *spider.Ctx) !spider.Response {
 }
 ```
 
-## Run
+### 5. Setup config and database
+
+Create `spider.config.zig`:
+
+```zig
+const spider = @import("spider");
+
+pub const config = spider.Config{
+    .port = 3000,
+    .env = .development,
+};
+```
+
+Create `docker-compose.yml`:
+
+```yaml
+services:
+  pg:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: spider
+      POSTGRES_PASSWORD: spider
+      POSTGRES_DB: myapp
+    ports:
+      - "5432:5432"
+```
+
+Create `.env`:
+
+```
+PG_HOST=localhost
+PG_PORT=5432
+PG_USER=spider
+PG_PASSWORD=spider
+PG_DB=myapp
+```
+
+### 6. Start database
+
+```bash
+docker compose up -d
+```
+
+### 7. Run
 
 ```bash
 zig build run
 ```
 
 ```
-Speed server starting on port 3000...
+Spider server starting on port 3000...
 Server listening on http://127.0.0.1:3000
 Starting 12 worker threads
 ```
 
-`listen` accepts `port` and `host` — any omitted field falls back to `spider.config.zig`:
+---
 
-```zig
-.listen(.{ .port = 3000 })                    // override port only
-.listen(.{ .host = "0.0.0.0" })               // override host only
-.listen(.{ .port = 3000, .host = "0.0.0.0" }) // override both
-.listen(.{})                                   // use config values
-```
+## What's next
 
-Test it:
+Both flows produce a running Spider app. From here you can:
 
-```bash
-curl http://localhost:3000/  # response
-```
-
-## Quick template example
+### Templates
 
 Create `src/index.html`:
 
@@ -120,34 +236,12 @@ extends "layout"
 <p>Today is { date }.</p>
 ```
 
-Create `src/layout.html`:
-
-```html
-<!DOCTYPE html>
-<html>
-<head><title>{ title ?? "Spider" }</title></head>
-<body>
-  <main>{ slot }</main>
-</body>
-</html>
-```
-
-Update your handler to use `c.view()` and declare `spider_templates`:
+Update `src/main.zig` to use `c.view()`:
 
 ```zig
-const spider = @import("spider");
 const templates = @import("embedded_templates.zig").EmbeddedTemplates;
 
 pub const spider_templates = templates;
-
-pub fn main() void {
-    var server = spider.app();
-    defer server.deinit();
-
-    server
-        .get("/", home)
-        .listen(.{ .port = 3000 }) catch {};
-}
 
 fn home(c: *spider.Ctx) !spider.Response {
     return c.view("index", .{
@@ -158,10 +252,32 @@ fn home(c: *spider.Ctx) !spider.Response {
 }
 ```
 
-`{ variable }` interpolates values, `{ slot }` injects child content into the layout, and `{ title ?? "Spider" }` provides a fallback default.
+### Generate features
+
+```bash
+spider g feature products
+```
+
+### Run migrations
+
+```bash
+spider migrate
+```
+
+### Listen options
+
+```zig
+.listen(.{ .port = 3000 })                    // override port only
+.listen(.{ .host = "0.0.0.0" })               // override host only
+.listen(.{ .port = 3000, .host = "0.0.0.0" }) // override both
+.listen(.{})                                   // use config values
+```
+
+---
 
 ## Next Steps
 
 - [Router](/docs/router) — dynamic params, wildcards, chained routes
 - [Templates](/docs/templates) — server-side rendering with components
 - [PostgreSQL](/docs/postgresql) — built-in PG client
+- [CLI](/docs/cli) — spider new, generate, migrate commands
