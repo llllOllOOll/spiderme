@@ -13,6 +13,3 @@ bin/
 public/css/app.css
 public/js/alpine.min.js
 public/js/htmx.min.js
-
-# Written by the build (generate-templates) before the app is compiled.
-src/embedded_templates.zig
