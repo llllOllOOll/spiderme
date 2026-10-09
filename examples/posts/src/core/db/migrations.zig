@@ -13,6 +13,10 @@ const MIGRATIONS = [_]Migration{
         .version = "1791551321_create_posts",
         .sql_file = @embedFile("./migrations/1791551321_create_posts.sql"),
     },
+    .{
+        .version = "1791551322_seed_posts",
+        .sql_file = @embedFile("./migrations/1791551322_seed_posts.sql"),
+    },
 };
 
 fn extractUpSection(sql_file: []const u8) []const u8 {

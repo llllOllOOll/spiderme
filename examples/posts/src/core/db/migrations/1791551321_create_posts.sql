@@ -1,7 +1,9 @@
 -- migrate:up
 CREATE TABLE IF NOT EXISTS posts (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    name TEXT NOT NULL,
+    title TEXT NOT NULL,
+    body TEXT NOT NULL,
+    author TEXT NOT NULL,
     inserted_at TEXT NOT NULL DEFAULT (datetime('now')),
     updated_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
