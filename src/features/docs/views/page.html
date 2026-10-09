@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{ title } · Spider</title>
+    <link rel="icon" type="image/png" href="/favicon.png">
+    <link rel="shortcut icon" href="/favicon.ico">
+    <link rel="preload" href="/fonts/atkinson-hyperlegible-400.woff2?v=1" as="font" type="font/woff2" crossorigin>
+    <link rel="preload" href="/fonts/atkinson-hyperlegible-700.woff2?v=1" as="font" type="font/woff2" crossorigin>
+    <link rel="stylesheet" href="/css/app.css">
+</head>
+<body>
+<a class="skip" href="#content">Skip to content</a>
+
+<header class="top">
+    <a class="logo" href="/">
+        <svg width="14" height="30" viewBox="0 0 14 30" aria-hidden="true"><line x1="7" y1="0" x2="7" y2="20" stroke="currentColor" stroke-width="1.5"/><circle cx="7" cy="23" r="5" fill="currentColor"/></svg>
+        <span>Spider</span>
+    </a>
+    <nav class="top-links" aria-label="Site">
+        <a href="/docs/quickstart">Guide</a>
+        <a href="/docs/api">API</a>
+        <a href="https://github.com/llllOllOOll/spider">GitHub</a>
+    </nav>
+    <form class="search" action="/docs/search" method="get" role="search">
+        <label for="q">Search</label>
+        <input id="q" name="q" type="search" value="{ query }" autocomplete="off">
+    </form>
+    <span class="zig" title="The Zig release these docs are written for">Zig { zig_version }</span>
+</header>
+
+<div class="shell">
+    <input class="menu-toggle" id="menu-toggle" type="checkbox" aria-label="Show the list of pages">
+    <label class="menu-button" for="menu-toggle">Pages</label>
+
+    <nav class="thread" aria-label="Docs">
+        <div class="thread-line">
+            for (sections) |section| {
+            <div class="thread-group">{ section.title }</div>
+            for (section.pages) |item| {
+            if (item.current) {
+            <a class="thread-link current" href="{ item.href }" aria-current="page">{ item.title }</a>
+            } else {
+            <a class="thread-link" href="{ item.href }">{ item.title }</a>
+            }
+            }
+            }
+        </div>
+    </nav>
+
+    <main id="content" class="content">
+        <div class="column">
+        if (is_page) {
+        <article class="prose">{ content }</article>
+        <footer class="page-foot">
+            <a href="{ edit_url }">Edit this page</a>
+            if (has_next) {
+            <a class="next" href="{ next_href }">Next: { next_title }</a>
+            }
+        </footer>
+        } else {
+        <article class="prose">
+            <h1>Search</h1>
+            if (results.len > 0) {
+            <ul class="results">
+                for (results) |item| {
+                <li><a href="{ item.href }">{ item.title }</a></li>
+                }
+            </ul>
+            } else {
+            <p>No page title matches “{ query }”.</p>
+            }
+        </article>
+        }
+        </div>
+    </main>
+</div>
+</body>
+</html>

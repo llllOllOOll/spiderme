@@ -1,0 +1,18 @@
+zig-out/
+zig-cache/
+.zig-cache/
+zig-pkg/
+.env
+.env.local
+.env.development
+.env.production
+
+# Spider generated assets (run: spider install): tailwind, daisyUI and icon
+# sets under bin/, compiled CSS and JS libraries under public/
+bin/
+public/css/app.css
+public/js/alpine.min.js
+public/js/htmx.min.js
+
+# Written by the build (generate-templates) before the app is compiled.
+src/embedded_templates.zig
