@@ -1,13 +1,22 @@
 const std = @import("std");
 const spider = @import("spider");
+const core = @import("core");
 const features = @import("features");
 const db = spider.sqlite;
 
 pub const spider_templates = @import("embedded_templates.zig").EmbeddedTemplates;
 
 pub fn main(init: std.process.Init) !void {
-    try db.init(init.arena.allocator(), init.io, .{});
+    const allocator = init.arena.allocator();
+
+    try db.init(allocator, init.io, .{});
     defer db.deinit();
+
+    // Applies the migrations that have not run yet, the ones `spider migrate`
+    // applies: a new database, or a new container, is ready when the server
+    // starts. The list is src/core/db/migrations.zig.
+    try core.db.migrations.migrate(allocator);
+
     try serve();
 }
 

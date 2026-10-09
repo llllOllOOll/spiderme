@@ -16,11 +16,14 @@ You need Zig 0.17.0 and the `spider` command line tool.
 
 ```bash
 spider install   # once: downloads Tailwind and the icons into bin/
-spider migrate   # once: creates db.sqlite with the table and four posts
 spider dev       # builds, runs, and reloads the browser as you edit
 ```
 
 Then open http://localhost:3000. Port in use? `spider dev --port 4000`.
+
+The first start creates `db.sqlite` with the posts table and four sample
+posts: the app applies its migrations when it starts. `spider migrate`
+does the same without starting it.
 
 ## Test it
 
@@ -67,4 +70,11 @@ The rest was written on top of what those commands generated.
 ```bash
 docker build -t posts .
 docker run -p 3000:3000 posts
+```
+
+The posts live in a file inside the container and go away with it. To keep
+them, give the file a volume:
+
+```bash
+docker run -p 3000:3000 -v posts-data:/data -e SQLITE_PATH=/data/db.sqlite posts
 ```
