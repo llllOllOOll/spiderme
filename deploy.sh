@@ -66,6 +66,9 @@ start() {
         ip="$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' "$name" 2>/dev/null || true)"
         if [ -n "$ip" ] && curl -fsS -m 3 -o /dev/null "http://$ip:3000/up"; then
             echo "started $name"
+            # Traefik sends it requests after its own first check of /up
+            # (every 5s, see the labels). Until then the old one serves.
+            sleep 8
             return 0
         fi
         sleep 1
@@ -108,10 +111,10 @@ case "$1" in
         ;;
     status)
         echo "containers:"
-        docker ps -a --filter "label=deploy.app=$APP" --format '  {{.Names}}  {{.Status}}'
-        docker ps -a --filter "name=^${LEGACY_CONTAINER}$" --format '  {{.Names}}  {{.Status}}  (started by hand)'
+        docker ps -a --filter "label=deploy.app=$APP" --format '{{.Names}}  {{.Status}}' | sed 's/^/  /'
+        docker ps -a --filter "name=^${LEGACY_CONTAINER}$" --format '{{.Names}}  {{.Status}}  (started by hand)' | sed 's/^/  /'
         echo "images:"
-        docker images "$APP" --format '  {{.Tag}}  {{.Size}}  {{.CreatedSince}}' | sort -r
+        docker images "$APP" --format '{{.Tag}}  {{.Size}}  {{.CreatedSince}}' | sort -r | sed 's/^/  /' 
         ;;
 esac
 REMOTE
