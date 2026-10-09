@@ -40,15 +40,13 @@ It creates `src/features/posts/` with its routes, controller, views and a migrat
 
 ## Run the tests
 
-Stop `spider dev` with Ctrl+C, then:
+In another terminal:
 
 ```bash
 zig build test
 ```
 
 A new project already has tests, and one of them starts the app and asks it for a page. [Testing](/docs/testing) shows how to add yours.
-
-Stop `spider dev` first because, for now, the two cannot build the same project at the same time: `spider dev` stops noticing changes afterwards.
 
 ## Add a login
 

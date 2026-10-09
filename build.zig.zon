@@ -5,8 +5,8 @@
     .minimum_zig_version = "0.17.0",
     .dependencies = .{
         .spider = .{
-            // The local Spider tree (branch docs-fixes), while its fixes are
-            // not released. Before this is published: url + hash of a tag.
+            // The local Spider tree, while what the site documents is not
+            // released. Before this is published: url + hash of a tag.
             .path = "../spider",
         },
     },
