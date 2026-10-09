@@ -29,6 +29,7 @@ Each route says who may call it, in its config:
 - `.public = true`: anyone.
 - `.authenticated = true`: anyone who is signed in.
 - `.roles = &.{"admin"}`: someone signed in whose role is one of these.
+- `.policy = ...`: someone signed in who passes a rule of the app, such as "wrote this post". [Access policies](/docs/policies) is about those.
 
 Posts lets everyone read and asks for a login to write:
 
@@ -41,6 +42,13 @@ A handler behind `.authenticated` can count on the visitor. Posts takes the auth
 ```
 
 `c.userId()` gives the id of the account, as text, or null when nobody is signed in.
+
+## Who is signed in, on the page
+
+Every template can read `current_user`: its `id`, `email` and `name`. Handlers do not pass it. The layout of Posts uses it for the top of every page:
+
+```html from=examples/posts/src/shared/templates/layout.html
+```
 
 ## Features made before the login
 

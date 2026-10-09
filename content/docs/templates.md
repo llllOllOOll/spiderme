@@ -36,6 +36,8 @@ A layout is a template with a `{ slot }` where the page goes. A page names its l
 
 The layout sees the same data as the page. `{ title ?? "Posts" }` uses the title the handler sent, or "Posts" when it sent none: `??` gives a default for a value that is missing. In a condition a missing value counts as false, so `if (!composing)` shows the button on every page except the ones that send `composing`.
 
+`current_user` is there on every page without any handler sending it: Spider fills it in when someone is signed in, with `id`, `email` and `name`. Nobody signed in, no `current_user`, and the layout offers to sign in. A component can read it too.
+
 ## Components
 
 A template can be used as a tag. The tag is the file name in PascalCase: `PostCard.html` and `post-card.html` are both `<PostCard>`. Its attributes become its values, and what is written inside the tag becomes its `{ slot }`.

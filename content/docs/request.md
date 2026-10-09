@@ -14,7 +14,7 @@ Where it can, this page shows code from [Posts](https://posts.spiderme.org), the
 
 `c.params.get` reads a `:name` segment of the route. Posts reads the `:id` of `/posts/:id` this way:
 
-```zig from=examples/posts/src/features/posts/controller.zig decl=load
+```zig from=examples/posts/src/features/posts/policy.zig decl=load
 ```
 
 `c.queryDecoded` reads a value of the query string, decoded: what you want for text a person typed. The feed of Posts uses it for its search, `/posts?q=router`:

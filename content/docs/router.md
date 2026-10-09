@@ -15,18 +15,21 @@ The code on this page is from [Posts](https://posts.spiderme.org), the example a
 
 `build` returns a group: routes that share a prefix. Each path is added to the prefix, so `""` is `/posts` itself and `/new` is `/posts/new`.
 
-Every route takes three arguments: the path, the handler, and a config that says who may call it. `defaults` says it once for the whole group: `.public`, anyone. A route that names its own access replaces the default, and here the routes that write do: `.authenticated` is anyone who is signed in. A route with `.{}` keeps the default. [Login](/docs/auth) explains the rest.
+Every route takes three arguments: the path, the handler, and a config that says who may call it. `defaults` says it once for the whole group: `.public`, anyone. A route that names its own access replaces the default, and here the routes that write do: `.authenticated` is anyone who is signed in, and `.policy` names a rule: here, that a post is changed by who wrote it. A route with `.{}` keeps the default. [Login](/docs/auth) and [Access policies](/docs/policies) explain the rest.
 
 ## Dynamic segments
 
 A segment that starts with a colon matches any value at that position: `/:id` answers `/posts/4` and `/posts/9`. The handler reads the value by its name with `c.params.get`.
 
-Posts looks up a post in one place, and every handler that needs one calls it:
+Posts looks up a post in one place:
 
-```zig from=examples/posts/src/features/posts/controller.zig decl=load,show
+```zig from=examples/posts/src/features/posts/policy.zig decl=load
 ```
 
-The value is text. `load` turns it into a number, and answers 404, by returning `error.NotFound`, when it is not one or when no post has that id.
+The value is text. `load` turns it into a number, and gives null when it is not one or when no post has that id. The page of a post answers that with 404, by returning `error.NotFound`:
+
+```zig from=examples/posts/src/features/posts/controller.zig decl=show
+```
 
 A fixed path wins over a dynamic one: `/posts/new` reaches `new`, not `show` with an id of "new". The order the routes are written in does not matter.
 

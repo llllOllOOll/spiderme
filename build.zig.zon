@@ -4,10 +4,7 @@
     .fingerprint = 0x6708b4a3d9ba7e3e,
     .minimum_zig_version = "0.17.0",
     .dependencies = .{
-        .spider = .{
-            .url = "git+https://github.com/llllOllOOll/spider?ref=v0.9.2#b896a90ade8d02fb814e1f362c1f14dfc713715d",
-            .hash = "spider-0.9.2-P7cGrpKNzADgOWuENKjajm7Uhobx1xHe4kW57HAOXEkA",
-        },
+        .spider = .{ .path = "../spider" },
     },
     .paths = .{
         "build.zig",

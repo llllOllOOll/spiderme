@@ -58,10 +58,10 @@ A handler that returns an error ends the request with the matching status: `erro
 
 Posts returns `error.NotFound` for a post that does not exist:
 
-```zig from=examples/posts/src/features/posts/controller.zig decl=load
+```zig from=examples/posts/src/features/posts/controller.zig decl=show
 ```
 
-What the visitor then sees is decided in one place, the error handler given to `onError` in `src/main.zig`. Posts shows its own page for a 404 and leaves the rest to Spider:
+What the visitor then sees is decided in one place, the error handler given to `onError` in `src/main.zig`. Posts shows its own pages for a 404 and a 403, and leaves the rest to Spider:
 
 ```zig from=examples/posts/src/main.zig decl=onError,fallback,api_errors
 ```
