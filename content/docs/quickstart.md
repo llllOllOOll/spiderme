@@ -34,7 +34,26 @@ By default `spider new` writes a project with HTML views and a SQLite database. 
 
 ```bash
 spider g feature posts
-spider migrate
 ```
 
-The first command creates `src/features/posts/` with its routes, controller, views and a migration. The second applies the migration.
+It creates `src/features/posts/` with its routes, controller, views and a migration for the `posts` table. Open [localhost:3000/posts](http://localhost:3000/posts): `spider dev` rebuilt the app, and the app created the table when it started again.
+
+## Run the tests
+
+Stop `spider dev` with Ctrl+C, then:
+
+```bash
+zig build test
+```
+
+A new project already has tests, and one of them starts the app and asks it for a page. [Testing](/docs/testing) shows how to add yours.
+
+Stop `spider dev` first because, for now, the two cannot build the same project at the same time: `spider dev` stops noticing changes afterwards.
+
+## Add a login
+
+```bash
+spider g auth
+```
+
+It adds accounts, sign in and sign out. From then on every route says who may call it, the ones of `posts` included: [Login](/docs/auth) explains how.

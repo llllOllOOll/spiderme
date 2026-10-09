@@ -22,7 +22,7 @@ curl -fsSL https://raw.githubusercontent.com/llllOllOOll/spider/main/scripts/ins
 spider new myapp
 ```
 
-It writes the project to `./myapp`, with HTML views and a SQLite database.
+It writes the project to `./myapp`, with HTML views, a SQLite database and a first test.
 
 - `--pg` uses PostgreSQL instead of SQLite.
 - `--no-db` leaves the database out.
@@ -36,7 +36,8 @@ Run these inside the project.
 
 - `spider dev` builds the app, runs it, and after every save rebuilds it and reloads the browser. `--port 4000` changes the port.
 - `spider g feature posts` generates `src/features/posts/` with a controller, a model, a repository, routes, views and a migration.
-- `spider migrate` applies the migrations that have not run yet.
+- `spider g auth` adds a login with the app's own accounts: sign up, sign in, sign out. `--api` generates JSON routes that answer a token, and `--provider=keycloak` uses a Keycloak realm instead.
+- `spider migrate` applies the migrations that have not run yet. The app does the same when it starts, so this is for when you want them applied without running it.
 - `spider routes` lists every route with its method, its path and who may call it.
 - `spider check` reports what does not follow the project's conventions, with the file, the line and the fix.
 

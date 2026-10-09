@@ -42,6 +42,22 @@ A handler behind `.authenticated` can count on the visitor. Posts takes the auth
 
 `c.userId()` gives the id of the account, as text, or null when nobody is signed in.
 
+## Features made before the login
+
+A feature generated before the login has routes that say nothing about who may call them. Once there is a login, `spider check` and `zig build test` point at each one.
+
+Two edits settle it. In the feature's `routes.zig`, the line that sets the defaults is there, commented out; put the access you want in it:
+
+```zig
+        .defaults(.{ .authenticated = true })
+```
+
+And in its `routes_test.zig`, the table says who may call each route. Change the `"-"` of each line to match:
+
+```zig
+        .{ "GET", "/posts", "authenticated" },
+```
+
 ## The middleware
 
 The line the command adds to `src/main.zig` is `.use(spider.session.middleware())`. On every request it reads the cookie, checks that the app signed it, and tells the routes who is there. It also changes the error handler, so that a visitor who is not signed in is sent to the sign-in page:
