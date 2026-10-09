@@ -22,7 +22,10 @@ Where it can, this page shows code from Posts, the example app in `examples/post
 ```zig from=examples/posts/src/features/posts/controller.zig decl=index
 ```
 
-`c.query` reads the value as it was sent, without decoding. All three return `?[]const u8`: null when the value is not there.
+`c.query` reads the value as it was sent, without decoding, which is fine for a number. All three return `?[]const u8`: null when the value is not there. The API of Posts takes a `?limit=`:
+
+```zig from=examples/posts/src/features/posts/api.zig decl=list
+```
 
 ## Cookies
 
@@ -35,36 +38,21 @@ Posts remembers the name of who wrote the last post, and fills it in when the fo
 
 ## Headers
 
-Header names are matched without regard to case.
+`c.header` reads a request header. Names are matched without regard to case. The JSON API of Posts asks for a key in one:
 
-```zig
-fn whoAmI(c: *spider.Ctx) !spider.Response {
-    const agent = c.header("User-Agent") orelse "unknown";
-    const session = c.cookie("session") orelse return error.Unauthorized;
-    const name = c.cookieDecoded("name") orelse "stranger";
-    return c.json(.{ .agent = agent, .session = session, .name = name }, .{});
-}
+```zig from=examples/posts/src/features/posts/api.zig decl=requireKey
 ```
 
 Returning `error.Unauthorized` answers 401. `error.NotFound` answers 404 and `error.Forbidden` 403.
 
 ## JSON body
 
-`c.bodyJson` parses the body into a struct. Fields the struct does not have are ignored; a field with a default value may be left out by the client.
+`c.bodyJson` parses the body into a struct. Fields the struct does not have are ignored; a field with a default value may be left out by the client. Posts takes a new post as JSON with the same struct its form uses:
 
-```zig
-const NewPost = struct {
-    title: []const u8,
-    draft: bool = false,
-};
-
-fn createPost(c: *spider.Ctx) !spider.Response {
-    const post = try c.bodyJson(NewPost);
-    return c.json(.{ .title = post.title, .draft = post.draft }, .{ .status = .created });
-}
+```zig from=examples/posts/src/features/posts/api.zig decl=create
 ```
 
-A body that is missing or does not match the struct answers 400.
+A body that is missing, or is not JSON that fits the struct, answers 400.
 
 ## Forms
 
@@ -82,12 +70,9 @@ A field the form did not send is an empty string, zero or `false`; an optional o
 
 ## Typed parameters
 
-Instead of reading and converting a value yourself, a handler can ask for it in its parameters. `spider.Path` takes a path segment as a number or text, `spider.Form` takes the form. A value that does not convert answers 400 before the handler runs.
+Instead of reading and converting a value yourself, a handler can ask for it in its parameters. `spider.Path` takes a path segment as a number or text, and `spider.Form` takes the form. A value that does not convert answers 400 before the handler runs.
 
-```zig
-fn updatePost(id: spider.Path(i64, "id"), form: spider.Form(NewPost), c: *spider.Ctx) !spider.Response {
-    return c.json(.{ .id = id.value, .title = form.value.title }, .{});
-}
+```zig from=examples/posts/src/features/posts/api.zig decl=show
 ```
 
-The parameters can come in any order.
+The value is in `.value`. The parameters can come in any order.

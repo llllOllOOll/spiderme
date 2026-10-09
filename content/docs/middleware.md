@@ -8,16 +8,13 @@ order: 40
 
 A middleware is a function that runs around a handler. It can stop the request, let it through, or change the response on the way back.
 
+The code on this page is from Posts, the example app in `examples/posts`. Its JSON API has two middlewares.
+
 ## Writing one
 
 It receives the request and `next`, the rest of the chain. Calling `next(c)` runs the handler and gives back its response.
 
-```zig
-fn requireKey(c: *spider.Ctx, next: spider.NextFn) anyerror!spider.Response {
-    const key = c.header("X-Api-Key") orelse return error.Unauthorized;
-    if (!std.mem.eql(u8, key, "secret")) return error.Forbidden;
-    return next(c);
-}
+```zig from=examples/posts/src/features/posts/api.zig decl=requireKey
 ```
 
 Not calling `next` ends the request there: the handler never runs.
@@ -26,44 +23,26 @@ Not calling `next` ends the request there: the handler never runs.
 
 Call `next` first, then work on what came back. Memory for the request comes from `c.arena` and is freed when the request ends.
 
-```zig
-fn poweredBy(c: *spider.Ctx, next: spider.NextFn) anyerror!spider.Response {
-    var res = try next(c);
-    const headers = try c.arena.alloc([2][]const u8, res.headers.len + 1);
-    @memcpy(headers[0..res.headers.len], res.headers);
-    headers[res.headers.len] = .{ "X-Powered-By", "Spider" };
-    res.headers = headers;
-    return res;
-}
+```zig from=examples/posts/src/features/posts/api.zig decl=noStore
 ```
-
-## Registering
-
-`use` puts a middleware on every request. `useAt` puts it on the paths under a prefix.
-
-```zig
-server
-    .use(spider.logger)
-    .use(poweredBy)
-    .useAt("/api/*", requireKey)
-    .mountFeatures(features)
-    .listen(.{}) catch |err| return err;
-```
-
-They run in the order they were added: first every `use`, then every `useAt` that matches.
 
 ## One group of routes
 
-A group can have its own middleware. It runs for the routes of that group only, after the ones registered on the server.
+A group can have its own middlewares. They run for the routes of that group only, in the order they were added:
 
-```zig
-pub fn build() spider.Group {
-    var g = spider.Group.init("/admin");
-    _ = g.use(requireKey);
-    _ = g.get("/", dashboard, .{ .public = true });
-    return g;
-}
+```zig from=examples/posts/src/features/posts/routes.zig decl=api
 ```
+
+The pages of Posts are another group, and neither middleware touches them.
+
+## The whole app
+
+`use` on the server puts a middleware on every request, before the ones of a group. Posts has one, the logger:
+
+```zig from=examples/posts/src/main.zig decl=serve
+```
+
+`server.useAt("/admin/*", check)` puts one on every path under a prefix instead, whatever group the routes are in.
 
 ## Ready-made
 
@@ -74,12 +53,7 @@ pub fn build() spider.Group {
 
 ## Errors
 
-An error returned by a handler or a middleware goes to the error handler. `spider.errorHandler` is the ready-made one, and apps created by the command line tool use it. To write your own, give `onError` a function:
+An error returned by a handler or a middleware goes to the error handler given to `onError`. `spider.errorHandler` is the ready-made one, and a new project uses it. Posts wraps it in a function of its own, to answer the API in JSON and to show its 404 page:
 
-```zig
-fn onError(c: *spider.Ctx, err: anyerror) anyerror!spider.Response {
-    return c.json(.{ .@"error" = @errorName(err) }, .{ .status = spider.statusForError(err) });
-}
+```zig from=examples/posts/src/main.zig decl=onError,fallback,api_errors
 ```
-
-`spider.statusForError` is the default mapping from an error to a status.
