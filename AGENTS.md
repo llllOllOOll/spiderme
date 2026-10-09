@@ -21,11 +21,16 @@ messages. The project is for readers all over the world. No
 `./deploy.sh` (see the comment at its top) builds the image here, sends it
 over SSH and switches versions on the server with no downtime;
 `./deploy.sh status` and `./deploy.sh rollback` come with it. It refuses
-to run with uncommitted changes.
+to run with uncommitted changes. `./deploy.sh posts ...` does the same for
+the example app, at posts.spiderme.org: its SQLite file lives in the
+volume `spiderme-posts-data`, and its secrets (`JWT_SECRET`,
+`POSTS_API_KEY`) in `~/.config/spiderme-deploy/` on the server, made
+there on the first deploy and never copied anywhere else.
 
 - The server is shared with other systems. The script only touches
-  containers labelled `deploy.app=spiderme-site` and images named
-  `spiderme-site`; do the same by hand.
+  containers labelled `deploy.app=spiderme-site` or `spiderme-posts`,
+  images with those names and the volume `spiderme-posts-data`; do the
+  same by hand.
 - Traefik on the server routes by container labels. If you change the
   labels in the script, change `ROUTE` too (the comment there says why).
 - The site serves `/install.sh`, a copy of `scripts/install.sh` of the
