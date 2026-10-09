@@ -1,0 +1,25 @@
+extends "layout"
+
+<main class="ui-reading">
+    <BackLink href="/posts" label="All posts" />
+
+    <header class="ui-post-header">
+        <h1 class="ui-headline">{ post.title }</h1>
+        <div class="ui-author-row">
+            <span class="ui-avatar ui-avatar-sm ui-avatar-{ post.tone }" aria-hidden="true">{ post.initials }</span>
+            <p class="ui-author-meta">
+                <span class="ui-author">{ post.author }</span>
+                <span class="ui-when">{ post.written }</span>
+            </p>
+        </div>
+    </header>
+
+    <article class="ui-prose">
+        { body }
+    </article>
+
+    <div class="ui-actions ui-actions-ruled">
+        <a class="ui-btn ui-btn-outline" href="/posts/{ post.id }/edit">Edit post</a>
+        <a class="ui-btn ui-btn-danger-quiet" href="/posts/{ post.id }/delete">Delete post</a>
+    </div>
+</main>

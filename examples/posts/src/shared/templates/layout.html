@@ -1,19 +1,29 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="dark">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{ title ?? "posts" }</title>
+    <title>{ title ?? "Posts" }</title>
     <link rel="icon" type="image/png" href="/favicon.png">
     <link rel="shortcut icon" href="/favicon.ico">
     <link rel="stylesheet" href="/css/app.css">
-    <script src="/js/htmx.min.js"></script>
-    <script defer src="/js/stores.js"></script>
-    <script defer src="/js/alpine.min.js"></script>
-    <style>[x-cloak] { display: none !important; }</style>
 </head>
-<body class="bg-base-100 text-base-content min-h-screen">
-    <Toast />
+<body class="ui-page">
+    <header class="ui-topbar">
+        <a class="ui-brand" href="/posts">
+            <svg width="14" height="32" viewBox="0 0 14 32" aria-hidden="true"><line x1="7" y1="0" x2="7" y2="22" stroke="#FF5300" stroke-width="2"/><circle cx="7" cy="25" r="6" fill="#FF5300"/></svg>
+            Posts
+        </a>
+        if (!composing) {
+        <a class="ui-btn ui-btn-primary" href="/posts/new">New post</a>
+        }
+    </header>
+
     { slot }
+
+    <footer class="ui-footer">
+        <span>Posts is an example app for Spider.</span>
+        <a class="ui-link" href="https://github.com/llllOllOOll/spider">Built with Spider</a>
+    </footer>
 </body>
 </html>

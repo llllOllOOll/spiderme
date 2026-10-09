@@ -1,1 +1,38 @@
-<PostsList />
+extends "layout"
+
+<main class="ui-feed-page">
+    <section class="ui-intro">
+        <h1 class="ui-display">Latest posts</h1>
+        <p class="ui-lead">Short notes from people building with Spider.</p>
+        <form class="ui-search" action="/posts" method="get" role="search">
+            <label class="ui-label" for="q">Search posts</label>
+            <div class="ui-search-row">
+                <div class="ui-search-box">
+                    <span class="hero-magnifying-glass-mini size-5" aria-hidden="true"></span>
+                    <input id="q" name="q" type="search" value="{ q }" placeholder="Try &quot;router&quot;">
+                </div>
+                <button class="ui-btn ui-btn-outline ui-search-submit" type="submit">Search</button>
+            </div>
+        </form>
+    </section>
+
+    <section class="ui-feed" aria-label="Posts">
+        if (searching) {
+        <p class="ui-feed-note">Posts that mention “{ q }”. <a class="ui-link" href="/posts">Show all posts</a></p>
+        }
+        if (posts.len == 0) {
+        <div class="ui-empty">
+            if (searching) {
+            <p>No post mentions “{ q }”.</p>
+            } else {
+            <p>Nothing here yet. <a class="ui-link" href="/posts/new">Write the first post</a></p>
+            }
+        </div>
+        }
+        for (posts) |post| {
+        <PostCard id="{ post.id }" title="{ post.title }" author="{ post.author }"
+                  initials="{ post.initials }" tone="{ post.tone }"
+                  written="{ post.written }" excerpt="{ post.excerpt }" />
+        }
+    </section>
+</main>

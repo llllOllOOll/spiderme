@@ -1,0 +1,45 @@
+extends "layout"
+
+<main class="ui-narrow">
+    <BackLink href="{ back }" label="{ back_label }" />
+
+    <h1 class="ui-headline ui-headline-sm">{ heading }</h1>
+
+    <form class="ui-card ui-form" action="{ action }" method="post">
+        <div class="ui-field">
+            <label class="ui-label" for="title">Title</label>
+            <input class="ui-input" id="title" name="title" type="text" value="{ form.title }"
+                   maxlength="120" required aria-describedby="title-note">
+            if (errors.title != "") {
+            <p class="ui-error" id="title-note">{ errors.title }</p>
+            }
+        </div>
+
+        <div class="ui-field">
+            <label class="ui-label" for="body">Body</label>
+            <textarea class="ui-textarea" id="body" name="body" rows="7" required
+                      aria-describedby="body-note">{ form.body }</textarea>
+            if (errors.body != "") {
+            <p class="ui-error" id="body-note">{ errors.body }</p>
+            } else {
+            <p class="ui-hint" id="body-note">Markdown is supported.</p>
+            }
+        </div>
+
+        <div class="ui-field">
+            <label class="ui-label" for="author">Your name</label>
+            <input class="ui-input" id="author" name="author" type="text" value="{ form.author }"
+                   maxlength="60" required autocomplete="name" aria-describedby="author-note">
+            if (errors.author != "") {
+            <p class="ui-error" id="author-note">{ errors.author }</p>
+            } else {
+            <p class="ui-hint" id="author-note">Saved in a cookie, so you only type it once.</p>
+            }
+        </div>
+
+        <div class="ui-actions">
+            <button class="ui-btn ui-btn-primary ui-btn-lg" type="submit">{ submit }</button>
+            <a class="ui-btn ui-btn-ghost ui-btn-lg" href="{ back }">Cancel</a>
+        </div>
+    </form>
+</main>

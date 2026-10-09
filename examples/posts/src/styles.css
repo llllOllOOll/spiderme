@@ -1,7 +1,30 @@
 @import "tailwindcss";
 
-/* UI kit (ui-* classes): see ui.css. Switch with `spider ui use <kit>`. */
+/* The look of the app (ui-* classes): see ui.css. */
 @import "./ui.css";
 
 /* Icon sets: one @plugin per set. Manage with `spider icons add|remove <set>`. */
 @plugin "../bin/icons/heroicons.mjs";
+
+/* Fonts, served by the app itself. Licenses: public/fonts/OFL-*.txt */
+@font-face {
+    font-family: 'Bricolage Grotesque';
+    font-style: normal;
+    font-weight: 600 800;
+    font-display: swap;
+    src: url('/fonts/bricolage-grotesque.woff2?v=1') format('woff2');
+}
+@font-face {
+    font-family: 'Onest';
+    font-style: normal;
+    font-weight: 400 600;
+    font-display: swap;
+    src: url('/fonts/onest.woff2?v=1') format('woff2');
+}
+@font-face {
+    font-family: 'JetBrains Mono';
+    font-style: normal;
+    font-weight: 400 500;
+    font-display: swap;
+    src: url('/fonts/jetbrains-mono.woff2?v=1') format('woff2');
+}

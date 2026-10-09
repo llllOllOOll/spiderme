@@ -1,0 +1,15 @@
+extends "layout"
+
+<main class="ui-narrow">
+    <BackLink href="/posts/{ post.id }" label="Back to the post" />
+
+    <h1 class="ui-headline ui-headline-sm">Delete this post?</h1>
+
+    <form class="ui-card ui-form" action="/posts/{ post.id }/delete" method="post">
+        <p class="ui-lead">“{ post.title }” by { post.author } will be removed for good.</p>
+        <div class="ui-actions">
+            <button class="ui-btn ui-btn-danger ui-btn-lg" type="submit">Delete post</button>
+            <a class="ui-btn ui-btn-ghost ui-btn-lg" href="/posts/{ post.id }">Keep it</a>
+        </div>
+    </form>
+</main>
