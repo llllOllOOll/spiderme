@@ -1,4 +1,5 @@
 pub const posts = @import("posts/mod.zig");
+pub const auth = @import("auth/mod.zig");
 
 // A file with `test "..."` blocks only runs if this module's test binary
 // imports it whole (refAllDecls here reaches one level: every <feature>/mod.zig

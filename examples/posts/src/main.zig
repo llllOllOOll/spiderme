@@ -36,6 +36,9 @@ pub fn serve(allocator: std.mem.Allocator, io: std.Io) !void {
     // `spider routes` prints what got registered.
     try server
         .use(spider.logger)
+        // Reads the login cookie (or a bearer token) and tells the routes
+        // who is there; a route that is not `.public` needs a login.
+        .use(spider.session.middleware())
         .mountFeatures(features)
         .onError(onError)
         // Port and host come from spider.config.zig; the PORT variable
@@ -54,7 +57,7 @@ fn onError(c: *spider.Ctx, err: anyerror) anyerror!spider.Response {
     return fallback(c, err);
 }
 
-const fallback = spider.errorHandler(.{});
+const fallback = spider.errorHandler(.{ .unauthorized_redirect = "/auth/login" });
 const api_errors = spider.errorHandler(.{ .always_json = true });
 
 // Routes in routes.zig with declared access, ui-* classes, icons from the
