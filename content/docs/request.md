@@ -31,9 +31,12 @@ Header names are matched without regard to case.
 fn whoAmI(c: *spider.Ctx) !spider.Response {
     const agent = c.header("User-Agent") orelse "unknown";
     const session = c.cookie("session") orelse return error.Unauthorized;
-    return c.json(.{ .agent = agent, .session = session }, .{});
+    const name = c.cookieDecoded("name") orelse "stranger";
+    return c.json(.{ .agent = agent, .session = session, .name = name }, .{});
 }
 ```
+
+`c.cookie` gives the value as the browser sent it. `c.cookieDecoded` also decodes it: use it for a cookie that was written with `.encode`, as [Responses](/docs/response) shows.
 
 Returning `error.Unauthorized` answers 401. `error.NotFound` answers 404 and `error.Forbidden` 403.
 
