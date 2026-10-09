@@ -49,6 +49,14 @@ fn old(c: *spider.Ctx) !spider.Response {
 
 It answers 302 with the address in `Location`.
 
+After a form is saved, use `c.redirectWith`. It answers 303, which tells the browser to load the next page with a GET, and its options can carry headers and cookies.
+
+```zig
+fn save(c: *spider.Ctx) !spider.Response {
+    return c.redirectWith("/posts/7", .{});
+}
+```
+
 ## Errors
 
 A handler that returns an error ends the request with the matching status: `error.NotFound` is 404, `error.Unauthorized` 401, `error.Forbidden` 403 and `error.BadRequest` 400. Any other error is 500.
@@ -90,6 +98,18 @@ fn index(c: *spider.Ctx) !spider.Response {
 fn signIn(c: *spider.Ctx) !spider.Response {
     const opts = try c.withCookie("session", "abc123", .{ .max_age = 3600 });
     return c.text("signed in", opts);
+}
+```
+
+A cookie cannot hold every character. For text a person typed, such as a name with an accent or a semicolon, pass `.encode = true`, and read the cookie back with `c.cookieDecoded`.
+
+```zig
+const Profile = struct { name: []const u8 };
+
+fn saveName(c: *spider.Ctx) !spider.Response {
+    const profile = try c.parseForm(Profile);
+    const opts = try c.withCookie("name", profile.name, .{ .encode = true, .max_age = 3600 });
+    return c.redirectWith("/", opts);
 }
 ```
 
