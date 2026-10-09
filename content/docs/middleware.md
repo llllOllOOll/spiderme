@@ -37,7 +37,7 @@ The pages of Posts are another group, and neither middleware touches them.
 
 ## The whole app
 
-`use` on the server puts a middleware on every request, before the ones of a group. Posts has one, the logger:
+`use` on the server puts a middleware on every request, before the ones of a group. Posts has two: the logger, and the one that reads the login cookie.
 
 ```zig from=examples/posts/src/main.zig decl=serve
 ```
@@ -47,6 +47,7 @@ The pages of Posts are another group, and neither middleware touches them.
 ## Ready-made
 
 - `spider.logger` prints one line per request: status, method, path and time.
+- `spider.session.middleware()` reads the login cookie and tells the routes who is signed in. See [Login](/docs/auth).
 - `spider.gzip` compresses responses for clients that accept it.
 - `spider.varyHtmx` adds `Vary: HX-Request` to HTML responses.
 - `spider.forceHttps(.{ .default_base_url = "https://example.com" })` redirects plain HTTP to HTTPS behind a proxy.

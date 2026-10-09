@@ -31,9 +31,9 @@ Where it can, this page shows code from Posts, the example app in `examples/post
 
 `c.cookie` gives the value of a cookie as the browser sent it. `c.cookieDecoded` also decodes it: use it for a cookie that was written with `.encode`, as [Responses](/docs/response) shows.
 
-Posts remembers the name of who wrote the last post, and fills it in when the form opens:
+Posts remembers the email of the last sign-in on a browser, and has it typed when the sign-in form opens:
 
-```zig from=examples/posts/src/features/posts/controller.zig decl=new
+```zig from=examples/posts/src/features/auth/controller.zig decl=loginForm
 ```
 
 ## Headers
@@ -66,7 +66,7 @@ And the handler that receives it:
 ```zig from=examples/posts/src/features/posts/controller.zig decl=create
 ```
 
-A field the form did not send is an empty string, zero or `false`; an optional one is null. `create` checks the fields itself and shows the form again when one is missing.
+A field the form did not send is an empty string, zero or `false`; an optional one is null. `create` checks the fields itself and shows the form again when one is missing. The form has no author field: the author is whoever is signed in.
 
 ## Typed parameters
 

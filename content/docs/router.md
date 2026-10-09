@@ -15,7 +15,7 @@ The code on this page is from Posts, the example app in `examples/posts`. These 
 
 `build` returns a group: routes that share a prefix. Each path is added to the prefix, so `""` is `/posts` itself and `/new` is `/posts/new`.
 
-Every route takes three arguments: the path, the handler, and a config that says who may call it. Here the config is empty because `defaults` already said it for the whole group: `.public`, anyone. A route that sets its own access replaces the default.
+Every route takes three arguments: the path, the handler, and a config that says who may call it. `defaults` says it once for the whole group: `.public`, anyone. A route that names its own access replaces the default, and here the routes that write do: `.authenticated` is anyone who is signed in. A route with `.{}` keeps the default. [Login](/docs/auth) explains the rest.
 
 ## Dynamic segments
 
@@ -37,7 +37,7 @@ A fixed path wins over a dynamic one: `/posts/new` reaches `new`, not `show` wit
 ```zig from=examples/posts/src/main.zig decl=serve
 ```
 
-So a feature can have more than one group. Posts has a second one, outside `/posts`, for the address of the site itself:
+So a feature can have more than one group. The posts feature has three: the pages above, a JSON API under `/api/posts`, and one outside both for the address of the site itself:
 
 ```zig from=examples/posts/src/features/posts/routes.zig decl=home
 ```
@@ -53,16 +53,26 @@ It prints every route of the app with who may call it:
 ```text
 GET     /                                                public
 GET     /_spider/health                                  public  quiet_log
+GET     /api/posts                                       public
+POST    /api/posts                                       public
+GET     /api/posts/:id                                   public
+GET     /auth/account                                    authenticated
+GET     /auth/login                                      public
+POST    /auth/login                                      public
+POST    /auth/logout                                     authenticated
+GET     /auth/register                                   public
+POST    /auth/register                                   public
 GET     /posts                                           public
 GET     /posts/:id                                       public
-GET     /posts/:id/delete                                public
-POST    /posts/:id/delete                                public
-GET     /posts/:id/edit                                  public
-POST    /posts/:id/update                                public
-POST    /posts/create                                    public
-GET     /posts/new                                       public
+GET     /posts/:id/delete                                authenticated
+POST    /posts/:id/delete                                authenticated
+GET     /posts/:id/edit                                  authenticated
+POST    /posts/:id/update                                authenticated
+POST    /posts/create                                    authenticated
+GET     /posts/export.csv                                public
+GET     /posts/new                                       authenticated
 GET     /up                                              public  quiet_log
-11 routes
+21 routes
 ```
 
 `/up` and `/_spider/health` come with Spider: they answer whether the app is running.

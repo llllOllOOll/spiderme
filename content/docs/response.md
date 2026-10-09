@@ -47,7 +47,7 @@ fn banner(c: *spider.Ctx) !spider.Response {
 ```zig from=examples/posts/src/features/posts/controller.zig decl=delete
 ```
 
-After a form is saved, use `c.redirectWith`. It answers 303, which tells the browser to load the next page with a GET, and its options can carry headers and cookies. Posts goes to the post it just saved, and remembers who wrote it:
+After a form is saved, use `c.redirectWith`. It answers 303, which tells the browser to load the next page with a GET, and its options can carry headers and cookies. Posts goes to the post it just saved:
 
 ```zig from=examples/posts/src/features/posts/controller.zig decl=saved
 ```
@@ -86,7 +86,12 @@ To choose the whole body yourself, return a response with the status, as `create
 
 `c.withCookie` gives back the options with a `Set-Cookie` header in them. A cookie is `HttpOnly`, `Secure` and `SameSite=Lax` unless you say otherwise.
 
-A cookie cannot hold every character. For text a person typed, such as a name with an accent or a semicolon, pass `.encode = true`, and read the cookie back with `c.cookieDecoded`. The `saved` function above does both: it remembers the author's name for a year.
+A cookie cannot hold every character. For text a person typed, pass `.encode = true`, and read the cookie back with `c.cookieDecoded`.
+
+When someone signs in, Posts sends two cookies with its redirect: the session, and the email to have typed next time.
+
+```zig from=examples/posts/src/features/auth/controller.zig decl=signIn,last_email,one_year
+```
 
 ## Files
 
