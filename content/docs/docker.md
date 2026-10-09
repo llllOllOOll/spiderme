@@ -41,6 +41,16 @@ The app reads the `PORT` variable:
 docker run -p 8080:8080 -e PORT=8080 myapp
 ```
 
+## The database
+
+The app applies its migrations when it starts, so a new container has its tables on the first request.
+
+With SQLite the data is a file inside the container, and it goes away with the container. To keep it, put the file in a volume:
+
+```bash
+docker run -p 3000:3000 -v myapp-data:/data -e SQLITE_PATH=/data/db.sqlite myapp
+```
+
 ## PostgreSQL
 
 A project created with `--pg` also gets a `docker-compose.yml`. It does not run the app: it starts a PostgreSQL server for development, on the port written in `.env`.
