@@ -14,9 +14,12 @@
             <svg width="14" height="32" viewBox="0 0 14 32" aria-hidden="true"><line x1="7" y1="0" x2="7" y2="22" stroke="#FF5300" stroke-width="2"/><circle cx="7" cy="25" r="6" fill="#FF5300"/></svg>
             Posts
         </a>
-        if (!composing) {
-        <a class="ui-btn ui-btn-primary" href="/posts/new">New post</a>
-        }
+        <nav class="ui-topbar-links">
+            <a class="ui-btn ui-btn-ghost" href="/auth/account">Account</a>
+            if (!composing) {
+            <a class="ui-btn ui-btn-primary" href="/posts/new">New post</a>
+            }
+        </nav>
     </header>
 
     { slot }

@@ -1,25 +1,25 @@
 extends "layout"
 
-<main class="min-h-screen flex items-center justify-center p-6">
-    <div class="ui-card w-full max-w-sm p-8 gap-6">
-        <h1 class="text-2xl font-semibold">Sign in</h1>
+<main class="ui-narrow">
+    <h1 class="ui-headline ui-headline-sm">Sign in</h1>
 
+    <form class="ui-card ui-form" action="/auth/login" method="post">
         if (problem != "") {
-        <p class="ui-alert ui-alert-error" role="alert">{ problem }</p>
+        <p class="ui-alert" role="alert">{ problem }</p>
         }
 
-        <form class="flex flex-col gap-4" action="/auth/login" method="post">
-            <label class="ui-field">
-                <span class="ui-label">Email</span>
-                <input class="ui-input" name="email" type="email" value="{ email }" autocomplete="email" required autofocus>
-            </label>
-            <label class="ui-field">
-                <span class="ui-label">Password</span>
-                <input class="ui-input" name="password" type="password" autocomplete="current-password" required>
-            </label>
-            <button class="ui-btn ui-btn-primary" type="submit">Sign in</button>
-        </form>
+        <div class="ui-field">
+            <label class="ui-label" for="email">Email</label>
+            <input class="ui-input" id="email" name="email" type="email" value="{ email }" autocomplete="email" required>
+        </div>
+        <div class="ui-field">
+            <label class="ui-label" for="password">Password</label>
+            <input class="ui-input" id="password" name="password" type="password" autocomplete="current-password" required>
+        </div>
 
-        <p class="text-sm">No account yet? <a class="underline" href="/auth/register">Create one</a></p>
-    </div>
+        <div class="ui-actions">
+            <button class="ui-btn ui-btn-primary ui-btn-lg" type="submit">Sign in</button>
+            <a class="ui-link" href="/auth/register">Create an account</a>
+        </div>
+    </form>
 </main>

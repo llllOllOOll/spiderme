@@ -26,17 +26,6 @@ extends "layout"
             }
         </div>
 
-        <div class="ui-field">
-            <label class="ui-label" for="author">Your name</label>
-            <input class="ui-input" id="author" name="author" type="text" value="{ form.author }"
-                   maxlength="60" required autocomplete="name" aria-describedby="author-note">
-            if (errors.author != "") {
-            <p class="ui-error" id="author-note">{ errors.author }</p>
-            } else {
-            <p class="ui-hint" id="author-note">Saved in a cookie, so you only type it once.</p>
-            }
-        </div>
-
         <div class="ui-actions">
             <button class="ui-btn ui-btn-primary ui-btn-lg" type="submit">{ submit }</button>
             <a class="ui-btn ui-btn-ghost ui-btn-lg" href="{ back }">Cancel</a>

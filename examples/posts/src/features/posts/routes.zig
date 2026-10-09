@@ -6,21 +6,23 @@ const api_handlers = @import("api.zig");
 /// `server.mountFeatures(features)`: every pub fn here with no parameters
 /// that returns a spider.Group. Paths are relative to the group prefix.
 ///
-/// The app has no login, so every route is public. A route's own config
-/// (the third argument) would replace these defaults.
+/// Reading is for everyone: `defaults` makes the routes public. Writing
+/// needs a login: those routes say `.authenticated`, which replaces the
+/// default for them.
 pub fn build() spider.Group {
+    const signed_in = .{ .authenticated = true };
     var g = spider.Group.init("/posts");
     _ = g
         .defaults(.{ .public = true })
         .get("", controller.index, .{})
-        .get("/new", controller.new, .{})
         .get("/export.csv", controller.exportCsv, .{})
-        .post("/create", controller.create, .{})
+        .get("/new", controller.new, signed_in)
+        .post("/create", controller.create, signed_in)
         .get("/:id", controller.show, .{})
-        .get("/:id/edit", controller.edit, .{})
-        .post("/:id/update", controller.update, .{})
-        .get("/:id/delete", controller.confirmDelete, .{})
-        .post("/:id/delete", controller.delete, .{});
+        .get("/:id/edit", controller.edit, signed_in)
+        .post("/:id/update", controller.update, signed_in)
+        .get("/:id/delete", controller.confirmDelete, signed_in)
+        .post("/:id/delete", controller.delete, signed_in);
     return g;
 }
 

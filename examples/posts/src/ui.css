@@ -68,6 +68,8 @@
     letter-spacing: -0.03em;
   }
 
+  .ui-topbar-links { display: flex; align-items: center; gap: 8px; }
+
   .ui-footer {
     margin-top: auto;
     display: flex;
@@ -379,6 +381,19 @@
   .ui-error { font-size: 14px; font-weight: 600; color: var(--color-error); }
   .ui-field:has(.ui-error) :where(.ui-input, .ui-textarea) { border-color: var(--color-error); }
 
+  /* A message at the top of a form: what is wrong with it. */
+  .ui-alert {
+    padding: 12px 14px;
+    border-radius: 10px;
+    background: #f6dedc;
+    font-size: 15px;
+    font-weight: 600;
+    color: #8c1d18;
+  }
+  .ui-facts { display: flex; flex-direction: column; gap: 16px; }
+  .ui-facts dt { font-size: 14px; color: var(--color-muted); }
+  .ui-facts dd { font-size: 17px; font-weight: 500; overflow-wrap: anywhere; }
+
   .ui-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
   .ui-actions-ruled { padding-top: 24px; border-top: 1px solid var(--color-rule); }
 
@@ -414,7 +429,9 @@
     .ui-excerpt { line-height: 1.55; }
     .ui-read,
     .ui-feed-note .ui-link,
-    .ui-empty .ui-link { display: inline-flex; align-items: center; min-height: 44px; }
+    .ui-empty .ui-link,
+    .ui-intro > .ui-link,
+    .ui-actions .ui-link { display: inline-flex; align-items: center; min-height: 44px; }
 
     .ui-reading,
     .ui-narrow { padding: 32px 20px 40px; gap: 24px; }

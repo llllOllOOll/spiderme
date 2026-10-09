@@ -10,7 +10,8 @@ const Response = spider.Response;
 // routes who is there. Nothing here talks to another service.
 
 pub fn loginForm(c: *spider.Ctx) !Response {
-    return loginPage(c, "", null);
+    // The email of the last sign-in on this browser, already typed.
+    return loginPage(c, c.cookieDecoded(last_email) orelse "", null);
 }
 
 pub fn login(c: *spider.Ctx) !Response {
@@ -59,15 +60,26 @@ pub fn account(c: *spider.Ctx) !Response {
     }, .{});
 }
 
-/// Starts the session and goes to the home page.
+/// Starts the session, remembers the email for the next sign-in on this
+/// browser, and goes to the home page. Two cookies: the options of both go
+/// in the same response.
 fn signIn(c: *spider.Ctx, user: model.User) !Response {
-    return c.redirectWith("/", try spider.session.start(c, .{
+    const session = try spider.session.start(c, .{
         .id = try std.fmt.allocPrint(c.arena, "{d}", .{user.id}),
         .email = user.email,
         .name = user.name,
         .roles = &.{user.role},
-    }));
+    });
+    // `.encode`: an email is text a person typed, not safe for a cookie as it is.
+    const remembered = try c.withCookie(last_email, user.email, .{ .encode = true, .max_age = one_year });
+
+    return c.redirectWith("/", .{
+        .headers = try std.mem.concat(c.arena, [2][]const u8, &.{ session.headers, remembered.headers }),
+    });
 }
+
+const last_email = "last_email";
+const one_year = 365 * 24 * 60 * 60;
 
 fn loginPage(c: *spider.Ctx, email: []const u8, problem: ?[]const u8) !Response {
     return c.view("auth/login", .{

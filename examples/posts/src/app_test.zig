@@ -23,9 +23,10 @@ fn run() !void {
     try main.serve(gpa, io);
 }
 
-/// Publishes a post and gives back its address, "/posts/5".
-fn publish(app: spider.testing.App, title: []const u8, body: []const u8) ![]const u8 {
-    var res = try app.postForm("/posts/create", .{ .title = title, .body = body, .author = "Test Writer" });
+/// Publishes a post as `writer` (a signed-in visitor) and gives back its
+/// address, "/posts/5".
+fn publish(writer: spider.testing.App, title: []const u8, body: []const u8) ![]const u8 {
+    var res = try writer.postForm("/posts/create", .{ .title = title, .body = body });
     defer res.deinit();
     try res.expectStatus(303);
     return std.testing.allocator.dupe(u8, res.header("Location").?);
@@ -34,6 +35,8 @@ fn publish(app: spider.testing.App, title: []const u8, body: []const u8) ![]cons
 fn path(buf: []u8, post: []const u8, rest: []const u8) []const u8 {
     return std.fmt.bufPrint(buf, "{s}{s}", .{ post, rest }) catch unreachable;
 }
+
+// ── reading: for everyone ───────────────────────────────────────────────
 
 test "GET / goes to the feed" {
     const app = try spider.testing.start(run);
@@ -84,9 +87,92 @@ test "GET /posts/:id shows a post, its body rendered from Markdown" {
     try res.expectContains("<code>/posts/:id</code>");
 }
 
+test "a missing post, a bad id and an unknown address get the 404 page" {
+    const app = try spider.testing.start(run);
+    for ([_][]const u8{ "/posts/9999", "/posts/abc", "/nowhere" }) |target| {
+        var res = try app.get(target);
+        defer res.deinit();
+        try res.expectStatus(404);
+        try res.expectContains("This page is not here");
+    }
+}
+
+// ── writing: for who is signed in ───────────────────────────────────────
+// `signUp` (below, with the tests of the login) creates an account and
+// gives back its Cookie header; `app.with` sends it on every request.
+
+test "writing needs a login: a visitor is sent to the sign-in page" {
+    const app = try spider.testing.start(run);
+
+    for ([_][]const u8{ "/posts/new", "/posts/4/edit", "/posts/4/delete" }) |target| {
+        var res = try app.get(target);
+        defer res.deinit();
+        try res.expectRedirect("/auth/login");
+    }
+
+    var create = try app.postForm("/posts/create", .{ .title = "No session", .body = "x" });
+    defer create.deinit();
+    try create.expectRedirect("/auth/login");
+
+    var delete = try app.request(.{ .method = "POST", .target = "/posts/4/delete" });
+    defer delete.deinit();
+    try delete.expectRedirect("/auth/login");
+
+    // And nothing was written or removed.
+    var feed = try app.get("/posts");
+    defer feed.deinit();
+    try feed.expectNotContains("No session");
+    try feed.expectContains("Routes that read like a sentence");
+}
+
+test "GET /posts/new shows the form to who is signed in" {
+    const app = try spider.testing.start(run);
+    var buf: [1024]u8 = undefined;
+    const writer = app.with(&.{try signUp(app, &buf, "Form Reader", "form@example.com")});
+
+    var res = try writer.get("/posts/new");
+    defer res.deinit();
+    try res.expectStatus(200);
+    try res.expectContains("Publish post");
+}
+
+test "POST /posts/create says what is missing and keeps what was typed" {
+    const app = try spider.testing.start(run);
+    var buf: [1024]u8 = undefined;
+    const writer = app.with(&.{try signUp(app, &buf, "Hasty Writer", "hasty@example.com")});
+
+    var res = try writer.postForm("/posts/create", .{ .title = "Only a title", .body = "  " });
+    defer res.deinit();
+    try res.expectStatus(422);
+    try res.expectContains("Write something in the body.");
+    try res.expectNotContains("Give the post a title.");
+    try res.expectContains("value=\"Only a title\"");
+}
+
+test "POST /posts/create saves the post under the name of who is signed in" {
+    const app = try spider.testing.start(run);
+    var buf: [1024]u8 = undefined;
+    const writer = app.with(&.{try signUp(app, &buf, "Zé; da Silva", "ze@example.com")});
+
+    // The form has no author field, and one sent anyway is ignored.
+    var res = try writer.postForm("/posts/create", .{ .title = "Hello from the test", .body = "A **bold** start.", .author = "Someone Else" });
+    defer res.deinit();
+    try res.expectStatus(303);
+
+    var post = try app.get(res.header("Location").?);
+    defer post.deinit();
+    try post.expectContains("Hello from the test");
+    try post.expectContains("A <b>bold</b> start.");
+    try post.expectContains("Zé; da Silva");
+    try post.expectNotContains("Someone Else");
+    try post.expectContains("Just now");
+}
+
 test "GET /posts/:id escapes what the author typed" {
     const app = try spider.testing.start(run);
-    const post = try publish(app, "<b>Bold</b> claims", "Hi <script>alert(1)</script> and [x](javascript:alert)");
+    var cookie: [1024]u8 = undefined;
+    const writer = app.with(&.{try signUp(app, &cookie, "Curious Writer", "curious@example.com")});
+    const post = try publish(writer, "<b>Bold</b> claims", "Hi <script>alert(1)</script> and [x](javascript:alert)");
     defer std.testing.allocator.free(post);
 
     var res = try app.get(post);
@@ -97,74 +183,29 @@ test "GET /posts/:id escapes what the author typed" {
     try res.expectNotContains("javascript:");
 }
 
-test "a missing post, a bad id and an unknown address get the 404 page" {
-    const app = try spider.testing.start(run);
-    for ([_][]const u8{ "/posts/9999", "/posts/abc", "/posts/9999/edit", "/posts/9999/delete", "/nowhere" }) |target| {
-        var res = try app.get(target);
-        defer res.deinit();
-        try res.expectStatus(404);
-        try res.expectContains("This page is not here");
-    }
-}
-
-test "GET /posts/new shows the form and remembers the author" {
-    const app = try spider.testing.start(run);
-
-    var first = try app.get("/posts/new");
-    defer first.deinit();
-    try first.expectStatus(200);
-    try first.expectContains("Publish post");
-    try first.expectContains("name=\"author\" type=\"text\" value=\"\"");
-
-    var again = try app.request(.{ .target = "/posts/new", .headers = &.{"Cookie: author=Ana%20Ribeiro"} });
-    defer again.deinit();
-    try again.expectContains("value=\"Ana Ribeiro\"");
-}
-
-test "POST /posts/create says what is missing and keeps what was typed" {
-    const app = try spider.testing.start(run);
-    var res = try app.postForm("/posts/create", .{ .title = "  ", .body = "", .author = "Ana" });
-    defer res.deinit();
-    try res.expectStatus(422);
-    try res.expectContains("Give the post a title.");
-    try res.expectContains("Write something in the body.");
-    try res.expectNotContains("Tell readers who wrote this.");
-    try res.expectContains("value=\"Ana\"");
-}
-
-test "POST /posts/create saves the post and sets the author cookie" {
-    const app = try spider.testing.start(run);
-    var res = try app.postForm("/posts/create", .{ .title = "Hello from the test", .body = "A **bold** start.", .author = "Zé; da Silva" });
-    defer res.deinit();
-    try res.expectStatus(303);
-    try std.testing.expectEqualStrings("Z%C3%A9%3B%20da%20Silva", res.cookie("author").?);
-
-    var post = try app.get(res.header("Location").?);
-    defer post.deinit();
-    try post.expectContains("Hello from the test");
-    try post.expectContains("A <b>bold</b> start.");
-    try post.expectContains("Zé; da Silva");
-    try post.expectContains("Just now");
-}
-
 test "GET /posts/:id/edit and POST /posts/:id/update change a post" {
     const app = try spider.testing.start(run);
-    const post = try publish(app, "Before the edit", "First version.");
+    var cookie: [1024]u8 = undefined;
+    const writer = app.with(&.{try signUp(app, &cookie, "First Author", "first@example.com")});
+    const post = try publish(writer, "Before the edit", "First version.");
     defer std.testing.allocator.free(post);
     var buf: [64]u8 = undefined;
 
-    var form = try app.get(path(&buf, post, "/edit"));
+    var form = try writer.get(path(&buf, post, "/edit"));
     defer form.deinit();
     try form.expectStatus(200);
     try form.expectContains("value=\"Before the edit\"");
     try form.expectContains("Save changes");
 
-    var invalid = try app.postForm(path(&buf, post, "/update"), .{ .title = "x", .body = "", .author = "x" });
+    var invalid = try writer.postForm(path(&buf, post, "/update"), .{ .title = "x", .body = "" });
     defer invalid.deinit();
     try invalid.expectStatus(422);
     try invalid.expectContains("Write something in the body.");
 
-    var saved = try app.postForm(path(&buf, post, "/update"), .{ .title = "After the edit", .body = "Second version.", .author = "Test Writer" });
+    // Someone else edits it: the post keeps its author.
+    var other_cookie: [1024]u8 = undefined;
+    const editor = app.with(&.{try signUp(app, &other_cookie, "Second Editor", "second@example.com")});
+    var saved = try editor.postForm(path(&buf, post, "/update"), .{ .title = "After the edit", .body = "Second version." });
     defer saved.deinit();
     try saved.expectRedirect(post);
 
@@ -173,19 +214,23 @@ test "GET /posts/:id/edit and POST /posts/:id/update change a post" {
     try page.expectContains("After the edit");
     try page.expectContains("Second version.");
     try page.expectNotContains("Before the edit");
+    try page.expectContains("First Author");
+    try page.expectNotContains("Second Editor");
 
-    var missing = try app.postForm("/posts/9999/update", .{ .title = "x", .body = "x", .author = "x" });
+    var missing = try writer.postForm("/posts/9999/update", .{ .title = "x", .body = "x" });
     defer missing.deinit();
     try missing.expectStatus(404);
 }
 
 test "GET /posts/:id/delete asks first, POST /posts/:id/delete removes the post" {
     const app = try spider.testing.start(run);
-    const post = try publish(app, "Soon gone", "Not for long.");
+    var cookie: [1024]u8 = undefined;
+    const writer = app.with(&.{try signUp(app, &cookie, "Tidy Writer", "tidy@example.com")});
+    const post = try publish(writer, "Soon gone", "Not for long.");
     defer std.testing.allocator.free(post);
     var buf: [64]u8 = undefined;
 
-    var ask = try app.get(path(&buf, post, "/delete"));
+    var ask = try writer.get(path(&buf, post, "/delete"));
     defer ask.deinit();
     try ask.expectStatus(200);
     try ask.expectContains("Delete this post?");
@@ -195,7 +240,7 @@ test "GET /posts/:id/delete asks first, POST /posts/:id/delete removes the post"
     defer still_there.deinit();
     try still_there.expectStatus(200);
 
-    var gone = try app.request(.{ .method = "POST", .target = path(&buf, post, "/delete") });
+    var gone = try writer.postForm(path(&buf, post, "/delete"), .{});
     defer gone.deinit();
     try gone.expectRedirect("/posts");
 
@@ -203,14 +248,16 @@ test "GET /posts/:id/delete asks first, POST /posts/:id/delete removes the post"
     defer after.deinit();
     try after.expectStatus(404);
 
-    var missing = try app.request(.{ .method = "POST", .target = "/posts/9999/delete" });
+    var missing = try writer.postForm("/posts/9999/delete", .{});
     defer missing.deinit();
     try missing.expectStatus(404);
 }
 
 test "GET /posts/export.csv downloads every post as a file" {
     const app = try spider.testing.start(run);
-    const post = try publish(app, "Commas, and \"quotes\"", "x");
+    var cookie: [1024]u8 = undefined;
+    const writer = app.with(&.{try signUp(app, &cookie, "Test Writer", "csv@example.com")});
+    const post = try publish(writer, "Commas, and \"quotes\"", "x");
     defer std.testing.allocator.free(post);
 
     var res = try app.get("/posts/export.csv");
@@ -397,4 +444,19 @@ test "auth: signing out ends the session" {
     defer out.deinit();
     try out.expectRedirect("/auth/login");
     try std.testing.expectEqualStrings("", out.cookie("session").?);
+}
+
+test "auth: the sign-in form remembers the email of the last sign-in" {
+    const app = try spider.testing.start(run);
+
+    var res = try app.postForm("/auth/register", .{ .name = "Flávia", .email = "flavia+posts@example.com", .password = "a good password" });
+    defer res.deinit();
+    try res.expectRedirect("/");
+    // Encoded: a "+" and an "@" are not safe in a cookie as they are.
+    try std.testing.expectEqualStrings("flavia%2Bposts%40example.com", res.cookie("last_email").?);
+
+    // Signed out, back on the same browser: the email is already typed.
+    var form = try app.request(.{ .target = "/auth/login", .headers = &.{"Cookie: last_email=flavia%2Bposts%40example.com"} });
+    defer form.deinit();
+    try form.expectContains("value=\"flavia+posts@example.com\"");
 }

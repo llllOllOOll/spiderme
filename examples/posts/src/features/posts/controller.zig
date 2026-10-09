@@ -37,16 +37,17 @@ pub fn show(c: *spider.Ctx) !Response {
 }
 
 pub fn new(c: *spider.Ctx) !Response {
-    return form(c, null, .{ .author = c.cookieDecoded("author") orelse "" }, .{});
+    return form(c, null, .{}, .{});
 }
 
 pub fn create(c: *spider.Ctx) !Response {
-    const input = (try c.parseForm(model.Input)).trimmed();
+    var input = (try c.parseForm(model.Input)).trimmed();
+    input.author = signedInName(c);
     const errors = model.validate(input);
     if (errors.any()) return form(c, null, input, errors);
 
     const id = try repository.create(c.arena, input);
-    return saved(c, id, input.author);
+    return saved(c, id);
 }
 
 pub fn edit(c: *spider.Ctx) !Response {
@@ -56,12 +57,13 @@ pub fn edit(c: *spider.Ctx) !Response {
 
 pub fn update(c: *spider.Ctx) !Response {
     const post = try load(c);
-    const input = (try c.parseForm(model.Input)).trimmed();
+    var input = (try c.parseForm(model.Input)).trimmed();
+    input.author = post.author; // an edit does not change who wrote it
     const errors = model.validate(input);
     if (errors.any()) return form(c, post.id, input, errors);
 
     try repository.update(c.arena, post.id, input);
-    return saved(c, post.id, input.author);
+    return saved(c, post.id);
 }
 
 /// Asks before deleting. It is a page, so it works without JavaScript.
@@ -138,10 +140,13 @@ fn form(c: *spider.Ctx, id: ?i64, input: model.Input, errors: model.Errors) !Res
     }, .{ .status = if (errors.any()) .unprocessable_entity else .ok });
 }
 
-/// After a save: go to the post and remember who wrote it, for a year.
-/// `.encode` lets the cookie hold any name (an accent, a semicolon).
-fn saved(c: *spider.Ctx, id: i64, author: []const u8) !Response {
-    const one_year = 365 * 24 * 60 * 60;
-    const url = try std.fmt.allocPrint(c.arena, "/posts/{d}", .{id});
-    return c.redirectWith(url, try c.withCookie("author", author, .{ .encode = true, .max_age = one_year }));
+/// After a save: go to the post. 303 makes the browser load it with a GET.
+fn saved(c: *spider.Ctx, id: i64) !Response {
+    return c.redirectWith(try std.fmt.allocPrint(c.arena, "/posts/{d}", .{id}), .{});
+}
+
+/// The name of who is signed in. The routes that write are only reached
+/// with a session (see routes.zig), and the session carries the name.
+fn signedInName(c: *spider.Ctx) []const u8 {
+    return c.params.get("_auth_name") orelse "";
 }
