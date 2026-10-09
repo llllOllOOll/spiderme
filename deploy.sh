@@ -1,9 +1,12 @@
 #!/usr/bin/env bash
-# Deploys the site to its server.
+# Deploys the site, or the example app, to the server.
 #
-#     ./deploy.sh             build, send, start the new version, retire the old one
-#     ./deploy.sh status      what is running on the server
-#     ./deploy.sh rollback    go back to the version before the current one
+#     ./deploy.sh [site|posts]            build, send, start the new version, retire the old one
+#     ./deploy.sh [site|posts] status     what is running on the server
+#     ./deploy.sh [site|posts] rollback   go back to the version before the current one
+#
+# Without a name it is the site: spiderme.org. `posts` is the example app
+# of examples/posts: posts.spiderme.org.
 #
 # How it works. The image is built here and sent to the server over SSH
 # (no registry in between). On the server, a Traefik that is already there
@@ -12,46 +15,109 @@
 # answers, it is removed instead and the old one keeps serving.
 #
 # It needs: Docker here, and SSH access to the server as a user that can
-# run `docker` there. Nothing secret is in this file or in the image.
+# run `docker` there. Nothing secret is in this file or in the images: what
+# an app needs to keep secret is made on the server the first time, in a
+# file only that user can read, and stays there.
 set -euo pipefail
 cd "$(dirname "$0")"
 
 # ── settings ────────────────────────────────────────────────────────────
 SERVER="${DEPLOY_SERVER:-seven@spiderme.org}"
-APP="spiderme-site"                      # image name and container prefix
-# The name of the Traefik router and service. Two containers may share one
-# only if their labels are identical, and during a deploy the old and the
-# new version run side by side: CHANGE THIS NAME WHENEVER YOU CHANGE THE
-# LABELS BELOW (v2, v3, ...), or Traefik drops the route while both run.
-ROUTE="spiderme-site-v2"
-RULE='Host(`spiderme.org`) || Host(`www.spiderme.org`)'
 NETWORK="network_public"                 # the Docker network Traefik watches
 CERT_RESOLVER="letsencrypt"              # the name of Traefik's certificate resolver
-CHECK_URL="https://spiderme.org"         # where the public sees it
 KEEP_IMAGES=3                            # versions kept on the server for rollback
-# A container of the site started by hand before this script existed.
-LEGACY_CONTAINER="spiderme-app"
+
+# One block per app.
+#   APP      image name and container prefix
+#   ROUTE    the name of the Traefik router and service. Two containers may
+#            share one only if their labels are identical, and during a
+#            deploy the old and the new version run side by side: CHANGE IT
+#            WHENEVER YOU CHANGE THE LABELS in start() (v2, v3, ...), or
+#            Traefik drops the route while both run.
+#   RULE     which addresses reach the app
+#   CONTEXT  the directory with its Dockerfile
+#   VOLUME   "name:/path" kept across versions, or empty
+#   SETTINGS "KEY=value ..." given to the container as they are (not secret)
+#   SECRETS  names of variables the server makes up once (random) and keeps
+#   LEGACY   a container started by hand before this script existed
+TARGET="site"
+case "${1:-}" in site | posts)
+    TARGET="$1"
+    shift
+    ;;
+esac
+
+case "$TARGET" in
+    site)
+        APP="spiderme-site"
+        ROUTE="spiderme-site-v2"
+        RULE='Host(`spiderme.org`) || Host(`www.spiderme.org`)'
+        CONTEXT="."
+        CHECK_URL="https://spiderme.org"
+        VOLUME=""
+        SETTINGS=""
+        SECRETS=""
+        LEGACY="spiderme-app"
+        ;;
+    posts)
+        APP="spiderme-posts"
+        ROUTE="spiderme-posts-v1"
+        RULE='Host(`posts.spiderme.org`)'
+        CONTEXT="examples/posts"
+        CHECK_URL="https://posts.spiderme.org"
+        VOLUME="spiderme-posts-data:/data" # the SQLite file
+        SETTINGS="SQLITE_PATH=/data/db.sqlite"
+        SECRETS="JWT_SECRET POSTS_API_KEY" # sessions; the key of the JSON API
+        LEGACY=""
+        ;;
+esac
 
 say() { printf '\033[1m==> %s\033[0m\n' "$*"; }
-fail() { printf '\033[31merror: %s\033[0m\n' "$*" >&2; exit 1; }
+fail() {
+    printf '\033[31merror: %s\033[0m\n' "$*" >&2
+    exit 1
+}
 
-# Runs the functions below on the server. They only touch containers and
-# images of this app.
+# Runs the functions below on the server. They only touch containers,
+# images and the volume of this app.
 remote() {
     # shellcheck disable=SC2029
-    ssh -o BatchMode=yes "$SERVER" "APP='$APP' ROUTE='$ROUTE' NETWORK='$NETWORK' CERT_RESOLVER='$CERT_RESOLVER' KEEP_IMAGES='$KEEP_IMAGES' LEGACY_CONTAINER='$LEGACY_CONTAINER' RULE='$RULE' bash -s -- $*" <<'REMOTE'
+    ssh -o BatchMode=yes "$SERVER" "APP='$APP' ROUTE='$ROUTE' NETWORK='$NETWORK' CERT_RESOLVER='$CERT_RESOLVER' KEEP_IMAGES='$KEEP_IMAGES' LEGACY='$LEGACY' RULE='$RULE' VOLUME='$VOLUME' SETTINGS='$SETTINGS' SECRETS='$SECRETS' bash -s -- $*" <<'REMOTE'
 set -euo pipefail
 
-# The containers of this app, newest first.
+# The containers of this app.
 containers() { docker ps -a --filter "label=deploy.app=$APP" --format '{{.Names}}' ; }
+
+# The file with the app's secrets: made the first time, one random value
+# per name, readable by this user only. Never printed.
+secrets_file() {
+    [ -n "$SECRETS" ] || return 0
+    local file="$HOME/.config/spiderme-deploy/$APP.env"
+    mkdir -p "$(dirname "$file")"
+    chmod 700 "$(dirname "$file")"
+    touch "$file"
+    chmod 600 "$file"
+    for name in $SECRETS; do
+        grep -q "^$name=" "$file" || printf '%s=%s\n' "$name" "$(head -c 32 /dev/urandom | od -An -tx1 | tr -d ' \n')" >> "$file"
+    done
+    echo "$file"
+}
 
 start() {
     local version="$1" name="$APP-$1"
+    local extra=()
+    [ -z "$VOLUME" ] || extra+=(--volume "$VOLUME")
+    for setting in $SETTINGS; do extra+=(--env "$setting"); done
+    local file
+    file="$(secrets_file)"
+    [ -z "$file" ] || extra+=(--env-file "$file")
+
     docker rm -f "$name" >/dev/null 2>&1 || true
     docker run -d \
         --name "$name" \
         --restart unless-stopped \
         --network "$NETWORK" \
+        ${extra[@]+"${extra[@]}"} \
         --label "deploy.app=$APP" \
         --label "deploy.version=$version" \
         --label "traefik.enable=true" \
@@ -92,7 +158,7 @@ start() {
 # one (the retry label above).
 retire_others() {
     local keep="$APP-$1"
-    for name in $(containers) "$LEGACY_CONTAINER"; do
+    for name in $(containers) $LEGACY; do
         [ "$name" = "$keep" ] && continue
         if docker inspect "$name" >/dev/null 2>&1; then
             docker rm -f "$name" >/dev/null && echo "removed $name"
@@ -122,25 +188,29 @@ case "$1" in
     status)
         echo "containers:"
         docker ps -a --filter "label=deploy.app=$APP" --format '{{.Names}}  {{.Status}}' | sed 's/^/  /'
-        docker ps -a --filter "name=^${LEGACY_CONTAINER}$" --format '{{.Names}}  {{.Status}}  (started by hand)' | sed 's/^/  /'
+        [ -z "$LEGACY" ] || docker ps -a --filter "name=^${LEGACY}$" --format '{{.Names}}  {{.Status}}  (started by hand)' | sed 's/^/  /'
         echo "images:"
-        docker images "$APP" --format '{{.Tag}}  {{.Size}}  {{.CreatedSince}}' | sort -r | sed 's/^/  /' 
+        docker images "$APP" --format '{{.Tag}}  {{.Size}}  {{.CreatedSince}}' | sort -r | sed 's/^/  /'
+        if [ -n "$VOLUME" ]; then
+            echo "volume:"
+            docker volume ls --filter "name=^${VOLUME%%:*}$" --format '{{.Name}}' | sed 's/^/  /'
+        fi
         ;;
 esac
 REMOTE
 }
 
-# Waits until the public address answers with this version.
+# Waits until the public address answers.
 check_public() {
     say "Checking $CHECK_URL"
-    for _ in $(seq 1 30); do
-        if curl -fsS -m 5 -o /dev/null "$CHECK_URL/up"; then
+    for _ in $(seq 1 45); do
+        if curl -fsS -m 5 -o /dev/null "$CHECK_URL/up" 2>/dev/null; then
             echo "$CHECK_URL/up answers"
             return 0
         fi
         sleep 2
     done
-    fail "$CHECK_URL/up does not answer. The container is up on the server: look at Traefik."
+    fail "$CHECK_URL/up does not answer. The container is up on the server: look at Traefik (a new address waits for its certificate)."
 }
 
 deploy() {
@@ -152,7 +222,7 @@ deploy() {
     version="$(date -u +%Y%m%d-%H%M)-$(git rev-parse --short HEAD)"
 
     say "Building $APP:$version"
-    docker build --platform linux/amd64 -t "$APP:$version" .
+    docker build --platform linux/amd64 -t "$APP:$version" "$CONTEXT"
 
     say "Sending the image to $SERVER"
     docker save "$APP:$version" | gzip | ssh -o BatchMode=yes "$SERVER" 'gunzip | docker load' | tail -n 1
@@ -161,7 +231,7 @@ deploy() {
     remote switch "$version" || fail "the new version did not start; the old one is still serving"
 
     check_public
-    say "Deployed $version"
+    say "Deployed $APP $version"
 }
 
 rollback() {
@@ -173,13 +243,13 @@ rollback() {
     say "Going back from ${current:-nothing} to $previous"
     remote switch "$previous" || fail "the earlier version did not start; the current one is still serving"
     check_public
-    say "Now running $previous"
+    say "Now running $APP $previous"
 }
 
 case "${1:-deploy}" in
     deploy) deploy ;;
     status) remote status ;;
     rollback) rollback ;;
-    -h | --help | help) sed -n '2,15p' "$0" | sed 's/^# \{0,1\}//' ;;
+    -h | --help | help) sed -n '2,20p' "$0" | sed 's/^# \{0,1\}//' ;;
     *) fail "unknown command: $1 (try ./deploy.sh --help)" ;;
 esac
