@@ -17,12 +17,17 @@ pub fn main(init: std.process.Init) !void {
     // starts. The list is src/core/db/migrations.zig.
     try core.db.migrations.migrate(allocator);
 
-    try serve();
+    try serve(allocator, init.io);
 }
 
-/// Builds the server and listens. The tests call it too (src/app_test.zig),
-/// on a database of their own.
-pub fn serve() !void {
+/// Builds the server and listens. main() calls it, and so do the tests in
+/// src/app_test.zig.
+pub fn serve(allocator: std.mem.Allocator, io: std.Io) !void {
+    // What the server needs before it starts goes here: `spider g auth`
+    // puts the login provider in this spot.
+    _ = allocator;
+    _ = io;
+
     var server = spider.app(.{});
     defer server.deinit();
 

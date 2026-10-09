@@ -20,7 +20,7 @@ fn run() !void {
     std.Io.Dir.cwd().deleteFile(io, scratch_db) catch {};
     try db.init(gpa, io, .{ .path = scratch_db });
     try core.db.migrations.migrate(gpa);
-    try main.serve();
+    try main.serve(gpa, io);
 }
 
 /// Publishes a post and gives back its address, "/posts/5".
