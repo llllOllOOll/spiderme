@@ -1,0 +1,25 @@
+# Not sent to `docker build`: local settings and secrets, databases, build
+# output, and what the build downloads again for the image's own platform.
+.git
+.env
+.env.*
+!.env.example
+db.sqlite
+db.sqlite-*
+zig-out/
+.zig-cache/
+zig-cache/
+zig-pkg/
+bin/
+public/css/app.css
+public/js/alpine.min.js
+public/js/htmx.min.js
+
+# The example app is read by the build (the pages quote its files), but its
+# own build output and settings stay out too.
+examples/posts/.env
+examples/posts/db.sqlite
+examples/posts/zig-out/
+examples/posts/.zig-cache/
+examples/posts/zig-pkg/
+examples/posts/bin/
