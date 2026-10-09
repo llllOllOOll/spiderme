@@ -16,7 +16,8 @@
 //! `Section` below; `order` places the page inside its section (lowest
 //! first). All three are required. A page with a missing or incomplete
 //! header, an unknown section, or the order of another page of its section
-//! stops the build, naming the file.
+//! stops the build, naming the file. So does a link to `/docs/<slug>` when no
+//! page has that slug.
 //!
 //! The content stays plain Markdown with a standard header: nothing in a
 //! page is specific to this site.
@@ -124,6 +125,42 @@ pub fn check(pages: []const Page, problem: *[]const u8) IndexError!void {
     }
 }
 
+pub const LinkError = error{
+    /// A link to `/docs/<slug>` and no page with that slug.
+    BrokenLink,
+};
+
+/// The slug an internal link points at: what follows `/docs/` up to the end
+/// of the path. Null for a link that is not `/docs/<slug>` (`/docs` itself,
+/// another site, another path).
+fn linkedSlug(target: []const u8) ?[]const u8 {
+    const prefix = "/docs/";
+    if (!std.mem.startsWith(u8, target, prefix)) return null;
+    const rest = target[prefix.len..];
+    const end = std.mem.indexOfAny(u8, rest, "#?/ \t\"") orelse rest.len;
+    return if (end == 0) null else rest[0..end];
+}
+
+/// Checks every Markdown link `](/docs/<slug>...)` of every page. `problem`
+/// receives "<page> links to /docs/<slug>" for the first one that points
+/// nowhere; the text lives in `arena`.
+pub fn checkLinks(arena: std.mem.Allocator, pages: []const Page, problem: *[]const u8) (LinkError || std.mem.Allocator.Error)!void {
+    for (pages) |page| {
+        var rest = page.meta.body;
+        while (std.mem.indexOf(u8, rest, "](")) |at| {
+            rest = rest[at + 2 ..];
+            const close = std.mem.indexOfScalar(u8, rest, ')') orelse break;
+            const slug = linkedSlug(rest[0..close]) orelse continue;
+            for (pages) |other| {
+                if (std.mem.eql(u8, other.slug, slug)) break;
+            } else {
+                problem.* = try std.fmt.allocPrint(arena, "{s} links to /docs/{s}", .{ page.slug, slug });
+                return error.BrokenLink;
+            }
+        }
+    }
+}
+
 /// Reading order: by section, then `order`.
 fn readingOrder(_: void, a: Page, b: Page) bool {
     if (a.meta.section != b.meta.section) return @backingInt(a.meta.section) < @backingInt(b.meta.section);
@@ -146,6 +183,7 @@ pub fn load(io: std.Io, arena: std.mem.Allocator, dir_path: []const u8, problem:
         try pages.append(arena, .{ .slug = name[0 .. name.len - ".md".len], .meta = try parse(source) });
     }
     try check(pages.items, problem);
+    try checkLinks(arena, pages.items, problem);
     std.mem.sort(Page, pages.items, {}, readingOrder);
     return pages.items;
 }
@@ -198,7 +236,8 @@ pub fn main(init: std.process.Init) !void {
 
     var problem: []const u8 = dir_path;
     const pages = load(io, arena, dir_path, &problem) catch |err| {
-        std.debug.print("docs: {s}: {s}\n  every page needs a header: ---, title:, section: (start|guide|reference), order:, ---\n", .{ problem, @errorName(err) });
+        std.debug.print("docs: {s}: {s}\n", .{ problem, @errorName(err) });
+        if (err != error.BrokenLink) std.debug.print("  every page needs a header: ---, title:, section: (start|guide|reference), order:, ---\n", .{});
         std.process.exit(1);
     };
     if (pages.len == 0) {
@@ -268,7 +307,39 @@ test "check: a repeated slug, a repeated order in one section, a bad file name" 
     try t.expectError(error.InvalidSlug, check(&.{fake("../main", .guide, 1)}, &problem));
 }
 
-test "the pages of this site: every header is complete, no address or order repeats" {
+fn withBody(slug: []const u8, body: []const u8) Page {
+    return .{ .slug = slug, .meta = .{ .title = "T", .section = .guide, .order = 1, .body = body } };
+}
+
+test "checkLinks: a link to a page that does not exist fails and names both ends" {
+    var arena_state = std.heap.ArenaAllocator.init(t.allocator);
+    defer arena_state.deinit();
+    const arena = arena_state.allocator();
+    var problem: []const u8 = "";
+
+    try t.expectError(error.BrokenLink, checkLinks(arena, &.{
+        withBody("router", "Next: [Requests](/docs/requests)."),
+        withBody("request", "Back to [Routing](/docs/router)."),
+    }, &problem));
+    try t.expectEqualStrings("router links to /docs/requests", problem);
+
+    // The anchor and the query are not part of the slug.
+    try t.expectError(error.BrokenLink, checkLinks(arena, &.{withBody("a", "[x](/docs/b#top)")}, &problem));
+    try t.expectEqualStrings("a links to /docs/b", problem);
+}
+
+test "checkLinks: links that resolve, and links that are not to a page, pass" {
+    var arena_state = std.heap.ArenaAllocator.init(t.allocator);
+    defer arena_state.deinit();
+    var problem: []const u8 = "";
+    try checkLinks(arena_state.allocator(), &.{
+        withBody("router", "[Request](/docs/request), [again](/docs/request#body), [q](/docs/request?x=1), " ++
+            "[home](/docs), [site](https://example.com/docs/nope), [mail](mailto:a@b.c), [self](#top), [file](/favicon.png)."),
+        withBody("request", "No links. An index like a[0](b) is not a docs link."),
+    }, &problem);
+}
+
+test "the pages of this site: complete headers, no repeated address or order, no broken link" {
     var arena_state = std.heap.ArenaAllocator.init(t.allocator);
     defer arena_state.deinit();
     var problem: []const u8 = "content/docs";

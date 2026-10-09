@@ -231,8 +231,9 @@ Don't delete the "every file with tests is part of this test binary" tests.
 - `tools/docs_index.zig` runs in the build: it reads the headers and
   generates the `docs_index` module (the pages in reading order, with their
   text). A missing or incomplete header, an unknown section, or an `order`
-  already used in the section stops the build and names the file. Its tests
-  run in `zig build test`.
+  already used in the section stops the build and names the file. So does a
+  link `[text](/docs/<slug>)` to a page that does not exist. Its tests run in
+  `zig build test`.
 - One route serves every page: `GET /docs/:page`
   (`src/features/docs/controller.zig`). The sidebar, the "Next" link and the
   search come from the generated index (`src/features/docs/pages.zig`).
