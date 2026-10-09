@@ -111,10 +111,21 @@ pub fn build(b: *std.Build) void {
     docs_index_run.has_side_effects = true;
     docs_index_run.addDirectoryArg(b.path("content/docs"));
     const docs_index = docs_index_run.addOutputFileArg("docs_index.zig");
+    // Code blocks of the pages come from files of the repository, the
+    // example app above all (tools/snippets.zig).
+    docs_index_run.addDirectoryArg(b.path("."));
     spider_build.watchSources(b, docs_index_run, "content/docs", &.{".md"});
+    spider_build.watchSources(b, docs_index_run, "examples/posts/src", &.{ ".zig", ".html", ".css", ".sql" });
     features_mod.addImport("docs_index", b.createModule(.{ .root_source_file = docs_index }));
     // The tool's own tests, including one over the real pages.
     test_step.dependOn(&b.addRunArtifact(b.addTest(.{ .root_module = docs_tool.root_module })).step);
+
+    // The example app the pages quote has tests of its own: the code a page
+    // shows is code that passes them.
+    const example_tests = b.addSystemCommand(&.{ b.graph.zig_exe, "build", "test" });
+    example_tests.setCwd(b.path("examples/posts"));
+    example_tests.has_side_effects = true;
+    test_step.dependOn(&example_tests.step);
 
     // `spider dev` runs `zig build dev --watch`: build the app, then tell the
     // supervisor where the new binary is and whether the page's files (the

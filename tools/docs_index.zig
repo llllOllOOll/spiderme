@@ -1,7 +1,7 @@
 //! Build-time tool: turns the Markdown pages in content/docs into the index
 //! the site compiles in.
 //!
-//! Usage: docs-index <content dir> <out.zig>
+//! Usage: docs-index <content dir> <out.zig> <repository root>
 //!
 //! A page is a Markdown file whose name is its address (`router.md` is
 //! `/docs/router`) and that starts with a header:
@@ -19,10 +19,14 @@
 //! stops the build, naming the file. So does a link to `/docs/<slug>` when no
 //! page has that slug.
 //!
-//! The content stays plain Markdown with a standard header: nothing in a
-//! page is specific to this site.
+//! A code block can come from a file of the repository, the example app in
+//! particular: see snippets.zig. Such a block is filled in here, and a file
+//! or declaration that is gone stops the build too.
+//!
+//! Apart from that, the content is plain Markdown with a standard header.
 
 const std = @import("std");
+const snippets = @import("snippets.zig");
 
 /// The groups of the sidebar, in the order they are shown.
 pub const Section = enum { start, guide, reference };
@@ -167,11 +171,16 @@ fn readingOrder(_: void, a: Page, b: Page) bool {
     return a.meta.order < b.meta.order;
 }
 
-/// Every `.md` file of `dir_path`, parsed, checked and in reading order.
-/// `problem` receives the file (or slug) at fault when it fails.
-pub fn load(io: std.Io, arena: std.mem.Allocator, dir_path: []const u8, problem: *[]const u8) ![]Page {
+/// Every `.md` file of `dir_path`, parsed, its code blocks filled in from
+/// the files under `root_path`, checked and in reading order. `problem`
+/// receives what is at fault when it fails: the page, and after a colon the
+/// file or declaration a block asked for.
+pub fn load(io: std.Io, arena: std.mem.Allocator, dir_path: []const u8, root_path: []const u8, problem: *[]const u8) ![]Page {
     var dir = try std.Io.Dir.cwd().openDir(io, dir_path, .{ .iterate = true });
     defer dir.close(io);
+    var root = try std.Io.Dir.cwd().openDir(io, root_path, .{});
+    defer root.close(io);
+    var files: Files = .{ .io = io, .root = root };
 
     var pages: std.ArrayList(Page) = .empty;
     var it = dir.iterate();
@@ -180,13 +189,32 @@ pub fn load(io: std.Io, arena: std.mem.Allocator, dir_path: []const u8, problem:
         const name = try arena.dupe(u8, entry.name);
         problem.* = name;
         const source = try dir.readFileAlloc(io, name, arena, .limited(4 * 1024 * 1024));
-        try pages.append(arena, .{ .slug = name[0 .. name.len - ".md".len], .meta = try parse(source) });
+        var meta = try parse(source);
+        var asked: []const u8 = "";
+        meta.body = snippets.expand(arena, meta.body, &files, Files.read, &asked) catch |err| {
+            problem.* = try std.fmt.allocPrint(arena, "{s}: {s}", .{ name, asked });
+            return err;
+        };
+        try pages.append(arena, .{ .slug = name[0 .. name.len - ".md".len], .meta = meta });
     }
     try check(pages.items, problem);
     try checkLinks(arena, pages.items, problem);
     std.mem.sort(Page, pages.items, {}, readingOrder);
     return pages.items;
 }
+
+/// Reads the files code blocks come from.
+const Files = struct {
+    io: std.Io,
+    root: std.Io.Dir,
+
+    fn read(ctx: *anyopaque, arena: std.mem.Allocator, path: []const u8) ?[]const u8 {
+        const self: *Files = @ptrCast(@alignCast(ctx));
+        // Only files inside the repository.
+        if (std.mem.startsWith(u8, path, "/") or std.mem.indexOf(u8, path, "..") != null) return null;
+        return self.root.readFileAlloc(self.io, path, arena, .limited(1024 * 1024)) catch null;
+    }
+};
 
 fn write(w: *std.Io.Writer, pages: []const Page) !void {
     try w.writeAll(
@@ -233,11 +261,16 @@ pub fn main(init: std.process.Init) !void {
     _ = args.next();
     const dir_path = args.next() orelse usage();
     const out_path = args.next() orelse usage();
+    const root_path = args.next() orelse usage();
 
     var problem: []const u8 = dir_path;
-    const pages = load(io, arena, dir_path, &problem) catch |err| {
+    const pages = load(io, arena, dir_path, root_path, &problem) catch |err| {
         std.debug.print("docs: {s}: {s}\n", .{ problem, @errorName(err) });
-        if (err != error.BrokenLink) std.debug.print("  every page needs a header: ---, title:, section: (start|guide|reference), order:, ---\n", .{});
+        switch (err) {
+            error.BrokenLink => {},
+            error.SnippetFileNotFound, error.SnippetDeclNotFound, error.SnippetBlockNotEmpty, error.SnippetBlockUnclosed => std.debug.print("  a code block with from=<file> shows code of that file (tools/snippets.zig)\n", .{}),
+            else => std.debug.print("  every page needs a header: ---, title:, section: (start|guide|reference), order:, ---\n", .{}),
+        }
         std.process.exit(1);
     };
     if (pages.len == 0) {
@@ -254,7 +287,7 @@ pub fn main(init: std.process.Init) !void {
 }
 
 fn usage() noreturn {
-    std.debug.print("usage: docs-index <content dir> <out.zig>\n", .{});
+    std.debug.print("usage: docs-index <content dir> <out.zig> <repository root>\n", .{});
     std.process.exit(2);
 }
 
@@ -339,12 +372,16 @@ test "checkLinks: links that resolve, and links that are not to a page, pass" {
     }, &problem);
 }
 
-test "the pages of this site: complete headers, no repeated address or order, no broken link" {
+test {
+    _ = snippets;
+}
+
+test "the pages of this site: complete headers, code blocks that exist, no repeated address or order, no broken link" {
     var arena_state = std.heap.ArenaAllocator.init(t.allocator);
     defer arena_state.deinit();
     var problem: []const u8 = "content/docs";
     // `zig build test` runs in the project root.
-    const pages = load(t.io, arena_state.allocator(), "content/docs", &problem) catch |err| {
+    const pages = load(t.io, arena_state.allocator(), "content/docs", ".", &problem) catch |err| {
         std.debug.print("\ncontent/docs/{s}: {s}\n", .{ problem, @errorName(err) });
         return err;
     };
