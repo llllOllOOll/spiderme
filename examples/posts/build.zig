@@ -97,6 +97,12 @@ pub fn build(b: *std.Build) void {
     core_mod.addImport("test_manifest", spider_build.testManifest(b, manifest_tool, "src/core", &.{}));
     features_mod.addImport("test_manifest", spider_build.testManifest(b, manifest_tool, "src/features", &.{}));
 
+    // `zig build test-routes`: calls every route of the running app once, on
+    // a scratch database (test/routes.sh; needs the spider CLI and curl).
+    const routes_check = b.addSystemCommand(&.{ "bash", "test/routes.sh" });
+    routes_check.step.dependOn(b.getInstallStep());
+    b.step("test-routes", "Call every route of the running app").dependOn(&routes_check.step);
+
     // `spider dev` runs `zig build dev --watch`: build the app, then tell the
     // supervisor where the new binary is and whether the page's files (the
     // stylesheet, the templates) changed.
