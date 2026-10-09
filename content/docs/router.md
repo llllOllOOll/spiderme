@@ -35,7 +35,7 @@ Routes that share a prefix live in a group, usually one per feature.
 ```zig
 pub fn build() spider.Group {
     var g = spider.Group.init("/posts");
-    _ = g.get("/", list, .{ .public = true });
+    _ = g.get("", list, .{ .public = true });
     _ = g.get("/:id", show, .{ .public = true });
     return g;
 }
