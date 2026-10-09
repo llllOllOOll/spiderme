@@ -107,6 +107,8 @@ That account then passes `.roles = &.{"admin"}` the next time it signs in.
 
 Sessions are signed with `JWT_SECRET`, in `.env`. `spider new` writes a random one. Keep the one of production out of git, and know that changing it signs everyone out.
 
+Without one, `spider dev` makes one up each time the app starts, so everyone is signed out on a restart. A release build, the one you deploy, refuses to sign anyone in until `JWT_SECRET` is set.
+
 A session lasts 14 days. It cannot be ended from the server before that: there is no list of sessions to remove it from.
 
 ## For an API

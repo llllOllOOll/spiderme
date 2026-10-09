@@ -15,7 +15,15 @@ docker build -t myapp .
 docker run -p 3000:3000 myapp
 ```
 
-The app listens on port 3000 inside the container. To give it the settings of your `.env`, add `--env-file .env`.
+The app listens on port 3000 inside the container.
+
+`.env` is not copied into the image, so the settings in it have to be given when the container starts:
+
+```bash
+docker run -p 3000:3000 --env-file .env myapp
+```
+
+An app with a [login](/docs/auth) needs this: a release build refuses to sign anyone in without `JWT_SECRET`.
 
 ## What the Dockerfile does
 

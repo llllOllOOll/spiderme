@@ -83,12 +83,15 @@ The rest was written on top of what those commands generated.
 
 ```bash
 docker build -t posts .
-docker run -p 3000:3000 posts
+docker run -p 3000:3000 --env-file .env posts
 ```
+
+`--env-file .env` gives the container `JWT_SECRET`, which signing in needs
+in a release build.
 
 The posts live in a file inside the container and go away with it. To keep
 them, give the file a volume:
 
 ```bash
-docker run -p 3000:3000 -v posts-data:/data -e SQLITE_PATH=/data/db.sqlite posts
+docker run -p 3000:3000 --env-file .env -v posts-data:/data -e SQLITE_PATH=/data/db.sqlite posts
 ```
