@@ -16,6 +16,22 @@ identifiers, test names, error messages, documentation and commit
 messages. The project is for readers all over the world. No
 `Co-authored-by` trailers in commits.
 
+## Deploy
+
+`./deploy.sh` (see the comment at its top) builds the image here, sends it
+over SSH and switches versions on the server with no downtime;
+`./deploy.sh status` and `./deploy.sh rollback` come with it. It refuses
+to run with uncommitted changes.
+
+- The server is shared with other systems. The script only touches
+  containers labelled `deploy.app=spiderme-site` and images named
+  `spiderme-site`; do the same by hand.
+- Traefik on the server routes by container labels. If you change the
+  labels in the script, change `ROUTE` too (the comment there says why).
+- The site serves `/install.sh`, a copy of `scripts/install.sh` of the
+  Spider repository: Spider's README and `spider self-update` use that
+  address. Copy it again when it changes there.
+
 ## Commands
 
 | What | Command |
