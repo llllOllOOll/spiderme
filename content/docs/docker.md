@@ -6,23 +6,7 @@ order: 60
 
 # Docker
 
-`spider new` writes a `Dockerfile` at the root of the project. It builds the app in one stage and copies the result into a small image.
-
-```dockerfile
-FROM llllollooll/zig:master AS builder
-WORKDIR /app
-COPY . .
-RUN zig build -Doptimize=ReleaseSmall
-
-FROM debian:bookworm-slim
-WORKDIR /app
-COPY --from=builder /app/zig-out/bin/myapp /app/myapp
-COPY --from=builder /app/public /app/public
-EXPOSE 3000
-CMD ["./myapp"]
-```
-
-The final image holds two things: the binary and the `public` folder. Templates are not copied, because a release build keeps them inside the binary.
+`spider new` writes a `Dockerfile` and a `.dockerignore` at the root of the project.
 
 ## Build and run
 
@@ -31,15 +15,35 @@ docker build -t myapp .
 docker run -p 3000:3000 myapp
 ```
 
-The app listens on port 3000 inside the container.
+The app listens on port 3000 inside the container. To give it the settings of your `.env`, add `--env-file .env`.
 
-## Known problem in 0.9.0
+## What the Dockerfile does
 
-With Spider 0.9.0 the `builder` image above is behind: it carries a Zig older than 0.17.0, and the build stops at `zig build`. Until the generated file changes, replace the first line with an image that has the official Zig 0.17.0.
+It has two stages.
 
-## The compose file
+The first builds the app. It downloads the official Zig release and checks it against its published checksum, installs the `spider` command, copies the project and runs:
 
-`docker-compose.yml` does not run the app. It starts a PostgreSQL server for development, for projects created with `--pg`:
+```bash
+zig build -Doptimize=ReleaseSmall
+```
+
+The second is the image you run. It holds two things: the binary and the `public` folder. Templates are not copied, because a release build keeps them inside the binary.
+
+## What stays out of the image
+
+The `.dockerignore` keeps `.env`, the SQLite database and your local build out of the build. Tailwind, the icons, htmx and Alpine are not in git either: the build downloads them again, for the image's own system.
+
+## Another port
+
+The app reads the `PORT` variable:
+
+```bash
+docker run -p 8080:8080 -e PORT=8080 myapp
+```
+
+## PostgreSQL
+
+A project created with `--pg` also gets a `docker-compose.yml`. It does not run the app: it starts a PostgreSQL server for development, on the port written in `.env`.
 
 ```bash
 docker compose up -d
