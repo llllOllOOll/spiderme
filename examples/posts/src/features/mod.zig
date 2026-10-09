@@ -1,4 +1,4 @@
-pub const home = @import("home/mod.zig");
+pub const posts = @import("posts/mod.zig");
 
 // A file with `test "..."` blocks only runs if this module's test binary
 // imports it whole (refAllDecls here reaches one level: every <feature>/mod.zig
@@ -10,4 +10,3 @@ test {
 test "every file with tests is part of this test binary" {
     try @import("spider").testing.expectAllTestsDiscovered(@import("test_manifest"));
 }
-pub const posts = @import("posts/mod.zig");

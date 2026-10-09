@@ -21,9 +21,20 @@ pub fn main(init: std.process.Init) !void {
     server
         .use(spider.logger)
         .mountFeatures(features)
-        .onError(spider.errorHandler(.{ .template_not_found_is_404 = true }))
+        .onError(onError)
         .listen(.{ .port = 3000, .host = "0.0.0.0" }) catch |err| return err;
 }
+
+/// A missing post or page gets the 404 page; any other error gets Spider's
+/// own answer.
+fn onError(c: *spider.Ctx, err: anyerror) anyerror!spider.Response {
+    if (err == error.NotFound) {
+        return c.view("not-found", .{ .title = "Page not found" }, .{ .status = .not_found });
+    }
+    return fallback(c, err);
+}
+
+const fallback = spider.errorHandler(.{});
 
 // Routes in routes.zig with declared access, ui-* classes, icons from the
 // active sets, features registered: `spider check` prints the same report.
