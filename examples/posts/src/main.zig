@@ -23,8 +23,8 @@ pub fn main(init: std.process.Init) !void {
 /// Builds the server and listens. main() calls it, and so do the tests in
 /// src/app_test.zig.
 pub fn serve(allocator: std.mem.Allocator, io: std.Io) !void {
-    // What the server needs before it starts goes here: `spider g auth`
-    // puts the login provider in this spot.
+    // What the server needs before it starts goes here. Posts needs
+    // nothing yet.
     _ = allocator;
     _ = io;
 
