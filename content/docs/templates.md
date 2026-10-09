@@ -8,88 +8,60 @@ order: 50
 
 A template is an HTML file with values in braces. `c.view` renders one with the data a handler gives it.
 
-```zig
-const Post = struct { title: []const u8, comments: u32 };
+The code on this page is from Posts, the example app in `examples/posts`. This is the handler of its feed:
 
-fn index(c: *spider.Ctx) !spider.Response {
-    const posts = [_]Post{
-        .{ .title = "Hello", .comments = 2 },
-        .{ .title = "Routing", .comments = 0 },
-    };
-    return c.view("posts/index", .{ .heading = "Posts", .posts = &posts, .signed_in = true }, .{});
-}
+```zig from=examples/posts/src/features/posts/controller.zig decl=index
 ```
 
 The name is the feature and the file: `"posts/index"` is `src/features/posts/views/index.html`. The data is a struct: text, numbers, booleans, optionals, other structs and slices of structs.
 
 ## Values, conditions and loops
 
-```html
-<h1>{ heading }</h1>
+And this is the template it renders:
 
-if (signed_in) {
-<p>Welcome back.</p>
-} else {
-<p>Please sign in.</p>
-}
-
-<ul>
-for (posts) |post| {
-    <li>{ post.title } ({ post.comments } comments)</li>
-}
-</ul>
-
-<p>{ subtitle ?? "No subtitle" }</p>
+```html from=examples/posts/src/features/posts/views/index.html
 ```
 
-`{ value }` is escaped: a `<` in the data reaches the page as `&lt;`. `??` gives a default for a value that is missing. Conditions take `==`, `!=`, `<`, `>`, `and`, `or` and `!`.
+- `{ q }` puts a value in the page. It is escaped: a `<` in the data reaches the page as `&lt;`.
+- `if (searching) { ... } else { ... }` shows one part or the other. Conditions take `==`, `!=`, `<`, `>`, `and`, `or` and `!`.
+- `for (posts) |post| { ... }` repeats a part for each item, and `post.title` reads a field of it.
+- `posts.len` is how many there are.
 
 ## Layouts
 
-A layout is a template with a `{ slot }` where the page goes. A page names its layout on the first line.
+A layout is a template with a `{ slot }` where the page goes. A page names its layout on its first line, as `extends "layout"` does above. This is the layout of Posts, `src/shared/templates/layout.html`:
 
-```html
-<!-- src/shared/templates/layout.html -->
-<html>
-<body>
-    <main>{ slot }</main>
-</body>
-</html>
+```html from=examples/posts/src/shared/templates/layout.html
 ```
 
-```html
-extends "layout"
-
-<h1>{ heading }</h1>
-```
+The layout sees the same data as the page. `{ title ?? "Posts" }` uses the title the handler sent, or "Posts" when it sent none: `??` gives a default for a value that is missing. In a condition a missing value counts as false, so `if (!composing)` shows the button on every page except the ones that send `composing`.
 
 ## Components
 
-A template can be used as a tag. The tag is the file name in PascalCase: `post-card.html` and `PostCard.html` are both `<PostCard>`. Its attributes become its values, and what is inside the tag becomes its `{ slot }`.
+A template can be used as a tag. The tag is the file name in PascalCase: `PostCard.html` and `post-card.html` are both `<PostCard>`. Its attributes become its values, and what is written inside the tag becomes its `{ slot }`.
 
-```html
-<!-- src/shared/templates/post-card.html -->
-<article>
-    <h2>{ title }</h2>
-    { slot }
-</article>
+The feed above writes one `<PostCard ... />` for each post. This is the component:
+
+```html from=examples/posts/src/features/posts/views/PostCard.html
 ```
 
-```html
-<PostCard title="{ post.title }">
-    <p>{ post.comments } comments</p>
-</PostCard>
+A component lives next to the views of its feature, or in `src/shared/templates` when several features use it, like the link that goes back a page:
+
+```html from=examples/posts/src/shared/templates/back-link.html
 ```
 
 ## HTML from Zig
 
-Text is always escaped. To put markup your own code built into a page, wrap it in `spider.RawHtml`. Never wrap anything a user typed.
+Text is always escaped. To put markup your own code built into a page, wrap it in `spider.RawHtml`. Posts does it for the body of a post, which is written in Markdown:
 
-```zig
-fn about(c: *spider.Ctx) !spider.Response {
-    const badge = spider.RawHtml{ .html = "<strong>new</strong>" };
-    return c.view("posts/about", .{ .badge = badge }, .{});
-}
+```zig from=examples/posts/src/features/posts/controller.zig decl=show
+```
+
+`spider.zmd.parse` turns Markdown into HTML and escapes everything the author typed, so its result is safe to show as it is. Never wrap text a user typed that did not go through something that escapes it.
+
+The template then uses `{ body }` like any other value:
+
+```html from=examples/posts/src/features/posts/views/show.html
 ```
 
 ## Where templates are read from
