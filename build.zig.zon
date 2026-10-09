@@ -5,9 +5,8 @@
     .minimum_zig_version = "0.17.0",
     .dependencies = .{
         .spider = .{
-            // The local Spider tree, while what the site documents is not
-            // released. Before this is published: url + hash of a tag.
-            .path = "../spider",
+            .url = "git+https://github.com/llllOllOOll/spider?ref=v0.9.2#b896a90ade8d02fb814e1f362c1f14dfc713715d",
+            .hash = "spider-0.9.2-P7cGrpKNzADgOWuENKjajm7Uhobx1xHe4kW57HAOXEkA",
         },
     },
     .paths = .{
