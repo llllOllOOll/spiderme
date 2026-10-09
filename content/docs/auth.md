@@ -18,7 +18,7 @@ It writes the feature `src/features/auth/`, a migration for the `users` table, t
 - `/auth/login` signs in,
 - `/auth/account` shows who is signed in, with a button to sign out.
 
-The code on this page is from Posts, the example app in `examples/posts`, where the command was run and its screens were restyled.
+The code on this page is from [Posts](https://posts.spiderme.org), the example app in `examples/posts`, where the command was run and its screens were restyled.
 
 ## Who may call a route
 

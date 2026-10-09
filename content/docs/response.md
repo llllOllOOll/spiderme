@@ -8,7 +8,7 @@ order: 30
 
 A handler returns a `spider.Response`. `c` builds it: every helper takes the content and an options struct, and `.{}` means status 200 with no extra headers.
 
-Where it can, this page shows code from Posts, the example app in `examples/posts`.
+Where it can, this page shows code from [Posts](https://posts.spiderme.org), the example app in `examples/posts`.
 
 ## JSON
 

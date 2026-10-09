@@ -8,7 +8,7 @@ order: 10
 
 A route is a method, a path, the function that answers it, and who may call it. Each feature of an app keeps its routes in one file, `routes.zig`.
 
-The code on this page is from Posts, the example app in `examples/posts`. These are all its routes:
+The code on this page is from [Posts](https://posts.spiderme.org), the example app in `examples/posts`. These are all its routes:
 
 ```zig from=examples/posts/src/features/posts/routes.zig decl=build
 ```

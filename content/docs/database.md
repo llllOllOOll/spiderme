@@ -8,7 +8,7 @@ order: 35
 
 A new project uses SQLite: the data is one file, `db.sqlite`, next to the app, and there is nothing to install. `spider new myapp --pg` makes a project on PostgreSQL instead.
 
-The code on this page is from Posts, the example app in `examples/posts`.
+The code on this page is from [Posts](https://posts.spiderme.org), the example app in `examples/posts`.
 
 ## Migrations
 
