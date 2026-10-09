@@ -82,6 +82,9 @@ pub fn build(b: *std.Build) void {
     run_step.dependOn(&run_cmd.step);
 
     const unit_tests = b.addTest(.{ .root_module = exe.root_module });
+    // src/main.zig imports the generated template index: a fresh clone runs
+    // `zig build test` before anything else built it.
+    unit_tests.step.dependOn(&gen.step);
     const run_unit_tests = b.addRunArtifact(unit_tests);
     const test_step = b.step("test", "Run unit tests");
     test_step.dependOn(&run_unit_tests.step);
@@ -96,12 +99,6 @@ pub fn build(b: *std.Build) void {
     exe.root_module.addImport("test_manifest", spider_build.testManifest(b, manifest_tool, "src", &.{ "core/", "features/", "shared/" }));
     core_mod.addImport("test_manifest", spider_build.testManifest(b, manifest_tool, "src/core", &.{}));
     features_mod.addImport("test_manifest", spider_build.testManifest(b, manifest_tool, "src/features", &.{}));
-
-    // `zig build test-routes`: calls every route of the running app once, on
-    // a scratch database (test/routes.sh; needs the spider CLI and curl).
-    const routes_check = b.addSystemCommand(&.{ "bash", "test/routes.sh" });
-    routes_check.step.dependOn(b.getInstallStep());
-    b.step("test-routes", "Call every route of the running app").dependOn(&routes_check.step);
 
     // `spider dev` runs `zig build dev --watch`: build the app, then tell the
     // supervisor where the new binary is and whether the page's files (the

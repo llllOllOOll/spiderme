@@ -15,10 +15,9 @@ in a cookie. Nothing in it needs JavaScript.
 You need Zig 0.17.0 and the `spider` command line tool.
 
 ```bash
-cp .env.example .env   # once: the settings, among them where the database is
-spider install         # once: downloads Tailwind and the icons into bin/
-spider migrate         # once: creates db.sqlite with the table and four posts
-spider dev             # builds, runs, and reloads the browser as you edit
+spider install   # once: downloads Tailwind and the icons into bin/
+spider migrate   # once: creates db.sqlite with the table and four posts
+spider dev       # builds, runs, and reloads the browser as you edit
 ```
 
 Then open http://localhost:3000. Port in use? `spider dev --port 4000`.
@@ -26,31 +25,30 @@ Then open http://localhost:3000. Port in use? `spider dev --port 4000`.
 ## Test it
 
 ```bash
-zig build test          # unit tests, the route table, the conventions
-zig build test-routes   # calls every route of the running app once
+zig build test
 ```
 
-`test-routes` starts the app on a scratch database, so it does not touch
-`db.sqlite`. It needs `curl`.
+It runs the unit tests, checks the route table and the project conventions,
+and calls every route of the app: `src/app_test.zig` starts the real server
+on a free port, with a scratch database, and sends it requests.
 
 ## Layout
 
 ```
 src/main.zig                    starts the server, mounts the features, 404 page
+src/app_test.zig                one test per route, against the running app
 src/features/posts/
   routes.zig                    the routes, in one group under /posts
   controller.zig                one function per route
   model.zig                     Post, the form input and its validation
   repository.zig                the SQL
   present.zig                   initials, "2 hours ago", the excerpt
-  markdown.zig                  the body of a post as HTML
-  author_cookie.zig             remembers the author name
   views/                        index, show, form, delete, and the PostCard component
 src/shared/templates/           layout, the back link, the 404 page
 src/core/db/migrations/         the posts table and the first four posts
 src/ui.css                      the look: every ui-* class the templates use
 public/fonts/                   the fonts, served by the app, with their licenses
-test/routes.sh                  what `zig build test-routes` runs
+Dockerfile                      builds the app with the official Zig, runs it in a small image
 ```
 
 ## How it was made
@@ -64,8 +62,9 @@ spider ui use tailwind
 
 The rest was written on top of what those commands generated.
 
-## The compose file
+## In a container
 
-`spider new` also writes `docker-compose.yml`. It starts a PostgreSQL
-server on the fixed port 5452, the same in every Spider project. This app
-uses SQLite and does not need it.
+```bash
+docker build -t posts .
+docker run -p 3000:3000 posts
+```

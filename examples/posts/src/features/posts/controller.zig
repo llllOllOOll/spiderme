@@ -3,8 +3,6 @@ const spider = @import("spider");
 const model = @import("model.zig");
 const repository = @import("repository.zig");
 const present = @import("present.zig");
-const markdown = @import("markdown.zig");
-const author_cookie = @import("author_cookie.zig");
 const Response = spider.Response;
 
 pub fn home(c: *spider.Ctx) !Response {
@@ -32,12 +30,14 @@ pub fn show(c: *spider.Ctx) !Response {
     return c.view("posts/show", .{
         .title = post.title,
         .post = try present.card(c.arena, post),
-        .body = try markdown.render(c.arena, post.body),
+        // The body is Markdown. Spider's renderer escapes what the author
+        // typed, so its HTML can go into the page as it is.
+        .body = spider.RawHtml{ .html = try spider.zmd.parse(c.arena, post.body, .{}) },
     }, .{});
 }
 
 pub fn new(c: *spider.Ctx) !Response {
-    return form(c, null, .{ .author = author_cookie.read(c) }, .{});
+    return form(c, null, .{ .author = c.cookieDecoded("author") orelse "" }, .{});
 }
 
 pub fn create(c: *spider.Ctx) !Response {
@@ -104,10 +104,10 @@ fn form(c: *spider.Ctx, id: ?i64, input: model.Input, errors: model.Errors) !Res
     }, .{ .status = if (errors.any()) .unprocessable_entity else .ok });
 }
 
-/// After a save: go to the post and remember who wrote it.
+/// After a save: go to the post and remember who wrote it, for a year.
+/// `.encode` lets the cookie hold any name (an accent, a semicolon).
 fn saved(c: *spider.Ctx, id: i64, author: []const u8) !Response {
-    const headers = try c.arena.alloc([2][]const u8, 2);
-    headers[0] = .{ "Location", try std.fmt.allocPrint(c.arena, "/posts/{d}", .{id}) };
-    headers[1] = .{ "Set-Cookie", try author_cookie.header(c, author) };
-    return .{ .status = .see_other, .headers = headers };
+    const one_year = 365 * 24 * 60 * 60;
+    const url = try std.fmt.allocPrint(c.arena, "/posts/{d}", .{id});
+    return c.redirectWith(url, try c.withCookie("author", author, .{ .encode = true, .max_age = one_year }));
 }
