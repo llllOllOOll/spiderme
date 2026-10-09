@@ -65,7 +65,7 @@ extends "layout"
 
 ## Components
 
-A template whose file name is in kebab case, like `post-card.html`, can be used as a tag in PascalCase. Its attributes become its values, and what is inside the tag becomes its `{ slot }`.
+A template can be used as a tag. The tag is the file name in PascalCase: `post-card.html` and `PostCard.html` are both `<PostCard>`. Its attributes become its values, and what is inside the tag becomes its `{ slot }`.
 
 ```html
 <!-- src/shared/templates/post-card.html -->
