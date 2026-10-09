@@ -50,7 +50,8 @@ pub fn create(c: *spider.Ctx) !Response {
     const errors = model.validate(input);
     if (errors.any()) return c.json(.{ .errors = errors }, .{ .status = .unprocessable_entity });
 
-    const id = try repository.create(c.arena, input);
+    // A program holds the key, not an account: the post belongs to nobody.
+    const id = try repository.create(c.arena, input, null);
     const location = try std.fmt.allocPrint(c.arena, "/api/posts/{d}", .{id});
     return c.json(.{ .id = id }, .{
         .status = .created,

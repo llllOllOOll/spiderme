@@ -18,8 +18,10 @@ extends "layout"
         { body }
     </article>
 
+    if (can_edit) {
     <div class="ui-actions ui-actions-ruled">
         <a class="ui-btn ui-btn-outline" href="/posts/{ post.id }/edit">Edit post</a>
         <a class="ui-btn ui-btn-danger-quiet" href="/posts/{ post.id }/delete">Delete post</a>
     </div>
+    }
 </main>

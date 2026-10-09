@@ -1,6 +1,7 @@
 const spider = @import("spider");
 const controller = @import("controller.zig");
 const api_handlers = @import("api.zig");
+const Posts = @import("policy.zig").Posts;
 
 /// Routes of the posts feature. src/main.zig mounts them with
 /// `server.mountFeatures(features)`: every pub fn here with no parameters
@@ -8,7 +9,9 @@ const api_handlers = @import("api.zig");
 ///
 /// Reading is for everyone: `defaults` makes the routes public. Writing
 /// needs a login: those routes say `.authenticated`, which replaces the
-/// default for them.
+/// default for them. Changing or deleting a post is for its author: those
+/// routes name a rule of src/features/posts/policy.zig, which also needs
+/// a login.
 pub fn build() spider.Group {
     const signed_in = .{ .authenticated = true };
     var g = spider.Group.init("/posts");
@@ -19,10 +22,10 @@ pub fn build() spider.Group {
         .get("/new", controller.new, signed_in)
         .post("/create", controller.create, signed_in)
         .get("/:id", controller.show, .{})
-        .get("/:id/edit", controller.edit, signed_in)
-        .post("/:id/update", controller.update, signed_in)
-        .get("/:id/delete", controller.confirmDelete, signed_in)
-        .post("/:id/delete", controller.delete, signed_in);
+        .get("/:id/edit", controller.edit, .{ .policy = Posts.route(.update) })
+        .post("/:id/update", controller.update, .{ .policy = Posts.route(.update) })
+        .get("/:id/delete", controller.confirmDelete, .{ .policy = Posts.route(.delete) })
+        .post("/:id/delete", controller.delete, .{ .policy = Posts.route(.delete) });
     return g;
 }
 

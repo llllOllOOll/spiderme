@@ -6,6 +6,8 @@ pub const Post = struct {
     title: []const u8,
     body: []const u8,
     author: []const u8,
+    /// The account that wrote it; 0 when it belongs to no account.
+    user_id: i64,
     age: i64,
 };
 

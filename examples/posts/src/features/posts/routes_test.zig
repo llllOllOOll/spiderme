@@ -12,10 +12,10 @@ test "posts routes: method, path and access" {
         .{ "GET", "/posts/export.csv", "public" },
         .{ "POST", "/posts/create", "authenticated" },
         .{ "GET", "/posts/:id", "public" },
-        .{ "GET", "/posts/:id/edit", "authenticated" },
-        .{ "POST", "/posts/:id/update", "authenticated" },
-        .{ "GET", "/posts/:id/delete", "authenticated" },
-        .{ "POST", "/posts/:id/delete", "authenticated" },
+        .{ "GET", "/posts/:id/edit", "policy:post.update" },
+        .{ "POST", "/posts/:id/update", "policy:post.update" },
+        .{ "GET", "/posts/:id/delete", "policy:post.delete" },
+        .{ "POST", "/posts/:id/delete", "policy:post.delete" },
     });
 }
 

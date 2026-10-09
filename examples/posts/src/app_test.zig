@@ -202,10 +202,7 @@ test "GET /posts/:id/edit and POST /posts/:id/update change a post" {
     try invalid.expectStatus(422);
     try invalid.expectContains("Write something in the body.");
 
-    // Someone else edits it: the post keeps its author.
-    var other_cookie: [1024]u8 = undefined;
-    const editor = app.with(&.{try signUp(app, &other_cookie, "Second Editor", "second@example.com")});
-    var saved = try editor.postForm(path(&buf, post, "/update"), .{ .title = "After the edit", .body = "Second version." });
+    var saved = try writer.postForm(path(&buf, post, "/update"), .{ .title = "After the edit", .body = "Second version." });
     defer saved.deinit();
     try saved.expectRedirect(post);
 
@@ -215,7 +212,6 @@ test "GET /posts/:id/edit and POST /posts/:id/update change a post" {
     try page.expectContains("Second version.");
     try page.expectNotContains("Before the edit");
     try page.expectContains("First Author");
-    try page.expectNotContains("Second Editor");
 
     var missing = try writer.postForm("/posts/9999/update", .{ .title = "x", .body = "x" });
     defer missing.deinit();
@@ -251,6 +247,97 @@ test "GET /posts/:id/delete asks first, POST /posts/:id/delete removes the post"
     var missing = try writer.postForm("/posts/9999/delete", .{});
     defer missing.deinit();
     try missing.expectStatus(404);
+}
+
+// ── a post belongs to who wrote it ──────────────────────────────────────
+// The rule is in src/features/posts/policy.zig; the routes name it.
+
+test "only the author changes or deletes a post: someone else gets 403" {
+    const app = try spider.testing.start(run);
+    var cookie: [1024]u8 = undefined;
+    const author = app.with(&.{try signUp(app, &cookie, "Owner Writer", "owner@example.com")});
+    const post = try publish(author, "Mine to change", "Hands off.");
+    defer std.testing.allocator.free(post);
+    var other_cookie: [1024]u8 = undefined;
+    const other = app.with(&.{try signUp(app, &other_cookie, "Other Person", "other@example.com")});
+    var buf: [64]u8 = undefined;
+
+    for ([_][]const u8{ "/edit", "/delete" }) |page| {
+        var res = try other.get(path(&buf, post, page));
+        defer res.deinit();
+        try res.expectStatus(403);
+        try res.expectContains("This post is not yours");
+    }
+
+    var update = try other.postForm(path(&buf, post, "/update"), .{ .title = "Taken over", .body = "x" });
+    defer update.deinit();
+    try update.expectStatus(403);
+
+    var delete = try other.postForm(path(&buf, post, "/delete"), .{});
+    defer delete.deinit();
+    try delete.expectStatus(403);
+
+    // Nothing changed.
+    var still = try app.get(post);
+    defer still.deinit();
+    try still.expectStatus(200);
+    try still.expectContains("Mine to change");
+    try still.expectNotContains("Taken over");
+}
+
+test "the sample posts belong to no account: nobody changes them" {
+    const app = try spider.testing.start(run);
+    var cookie: [1024]u8 = undefined;
+    const someone = app.with(&.{try signUp(app, &cookie, "Late Arrival", "late@example.com")});
+
+    var edit = try someone.get("/posts/4/edit");
+    defer edit.deinit();
+    try edit.expectStatus(403);
+
+    var delete = try someone.postForm("/posts/4/delete", .{});
+    defer delete.deinit();
+    try delete.expectStatus(403);
+}
+
+test "GET /posts/:id offers Edit and Delete to the author only" {
+    const app = try spider.testing.start(run);
+    var cookie: [1024]u8 = undefined;
+    const author = app.with(&.{try signUp(app, &cookie, "Button Owner", "buttons@example.com")});
+    const post = try publish(author, "Whose buttons", "x");
+    defer std.testing.allocator.free(post);
+    var other_cookie: [1024]u8 = undefined;
+    const other = app.with(&.{try signUp(app, &other_cookie, "Button Reader", "reader@example.com")});
+
+    var mine = try author.get(post);
+    defer mine.deinit();
+    try mine.expectContains("Edit post");
+    try mine.expectContains("Delete post");
+
+    var theirs = try other.get(post);
+    defer theirs.deinit();
+    try theirs.expectNotContains("Edit post");
+    try theirs.expectNotContains("Delete post");
+
+    var visitor = try app.get(post);
+    defer visitor.deinit();
+    try visitor.expectNotContains("Edit post");
+}
+
+test "the header says who is signed in, or offers to sign in" {
+    const app = try spider.testing.start(run);
+
+    var visitor = try app.get("/posts");
+    defer visitor.deinit();
+    try visitor.expectContains("href=\"/auth/login\">Sign in</a>");
+    try visitor.expectNotContains("Sign out");
+
+    var cookie: [1024]u8 = undefined;
+    const member = app.with(&.{try signUp(app, &cookie, "Header <Name>", "header@example.com")});
+    var signed_in = try member.get("/posts");
+    defer signed_in.deinit();
+    try signed_in.expectContains("Header &lt;Name&gt;");
+    try signed_in.expectContains("Sign out");
+    try signed_in.expectNotContains(">Sign in</a>");
 }
 
 test "GET /posts/export.csv downloads every post as a file" {

@@ -69,6 +69,8 @@
   }
 
   .ui-topbar-links { display: flex; align-items: center; gap: 8px; }
+  /* The name of who is signed in: one line, cut when long. */
+  .ui-btn.ui-who { display: inline-block; max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; line-height: 42px; }
 
   .ui-footer {
     margin-top: auto;
@@ -402,6 +404,9 @@
     .ui-topbar { height: 60px; padding: 0 20px; }
     .ui-brand { gap: 8px; font-size: 22px; }
     .ui-topbar .ui-btn { padding: 0 16px; }
+    /* Signing out is on the account page, one tap on the name away. */
+    .ui-topbar-links form { display: none; }
+    .ui-btn.ui-who { max-width: 110px; }
     .ui-footer { flex-direction: column; gap: 8px; padding: 24px 20px; }
 
     .ui-feed-page { flex-direction: column; gap: 32px; padding: 32px 20px 40px; }

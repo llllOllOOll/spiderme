@@ -15,7 +15,14 @@
             Posts
         </a>
         <nav class="ui-topbar-links">
-            <a class="ui-btn ui-btn-ghost" href="/auth/account">Account</a>
+            if (current_user) {
+            <a class="ui-btn ui-btn-ghost ui-who" href="/auth/account">{ current_user.name }</a>
+            <form action="/auth/logout" method="post">
+                <button class="ui-btn ui-btn-ghost" type="submit">Sign out</button>
+            </form>
+            } else {
+            <a class="ui-btn ui-btn-ghost" href="/auth/login">Sign in</a>
+            }
             if (!composing) {
             <a class="ui-btn ui-btn-primary" href="/posts/new">New post</a>
             }

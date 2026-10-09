@@ -21,6 +21,10 @@ const MIGRATIONS = [_]Migration{
         .version = "1791568783_create_users",
         .sql_file = @embedFile("./migrations/1791568783_create_users.sql"),
     },
+    .{
+        .version = "1791583874_posts_belong_to_users",
+        .sql_file = @embedFile("./migrations/1791583874_posts_belong_to_users.sql"),
+    },
 };
 
 fn extractUpSection(sql_file: []const u8) []const u8 {

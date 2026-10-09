@@ -4,7 +4,7 @@ const db = spider.sqlite;
 const model = @import("model.zig");
 
 const columns =
-    "id, title, body, author, " ++
+    "id, title, body, author, COALESCE(user_id, 0) AS user_id, " ++
     "CAST(strftime('%s', 'now') - strftime('%s', inserted_at) AS INTEGER) AS age";
 
 /// Every post, newest first.
@@ -26,11 +26,12 @@ pub fn find(arena: std.mem.Allocator, id: i64) !?model.Post {
     return db.queryOne(model.Post, arena, sql, .{id});
 }
 
-/// Saves a new post and gives back its id.
-pub fn create(arena: std.mem.Allocator, input: model.Input) !i64 {
+/// Saves a new post and gives back its id. `user_id` is the account that
+/// wrote it, or null for a post that belongs to no account.
+pub fn create(arena: std.mem.Allocator, input: model.Input, user_id: ?i64) !i64 {
     const Row = struct { id: i64 };
-    const sql = "INSERT INTO posts (title, body, author) VALUES (?1, ?2, ?3) RETURNING id";
-    const row = try db.queryOne(Row, arena, sql, .{ input.title, input.body, input.author });
+    const sql = "INSERT INTO posts (title, body, author, user_id) VALUES (?1, ?2, ?3, ?4) RETURNING id";
+    const row = try db.queryOne(Row, arena, sql, .{ input.title, input.body, input.author, user_id });
     return (row orelse return error.InsertFailed).id;
 }
 

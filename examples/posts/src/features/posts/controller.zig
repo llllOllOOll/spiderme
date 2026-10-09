@@ -3,6 +3,9 @@ const spider = @import("spider");
 const model = @import("model.zig");
 const repository = @import("repository.zig");
 const present = @import("present.zig");
+const policy = @import("policy.zig");
+const Posts = policy.Posts;
+const Mine = spider.Loaded(model.Post);
 const Response = spider.Response;
 
 pub fn home(c: *spider.Ctx) !Response {
@@ -26,10 +29,12 @@ pub fn index(c: *spider.Ctx) !Response {
 }
 
 pub fn show(c: *spider.Ctx) !Response {
-    const post = try load(c);
+    const post = (try policy.load(c)) orelse return error.NotFound;
     return c.view("posts/show", .{
         .title = post.title,
         .post = try present.card(c.arena, post),
+        // The same rule the routes use decides whether the buttons show.
+        .can_edit = try Posts.can(c, .update, &post),
         // The body is Markdown. Spider's renderer escapes what the author
         // typed, so its HTML can go into the page as it is.
         .body = spider.RawHtml{ .html = try spider.zmd.parse(c.arena, post.body, .{}) },
@@ -46,17 +51,20 @@ pub fn create(c: *spider.Ctx) !Response {
     const errors = model.validate(input);
     if (errors.any()) return form(c, null, input, errors);
 
-    const id = try repository.create(c.arena, input);
+    const id = try repository.create(c.arena, input, policy.signedInId(c));
     return saved(c, id);
 }
 
-pub fn edit(c: *spider.Ctx) !Response {
-    const post = try load(c);
+// The four handlers below are only reached by the author: the route's
+// policy loaded the post and checked it, and hands it over as `mine`.
+
+pub fn edit(c: *spider.Ctx, mine: Mine) !Response {
+    const post = mine.value;
     return form(c, post.id, .{ .title = post.title, .body = post.body, .author = post.author }, .{});
 }
 
-pub fn update(c: *spider.Ctx) !Response {
-    const post = try load(c);
+pub fn update(c: *spider.Ctx, mine: Mine) !Response {
+    const post = mine.value;
     var input = (try c.parseForm(model.Input)).trimmed();
     input.author = post.author; // an edit does not change who wrote it
     const errors = model.validate(input);
@@ -67,16 +75,16 @@ pub fn update(c: *spider.Ctx) !Response {
 }
 
 /// Asks before deleting. It is a page, so it works without JavaScript.
-pub fn confirmDelete(c: *spider.Ctx) !Response {
-    const post = try load(c);
+pub fn confirmDelete(c: *spider.Ctx, mine: Mine) !Response {
+    const post = mine.value;
     return c.view("posts/delete", .{
         .title = "Delete post",
-        .post = try present.card(c.arena, post),
+        .post = try present.card(c.arena, post.*),
     }, .{});
 }
 
-pub fn delete(c: *spider.Ctx) !Response {
-    const post = try load(c);
+pub fn delete(c: *spider.Ctx, mine: Mine) !Response {
+    const post = mine.value;
     try repository.delete(c.arena, post.id);
     return c.redirect("/posts");
 }
@@ -113,14 +121,6 @@ test "csvField: quotes around the text, quotes inside doubled" {
     defer arena.deinit();
     try std.testing.expectEqualStrings("\"Hello, world\"", try csvField(arena.allocator(), "Hello, world"));
     try std.testing.expectEqualStrings("\"a \"\"quoted\"\" word\"", try csvField(arena.allocator(), "a \"quoted\" word"));
-}
-
-/// The post named by the :id of the path. A missing post, or an id that is
-/// not a number, is error.NotFound: the 404 page.
-fn load(c: *spider.Ctx) !model.Post {
-    const text = c.params.get("id") orelse return error.NotFound;
-    const id = std.fmt.parseInt(i64, text, 10) catch return error.NotFound;
-    return (try repository.find(c.arena, id)) orelse error.NotFound;
 }
 
 /// The form for a new post (`id` is null) or for an existing one. With
