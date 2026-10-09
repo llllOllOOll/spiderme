@@ -18,7 +18,12 @@ cd "$(dirname "$0")"
 
 # ── settings ────────────────────────────────────────────────────────────
 SERVER="${DEPLOY_SERVER:-seven@spiderme.org}"
-APP="spiderme-site"                      # image name, container prefix, Traefik names
+APP="spiderme-site"                      # image name and container prefix
+# The name of the Traefik router and service. Two containers may share one
+# only if their labels are identical, and during a deploy the old and the
+# new version run side by side: CHANGE THIS NAME WHENEVER YOU CHANGE THE
+# LABELS BELOW (v2, v3, ...), or Traefik drops the route while both run.
+ROUTE="spiderme-site-v2"
 RULE='Host(`spiderme.org`) || Host(`www.spiderme.org`)'
 NETWORK="network_public"                 # the Docker network Traefik watches
 CERT_RESOLVER="letsencrypt"              # the name of Traefik's certificate resolver
@@ -34,7 +39,7 @@ fail() { printf '\033[31merror: %s\033[0m\n' "$*" >&2; exit 1; }
 # images of this app.
 remote() {
     # shellcheck disable=SC2029
-    ssh -o BatchMode=yes "$SERVER" "APP='$APP' NETWORK='$NETWORK' CERT_RESOLVER='$CERT_RESOLVER' KEEP_IMAGES='$KEEP_IMAGES' LEGACY_CONTAINER='$LEGACY_CONTAINER' RULE='$RULE' bash -s -- $*" <<'REMOTE'
+    ssh -o BatchMode=yes "$SERVER" "APP='$APP' ROUTE='$ROUTE' NETWORK='$NETWORK' CERT_RESOLVER='$CERT_RESOLVER' KEEP_IMAGES='$KEEP_IMAGES' LEGACY_CONTAINER='$LEGACY_CONTAINER' RULE='$RULE' bash -s -- $*" <<'REMOTE'
 set -euo pipefail
 
 # The containers of this app, newest first.
@@ -50,14 +55,17 @@ start() {
         --label "deploy.app=$APP" \
         --label "deploy.version=$version" \
         --label "traefik.enable=true" \
-        --label "traefik.http.routers.$APP.rule=$RULE" \
-        --label "traefik.http.routers.$APP.entrypoints=websecure" \
-        --label "traefik.http.routers.$APP.tls=true" \
-        --label "traefik.http.routers.$APP.tls.certresolver=$CERT_RESOLVER" \
-        --label "traefik.http.services.$APP.loadbalancer.server.port=3000" \
-        --label "traefik.http.services.$APP.loadbalancer.healthcheck.path=/up" \
-        --label "traefik.http.services.$APP.loadbalancer.healthcheck.interval=5s" \
-        --label "traefik.http.services.$APP.loadbalancer.healthcheck.timeout=3s" \
+        --label "traefik.http.routers.$ROUTE.rule=$RULE" \
+        --label "traefik.http.routers.$ROUTE.entrypoints=websecure" \
+        --label "traefik.http.routers.$ROUTE.tls=true" \
+        --label "traefik.http.routers.$ROUTE.tls.certresolver=$CERT_RESOLVER" \
+        --label "traefik.http.routers.$ROUTE.middlewares=$ROUTE-retry" \
+        --label "traefik.http.middlewares.$ROUTE-retry.retry.attempts=3" \
+        --label "traefik.http.middlewares.$ROUTE-retry.retry.initialinterval=100ms" \
+        --label "traefik.http.services.$ROUTE.loadbalancer.server.port=3000" \
+        --label "traefik.http.services.$ROUTE.loadbalancer.healthcheck.path=/up" \
+        --label "traefik.http.services.$ROUTE.loadbalancer.healthcheck.interval=5s" \
+        --label "traefik.http.services.$ROUTE.loadbalancer.healthcheck.timeout=3s" \
         "$APP:$version" >/dev/null
 
     # Ask the container itself, not Traefik: is it answering?
@@ -79,7 +87,9 @@ start() {
     return 1
 }
 
-# Removes every container of the app except the one of `version`.
+# Removes every container of the app except the one of `version`. A request
+# that was on its way to one of them is sent again by Traefik to the new
+# one (the retry label above).
 retire_others() {
     local keep="$APP-$1"
     for name in $(containers) "$LEGACY_CONTAINER"; do
