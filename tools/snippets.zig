@@ -11,9 +11,14 @@
 //!
 //! `from` is a file, from the root of this repository. `decl` picks
 //! declarations of a Zig file by name, with their doc comments: a function,
-//! a constant, a test (by its text). Several, separated by commas, are
-//! shown in the order asked, a blank line between them. Without `decl` the
-//! block is the whole file.
+//! a constant, a test (by its text). Several, separated by commas or given
+//! as several `decl=`, are shown in the order asked, a blank line between
+//! them. A name with spaces or commas, as tests have, goes in quotes:
+//!
+//!     ```zig from=src/app_test.zig decl=run decl="the feed lists posts, newest first"
+//!     ```
+//!
+//! Without `decl` the block is the whole file.
 //!
 //! The build puts the code in. A file or a declaration that is not there
 //! stops it, so a page cannot show code the example no longer has; and the
@@ -68,7 +73,7 @@ pub fn expand(arena: std.mem.Allocator, markdown: []const u8, ctx: *anyopaque, r
         }
 
         const source = read(ctx, arena, request.from) orelse return error.SnippetFileNotFound;
-        const code = if (request.decls.len == 0)
+        const code = if (request.count == 0)
             std.mem.trim(u8, source, "\r\n")
         else
             try declarations(arena, source, request, problem);
@@ -78,31 +83,65 @@ pub fn expand(arena: std.mem.Allocator, markdown: []const u8, ctx: *anyopaque, r
     return out.items;
 }
 
+const max_decls = 8;
+
 const Request = struct {
     language: []const u8,
-    from: []const u8,
-    /// Comma-separated names; empty for the whole file.
-    decls: []const u8,
+    from: []const u8 = "",
+    /// The names asked for; none for the whole file.
+    names: [max_decls][]const u8 = undefined,
+    count: usize = 0,
+
+    fn add(self: *Request, name: []const u8) void {
+        if (name.len == 0 or self.count == max_decls) return;
+        self.names[self.count] = name;
+        self.count += 1;
+    }
 };
 
 /// The request in a line such as "```zig from=a/b.zig decl=x", or null for
 /// any other line.
 fn parseOpening(line: []const u8) ?Request {
     if (!std.mem.startsWith(u8, line, "```")) return null;
-    var words = std.mem.tokenizeAny(u8, line[3..], " \t\r");
-    const language = words.next() orelse return null;
-    var request: Request = .{ .language = language, .from = "", .decls = "" };
-    while (words.next()) |word| {
-        if (std.mem.startsWith(u8, word, "from=")) request.from = word["from=".len..];
-        if (std.mem.startsWith(u8, word, "decl=")) request.decls = word["decl=".len..];
+    const rest = std.mem.trim(u8, line[3..], " \t\r");
+    const language_end = std.mem.indexOfAny(u8, rest, " \t") orelse rest.len;
+    if (language_end == 0) return null;
+    var request: Request = .{ .language = rest[0..language_end] };
+
+    var i = language_end;
+    while (i < rest.len) {
+        while (i < rest.len and (rest[i] == ' ' or rest[i] == '\t')) i += 1;
+        const eq = std.mem.indexOfScalarPos(u8, rest, i, '=') orelse break;
+        const key = rest[i..eq];
+        var value_start = eq + 1;
+        var value_end: usize = undefined;
+        const quoted = value_start < rest.len and rest[value_start] == '"';
+        if (quoted) {
+            value_start += 1;
+            value_end = std.mem.indexOfScalarPos(u8, rest, value_start, '"') orelse rest.len;
+            i = @min(value_end + 1, rest.len);
+        } else {
+            value_end = std.mem.indexOfAnyPos(u8, rest, value_start, " \t") orelse rest.len;
+            i = value_end;
+        }
+        const value = rest[value_start..value_end];
+        if (std.mem.eql(u8, key, "from")) {
+            request.from = value;
+        } else if (std.mem.eql(u8, key, "decl")) {
+            if (quoted) {
+                request.add(value);
+            } else {
+                var names = std.mem.tokenizeScalar(u8, value, ',');
+                while (names.next()) |name| request.add(name);
+            }
+        }
     }
     return if (request.from.len == 0) null else request;
 }
 
 fn declarations(arena: std.mem.Allocator, source: []const u8, request: Request, problem: *[]const u8) Error![]const u8 {
     var out: std.ArrayList(u8) = .empty;
-    var names = std.mem.tokenizeScalar(u8, request.decls, ',');
-    while (names.next()) |name| {
+    for (request.names[0..request.count]) |name| {
         const code = declaration(source, name) orelse {
             problem.* = try std.fmt.allocPrint(arena, "{s}: no top-level declaration named {s}", .{ request.from, name });
             return error.SnippetDeclNotFound;
@@ -309,4 +348,28 @@ test "expand: a file or a declaration that is not there stops the build and says
 
     try t.expectError(error.SnippetBlockNotEmpty, expandSample(a, "```zig from=app/posts.zig decl=load\nstale code\n```", &problem));
     try t.expectError(error.SnippetBlockUnclosed, expandSample(a, "```zig from=app/posts.zig decl=load\n", &problem));
+}
+
+test "expand: a test is asked for by its text, in quotes, next to other names" {
+    var arena: std.heap.ArenaAllocator = .init(t.allocator);
+    defer arena.deinit();
+    var problem: []const u8 = "";
+    const out = try expandSample(arena.allocator(), "```zig from=app/posts.zig decl=limit decl=\"lists the posts\" decl=load\n```", &problem);
+    try t.expectEqualStrings(
+        \\```zig
+        \\/// How many.
+        \\pub const limit = 10;
+        \\
+        \\test "lists the posts" {
+        \\    try index();
+        \\}
+        \\
+        \\fn load(c: *Ctx) !Post {
+        \\    return c.find();
+        \\}
+        \\```
+    , out);
+
+    try t.expectError(error.SnippetDeclNotFound, expandSample(arena.allocator(), "```zig from=app/posts.zig decl=\"lists the posts, all of them\"\n```", &problem));
+    try t.expectEqualStrings("app/posts.zig: no top-level declaration named lists the posts, all of them", problem);
 }

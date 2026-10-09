@@ -12,6 +12,8 @@ zig build test
 
 It runs every test of the project. A new project has a few already, and this page shows how to add the most useful kind: tests that send requests to the app.
 
+The code on this page is from Posts, the example app in `examples/posts`.
+
 ## What a new project checks
 
 - **The conventions.** The same report as `spider check`: routes in the right file, templates using the project's classes.
@@ -19,110 +21,57 @@ It runs every test of the project. A new project has a few already, and this pag
 - **The app answers.** One request to the running app, described below.
 - **That no test file is left out.** A file with tests that nothing imports fails the build, with its name.
 
-The route table is a list of method, path and who may call the route, as `spider routes` prints it:
+The route table is a list of method, path and who may call the route, as `spider routes` prints it. This is the one of the posts feature:
 
-```zig
-const spider = @import("spider");
-const routes = @import("routes.zig");
-
-test "posts routes: method, path and access" {
-    try spider.testing.expectRoutes(routes.build(), &.{
-        .{ "GET", "/posts", "-" },
-        .{ "GET", "/posts/new", "-" },
-        .{ "GET", "/posts/:id/edit", "-" },
-        .{ "POST", "/posts/create", "-" },
-        .{ "POST", "/posts/:id/update", "-" },
-        .{ "POST", "/posts/:id/delete", "-" },
-    });
-}
+```zig from=examples/posts/src/features/posts/routes_test.zig decl="posts routes: method, path and access"
 ```
 
 Add a route, or change who may call one, and the test fails until the table says the same. It prints the table as it is now, ready to paste.
 
 ## Requests against the app
 
-A new project also has `src/app_test.zig`, with a first test that asks the app for its home page:
+A new project also has `src/app_test.zig`, with a function called `run` and a first test. `run` does what `main` does to start the server, with one difference: the database is a file of its own, so the tests never touch `db.sqlite`.
 
-```zig
-const std = @import("std");
-const spider = @import("spider");
-const core = @import("core");
-const db = spider.sqlite;
-const main = @import("main.zig");
-
-/// What main() does to serve, on a database of its own: the tests never touch
-/// db.sqlite. The migrations run on it, so every table is there.
-fn run() !void {
-    const gpa = std.heap.smp_allocator;
-    var threaded: std.Io.Threaded = .init(gpa, .{});
-    const io = threaded.io();
-
-    const path = ".zig-cache/test.sqlite";
-    std.Io.Dir.cwd().deleteFile(io, path) catch {};
-    try db.init(gpa, io, .{ .path = path });
-    try core.db.migrations.migrate(gpa);
-
-    try main.serve(gpa, io);
-}
-
-test "the home page answers" {
-    const app = try spider.testing.start(run);
-
-    var res = try app.get("/");
-    defer res.deinit();
-    try res.expectStatus(200);
-}
+```zig from=examples/posts/src/app_test.zig decl=scratch_db,run
 ```
 
-`spider.testing.start` runs the real server inside the test, on a free port, and gives you something to send requests with. Nothing is faked: middlewares, templates, the error handler and the database all take part.
+`main.serve` is the function in `src/main.zig` that builds the server and listens.
 
-`run` is what the server needs to start. It does what `main` does, with one difference: the database is a file of its own, so the tests never touch `db.sqlite`. `main.serve` is the function in `src/main.zig` that builds the server and listens.
+A test asks for the app with `spider.testing.start(run)`. It runs the real server, on a free port, once for all the tests of the project: every test calls it and gets the same one. Nothing is faked: middlewares, templates, the error handler and the database all take part.
 
-`start` runs the server once for all the tests of the project. Every test calls it and gets the same one.
+```zig from=examples/posts/src/app_test.zig decl="GET /posts lists the posts, newest first"
+```
 
-Write your tests below the first one.
+`app.get` sends a request, and what comes back has the status, the headers and the body, with a few checks ready: `expectStatus`, `expectContains`.
+
+The tests share one database, and they run in any order. Make each test create what it needs, and do not count on a table being empty.
 
 ## Forms and redirects
 
 `postForm` sends a struct as a form. A redirect is not followed: the response is the redirect itself, and you ask for the next page.
 
-```zig
-test "a new post shows up in the list" {
-    const app = try spider.testing.start(run);
+Posts sends a visitor who is not signed in to the sign-in page, whatever they try to write:
 
-    var saved = try app.postForm("/posts/create", .{ .name = "Written by a test" });
-    defer saved.deinit();
-    try saved.expectRedirect("/posts");
-
-    var list = try app.get("/posts");
-    defer list.deinit();
-    try list.expectContains("Written by a test");
-}
+```zig from=examples/posts/src/app_test.zig decl="writing needs a login: a visitor is sent to the sign-in page"
 ```
 
-The tests share one database, and they run in any order. Make each test create what it needs, and do not count on a table being empty.
+## A signed-in visitor
 
-## Headers, JSON and errors
+To test what needs a login, sign up in the test and keep the cookie. This helper comes with `spider g auth`:
 
-`request` takes the method, header lines and a body. `postJson` sends JSON.
+```zig from=examples/posts/src/app_test.zig decl=signUp
+```
 
-```zig
-test "htmx gets the list without the page around it" {
-    const app = try spider.testing.start(run);
+`app.with` gives the same app sending those headers on every request, so the rest of the test reads like the visitor using the site:
 
-    var res = try app.request(.{ .target = "/posts", .headers = &.{"HX-Request: true"} });
-    defer res.deinit();
-    try res.expectStatus(200);
-    try res.expectNotContains("<html");
-}
+```zig from=examples/posts/src/app_test.zig decl="POST /posts/create saves the post under the name of who is signed in"
+```
 
-test "an address that does not exist answers 404" {
-    const app = try spider.testing.start(run);
+## Headers and JSON
 
-    var res = try app.get("/nowhere");
-    defer res.deinit();
-    try res.expectStatus(404);
-}
+`request` takes the method, header lines and a body, for everything the shortcuts do not cover. The API of Posts wants a key in a header and a JSON body:
+
+```zig from=examples/posts/src/app_test.zig decl=key decl="POST /api/posts saves a post sent as JSON"
 ```
 
 ## What a response has
