@@ -43,9 +43,11 @@ pub fn serve(allocator: std.mem.Allocator, io: std.Io) !void {
         .listen(.{});
 }
 
-/// A missing post or page gets the 404 page; any other error gets Spider's
-/// own answer.
+/// Where every error a handler or a middleware returns ends up. The API
+/// answers in JSON; a missing post or page gets the 404 page; anything
+/// else gets Spider's own answer.
 fn onError(c: *spider.Ctx, err: anyerror) anyerror!spider.Response {
+    if (std.mem.startsWith(u8, c.getPath(), "/api/")) return api_errors(c, err);
     if (err == error.NotFound) {
         return c.view("not-found", .{ .title = "Page not found" }, .{ .status = .not_found });
     }
@@ -53,6 +55,7 @@ fn onError(c: *spider.Ctx, err: anyerror) anyerror!spider.Response {
 }
 
 const fallback = spider.errorHandler(.{});
+const api_errors = spider.errorHandler(.{ .always_json = true });
 
 // Routes in routes.zig with declared access, ui-* classes, icons from the
 // active sets, features registered: `spider check` prints the same report.

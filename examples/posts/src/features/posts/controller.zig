@@ -79,6 +79,40 @@ pub fn delete(c: *spider.Ctx) !Response {
     return c.redirect("/posts");
 }
 
+/// Every post as a spreadsheet file the browser saves.
+pub fn exportCsv(c: *spider.Ctx) !Response {
+    const posts = try repository.list(c.arena);
+
+    var csv: std.ArrayList(u8) = .empty;
+    try csv.appendSlice(c.arena, "id,title,author\n");
+    for (posts) |post| {
+        try csv.print(c.arena, "{d},{s},{s}\n", .{
+            post.id,
+            try csvField(c.arena, post.title),
+            try csvField(c.arena, post.author),
+        });
+    }
+
+    return c.download(csv.items, .{
+        .filename = "posts.csv",
+        .content_type = spider.content_types.csv,
+    });
+}
+
+/// `text` in quotes, with the quotes inside it doubled: what a CSV field
+/// needs to hold commas, quotes and line breaks.
+fn csvField(arena: std.mem.Allocator, text: []const u8) ![]const u8 {
+    const doubled = try std.mem.replaceOwned(u8, arena, text, "\"", "\"\"");
+    return std.fmt.allocPrint(arena, "\"{s}\"", .{doubled});
+}
+
+test "csvField: quotes around the text, quotes inside doubled" {
+    var arena: std.heap.ArenaAllocator = .init(std.testing.allocator);
+    defer arena.deinit();
+    try std.testing.expectEqualStrings("\"Hello, world\"", try csvField(arena.allocator(), "Hello, world"));
+    try std.testing.expectEqualStrings("\"a \"\"quoted\"\" word\"", try csvField(arena.allocator(), "a \"quoted\" word"));
+}
+
 /// The post named by the :id of the path. A missing post, or an id that is
 /// not a number, is error.NotFound: the 404 page.
 fn load(c: *spider.Ctx) !model.Post {

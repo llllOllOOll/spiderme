@@ -10,6 +10,15 @@ Markdown, a form to write and edit a post, a confirmation page before a
 post is deleted, and a 404 page. The name typed in the form is remembered
 in a cookie. Nothing in it needs JavaScript.
 
+For programs there is the same list as a CSV file (`/posts/export.csv`)
+and a small JSON API under `/api/posts`, which asks for a key:
+
+```bash
+curl -H "X-Api-Key: dev-key" http://localhost:3000/api/posts
+```
+
+The key is `POSTS_API_KEY` in `.env`; without one it is `dev-key`.
+
 ## Run it
 
 You need Zig 0.17.0 and the `spider` command line tool.
@@ -42,7 +51,8 @@ src/main.zig                    starts the server, mounts the features, 404 page
 src/app_test.zig                one test per route, against the running app
 src/features/posts/
   routes.zig                    the routes, in one group under /posts
-  controller.zig                one function per route
+  controller.zig                one function per page
+  api.zig                       the JSON routes and their two middlewares
   model.zig                     Post, the form input and its validation
   repository.zig                the SQL
   present.zig                   initials, "2 hours ago", the excerpt

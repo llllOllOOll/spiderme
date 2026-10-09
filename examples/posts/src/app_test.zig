@@ -207,3 +207,108 @@ test "GET /posts/:id/delete asks first, POST /posts/:id/delete removes the post"
     defer missing.deinit();
     try missing.expectStatus(404);
 }
+
+test "GET /posts/export.csv downloads every post as a file" {
+    const app = try spider.testing.start(run);
+    const post = try publish(app, "Commas, and \"quotes\"", "x");
+    defer std.testing.allocator.free(post);
+
+    var res = try app.get("/posts/export.csv");
+    defer res.deinit();
+    try res.expectStatus(200);
+    try res.expectHeader("Content-Type", "text/csv; charset=utf-8");
+    try res.expectHeader("Content-Disposition", "attachment; filename=\"posts.csv\"");
+    try res.expectContains("id,title,author\n");
+    try res.expectContains(",\"Routes that read like a sentence\",\"Ana Ribeiro\"\n");
+    try res.expectContains(",\"Commas, and \"\"quotes\"\"\",\"Test Writer\"\n");
+}
+
+// ── the JSON API ────────────────────────────────────────────────────────
+
+const key = "X-Api-Key: dev-key";
+
+test "the API needs its key, and answers errors in JSON" {
+    const app = try spider.testing.start(run);
+
+    var none = try app.get("/api/posts");
+    defer none.deinit();
+    try none.expectStatus(401);
+    try none.expectHeader("Content-Type", "application/json");
+
+    var wrong = try app.request(.{ .target = "/api/posts", .headers = &.{"X-Api-Key: guess"} });
+    defer wrong.deinit();
+    try wrong.expectStatus(401);
+
+    var missing = try app.request(.{ .target = "/api/posts/9999", .headers = &.{key} });
+    defer missing.deinit();
+    try missing.expectStatus(404);
+    try missing.expectHeader("Content-Type", "application/json");
+    try missing.expectContains("\"error\":");
+}
+
+test "GET /api/posts lists, searches and limits; its answers are not cached" {
+    const app = try spider.testing.start(run);
+
+    var all = try app.request(.{ .target = "/api/posts", .headers = &.{key} });
+    defer all.deinit();
+    try all.expectStatus(200);
+    try all.expectHeader("Cache-Control", "no-store");
+    try all.expectContains("\"title\":\"Routes that read like a sentence\"");
+    try all.expectContains("\"author\":\"Tom Becker\"");
+
+    var found = try app.request(.{ .target = "/api/posts?q=container", .headers = &.{key} });
+    defer found.deinit();
+    try found.expectContains("Running Spider in a tiny container");
+    try found.expectNotContains("My first week with Zig 0.17");
+
+    var none = try app.request(.{ .target = "/api/posts?limit=0", .headers = &.{key} });
+    defer none.deinit();
+    try none.expectContains("{\"posts\":[]}");
+
+    var bad = try app.request(.{ .target = "/api/posts?limit=many", .headers = &.{key} });
+    defer bad.deinit();
+    try bad.expectStatus(400);
+    try bad.expectContains("limit must be a whole number");
+}
+
+test "GET /api/posts/:id shows one post; an id that is not a number is a 400" {
+    const app = try spider.testing.start(run);
+
+    var one = try app.request(.{ .target = "/api/posts/4", .headers = &.{key} });
+    defer one.deinit();
+    try one.expectStatus(200);
+    try one.expectContains("\"id\":4,\"title\":\"Routes that read like a sentence\"");
+
+    var bad = try app.request(.{ .target = "/api/posts/four", .headers = &.{key} });
+    defer bad.deinit();
+    try bad.expectStatus(400);
+}
+
+test "POST /api/posts saves a post sent as JSON" {
+    const app = try spider.testing.start(run);
+    const json = &.{ key, "Content-Type: application/json" };
+
+    var saved = try app.request(.{
+        .method = "POST",
+        .target = "/api/posts",
+        .headers = json,
+        .body = "{\"title\":\"From the API\",\"body\":\"Sent as JSON.\",\"author\":\"A program\"}",
+    });
+    defer saved.deinit();
+    try saved.expectStatus(201);
+    const location = saved.header("Location").?;
+    try std.testing.expect(std.mem.startsWith(u8, location, "/api/posts/"));
+
+    var back = try app.request(.{ .target = location, .headers = &.{key} });
+    defer back.deinit();
+    try back.expectContains("\"title\":\"From the API\"");
+
+    var empty = try app.request(.{ .method = "POST", .target = "/api/posts", .headers = json, .body = "{\"title\":\"Only a title\"}" });
+    defer empty.deinit();
+    try empty.expectStatus(422);
+    try empty.expectContains("\"body\":\"Write something in the body.\"");
+
+    var not_json = try app.request(.{ .method = "POST", .target = "/api/posts", .headers = json, .body = "title=x" });
+    defer not_json.deinit();
+    try not_json.expectStatus(400);
+}

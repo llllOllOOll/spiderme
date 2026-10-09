@@ -9,12 +9,21 @@ test "posts routes: method, path and access" {
     try spider.testing.expectRoutes(routes.build(), &.{
         .{ "GET", "/posts", "public" },
         .{ "GET", "/posts/new", "public" },
+        .{ "GET", "/posts/export.csv", "public" },
         .{ "POST", "/posts/create", "public" },
         .{ "GET", "/posts/:id", "public" },
         .{ "GET", "/posts/:id/edit", "public" },
         .{ "POST", "/posts/:id/update", "public" },
         .{ "GET", "/posts/:id/delete", "public" },
         .{ "POST", "/posts/:id/delete", "public" },
+    });
+}
+
+test "api routes: method, path and access" {
+    try spider.testing.expectRoutes(routes.api(), &.{
+        .{ "GET", "/api/posts", "public" },
+        .{ "GET", "/api/posts/:id", "public" },
+        .{ "POST", "/api/posts", "public" },
     });
 }
 
