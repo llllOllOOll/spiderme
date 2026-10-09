@@ -8,22 +8,32 @@ order: 20
 
 A handler receives `c: *spider.Ctx`. Everything the client sent is read through it: path parameters, the query string, headers, cookies and the body.
 
+Where it can, this page shows code from Posts, the example app in `examples/posts`.
+
 ## Path and query
 
-`c.params.get` reads a `:name` segment of the route. `c.query` reads a query string value as it was sent; `c.queryDecoded` also decodes it, which is what you want for text a person typed.
+`c.params.get` reads a `:name` segment of the route. Posts reads the `:id` of `/posts/:id` this way:
 
-```zig
-fn listPosts(c: *spider.Ctx) !spider.Response {
-    const author = c.params.get("author") orelse return error.NotFound;
-    const page = c.query("page") orelse "1";
-    const search = c.queryDecoded("q") orelse "";
-    return c.json(.{ .author = author, .page = page, .search = search }, .{});
-}
+```zig from=examples/posts/src/features/posts/controller.zig decl=load
 ```
 
-All three return `?[]const u8`: null when the value is not there.
+`c.queryDecoded` reads a value of the query string, decoded: what you want for text a person typed. The feed of Posts uses it for its search, `/posts?q=router`:
 
-## Headers and cookies
+```zig from=examples/posts/src/features/posts/controller.zig decl=index
+```
+
+`c.query` reads the value as it was sent, without decoding. All three return `?[]const u8`: null when the value is not there.
+
+## Cookies
+
+`c.cookie` gives the value of a cookie as the browser sent it. `c.cookieDecoded` also decodes it: use it for a cookie that was written with `.encode`, as [Responses](/docs/response) shows.
+
+Posts remembers the name of who wrote the last post, and fills it in when the form opens:
+
+```zig from=examples/posts/src/features/posts/controller.zig decl=new
+```
+
+## Headers
 
 Header names are matched without regard to case.
 
@@ -35,8 +45,6 @@ fn whoAmI(c: *spider.Ctx) !spider.Response {
     return c.json(.{ .agent = agent, .session = session, .name = name }, .{});
 }
 ```
-
-`c.cookie` gives the value as the browser sent it. `c.cookieDecoded` also decodes it: use it for a cookie that was written with `.encode`, as [Responses](/docs/response) shows.
 
 Returning `error.Unauthorized` answers 401. `error.NotFound` answers 404 and `error.Forbidden` 403.
 
@@ -60,23 +68,17 @@ A body that is missing or does not match the struct answers 400.
 
 ## Forms
 
-`c.parseForm` reads an HTML form, urlencoded or multipart, into a struct. A field can be text, a number, a `bool`, or an optional of those.
+`c.parseForm` reads an HTML form, urlencoded or multipart, into a struct. A field can be text, a number, a `bool`, or an optional of those. This is what the form of a post sends:
 
-```zig
-const SignIn = struct {
-    email: []const u8,
-    remember: bool,
-    age: ?u32,
-};
-
-fn signIn(c: *spider.Ctx) !spider.Response {
-    const form = try c.parseForm(SignIn);
-    if (form.email.len == 0) return error.BadRequest;
-    return c.redirect("/");
-}
+```zig from=examples/posts/src/features/posts/model.zig decl=Input
 ```
 
-A field the form did not send is an empty string, zero or `false`; an optional one is null.
+And the handler that receives it:
+
+```zig from=examples/posts/src/features/posts/controller.zig decl=create
+```
+
+A field the form did not send is an empty string, zero or `false`; an optional one is null. `create` checks the fields itself and shows the form again when one is missing.
 
 ## Typed parameters
 

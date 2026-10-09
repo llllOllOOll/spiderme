@@ -8,6 +8,8 @@ order: 30
 
 A handler returns a `spider.Response`. `c` builds it: every helper takes the content and an options struct, and `.{}` means status 200 with no extra headers.
 
+Where it can, this page shows code from Posts, the example app in `examples/posts`.
+
 ## Text, JSON and HTML
 
 ```zig
@@ -41,25 +43,31 @@ fn create(c: *spider.Ctx) !spider.Response {
 
 ## Redirects
 
-```zig
-fn old(c: *spider.Ctx) !spider.Response {
-    return c.redirect("/posts");
-}
+`c.redirect` answers 302 with the address in `Location`. Posts goes back to the feed after deleting a post:
+
+```zig from=examples/posts/src/features/posts/controller.zig decl=delete
 ```
 
-It answers 302 with the address in `Location`.
+After a form is saved, use `c.redirectWith`. It answers 303, which tells the browser to load the next page with a GET, and its options can carry headers and cookies. Posts goes to the post it just saved, and remembers who wrote it:
 
-After a form is saved, use `c.redirectWith`. It answers 303, which tells the browser to load the next page with a GET, and its options can carry headers and cookies.
-
-```zig
-fn save(c: *spider.Ctx) !spider.Response {
-    return c.redirectWith("/posts/7", .{});
-}
+```zig from=examples/posts/src/features/posts/controller.zig decl=saved
 ```
 
 ## Errors
 
 A handler that returns an error ends the request with the matching status: `error.NotFound` is 404, `error.Unauthorized` 401, `error.Forbidden` 403 and `error.BadRequest` 400. Any other error is 500.
+
+Posts returns `error.NotFound` for a post that does not exist:
+
+```zig from=examples/posts/src/features/posts/controller.zig decl=load
+```
+
+What the visitor then sees is decided in one place, the error handler given to `onError` in `src/main.zig`. Posts shows its own page for a 404 and leaves the rest to Spider:
+
+```zig from=examples/posts/src/main.zig decl=onError,fallback
+```
+
+To say more about a 400, set the detail before returning the error:
 
 ```zig
 fn show(c: *spider.Ctx) !spider.Response {
@@ -82,13 +90,12 @@ fn missing(c: *spider.Ctx) !spider.Response {
 
 ## Templates
 
-`c.view` renders a template with the data you give it. The name is the feature and the file: `"posts/index"` is `src/features/posts/views/index.html`.
+`c.view` renders a template with the data you give it, and its options set the status like any other response. Posts shows its form again with 422 when a field is missing:
 
-```zig
-fn index(c: *spider.Ctx) !spider.Response {
-    return c.view("posts/index", .{ .title = "Posts", .count = 3 }, .{});
-}
+```zig from=examples/posts/src/features/posts/controller.zig decl=form
 ```
+
+[Templates](/docs/templates) explains the files.
 
 ## Cookies
 
@@ -101,17 +108,7 @@ fn signIn(c: *spider.Ctx) !spider.Response {
 }
 ```
 
-A cookie cannot hold every character. For text a person typed, such as a name with an accent or a semicolon, pass `.encode = true`, and read the cookie back with `c.cookieDecoded`.
-
-```zig
-const Profile = struct { name: []const u8 };
-
-fn saveName(c: *spider.Ctx) !spider.Response {
-    const profile = try c.parseForm(Profile);
-    const opts = try c.withCookie("name", profile.name, .{ .encode = true, .max_age = 3600 });
-    return c.redirectWith("/", opts);
-}
-```
+A cookie cannot hold every character. For text a person typed, such as a name with an accent or a semicolon, pass `.encode = true`, and read the cookie back with `c.cookieDecoded`. The `saved` function above does that for the author's name.
 
 ## Files
 
