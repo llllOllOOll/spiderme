@@ -10,12 +10,13 @@ order: 55
 zig build test
 ```
 
-It runs every test of the project. A new project has a few already, and this page adds the most useful kind: tests that send requests to the app.
+It runs every test of the project. A new project has a few already, and this page shows how to add the most useful kind: tests that send requests to the app.
 
 ## What a new project checks
 
 - **The conventions.** The same report as `spider check`: routes in the right file, templates using the project's classes.
 - **The route table of each feature.** `spider g feature` writes it next to the routes.
+- **The app answers.** One request to the running app, described below.
 - **That no test file is left out.** A file with tests that nothing imports fails the build, with its name.
 
 The route table is a list of method, path and who may call the route, as `spider routes` prints it:
@@ -40,43 +41,17 @@ Add a route, or change who may call one, and the test fails until the table says
 
 ## Requests against the app
 
-`spider.testing.start` runs the real server inside the test, on a free port, and gives you something to send requests with. Nothing is faked: middlewares, templates, the error handler and the database all take part.
-
-It needs a function that does what `main` does to serve. In `src/main.zig`, move the server into one:
-
-```zig
-pub fn main(init: std.process.Init) !void {
-    const allocator = init.arena.allocator();
-
-    try db.init(allocator, init.io, .{});
-    defer db.deinit();
-    try core.db.migrations.migrate(allocator);
-
-    try serve();
-}
-
-/// Builds the server and listens. The tests call it too.
-pub fn serve() !void {
-    var server = spider.app(.{});
-    defer server.deinit();
-
-    try server
-        .use(spider.logger)
-        .mountFeatures(features)
-        .onError(spider.errorHandler(.{ .template_not_found_is_404 = true }))
-        .listen(.{});
-}
-```
-
-Then write the tests in a new file, `src/app_test.zig`. Its `run` function is `main` again, with a database of its own, so the tests never touch `db.sqlite`:
+A new project also has `src/app_test.zig`, with a first test that asks the app for its home page:
 
 ```zig
 const std = @import("std");
 const spider = @import("spider");
 const core = @import("core");
-const main = @import("main.zig");
 const db = spider.sqlite;
+const main = @import("main.zig");
 
+/// What main() does to serve, on a database of its own: the tests never touch
+/// db.sqlite. The migrations run on it, so every table is there.
 fn run() !void {
     const gpa = std.heap.smp_allocator;
     var threaded: std.Io.Threaded = .init(gpa, .{});
@@ -86,28 +61,26 @@ fn run() !void {
     std.Io.Dir.cwd().deleteFile(io, path) catch {};
     try db.init(gpa, io, .{ .path = path });
     try core.db.migrations.migrate(gpa);
-    try main.serve();
+
+    try main.serve(gpa, io);
 }
 
-test "the posts page answers" {
+test "the home page answers" {
     const app = try spider.testing.start(run);
 
-    var res = try app.get("/posts");
+    var res = try app.get("/");
     defer res.deinit();
     try res.expectStatus(200);
-    try res.expectContains("<h1");
 }
 ```
 
-Last, import the file from `src/main.zig`. Without this the build fails and names the file, because its tests would not run:
+`spider.testing.start` runs the real server inside the test, on a free port, and gives you something to send requests with. Nothing is faked: middlewares, templates, the error handler and the database all take part.
 
-```zig
-test {
-    _ = @import("app_test.zig");
-}
-```
+`run` is what the server needs to start. It does what `main` does, with one difference: the database is a file of its own, so the tests never touch `db.sqlite`. `main.serve` is the function in `src/main.zig` that builds the server and listens.
 
 `start` runs the server once for all the tests of the project. Every test calls it and gets the same one.
+
+Write your tests below the first one.
 
 ## Forms and redirects
 
