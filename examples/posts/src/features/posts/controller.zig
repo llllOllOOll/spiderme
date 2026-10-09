@@ -1,0 +1,64 @@
+const std = @import("std");
+const spider = @import("spider");
+const model = @import("model.zig");
+const repository = @import("repository.zig");
+const Response = spider.Response;
+
+// Handlers take *spider.Ctx plus typed extractors: spider.Path(T, "name")
+// parses a path param (a bad value answers 400 before the handler runs),
+// spider.Form(T) parses the form body.
+
+pub fn index(c: *spider.Ctx) !Response {
+    const items = try repository.findAll(c.arena);
+    const context = .{ .posts = items, .page_title = "posts" };
+    if (c.isHtmx()) return c.view("posts/index", context, .{});
+    return c.view("posts/page", context, .{});
+}
+
+pub fn newForm(c: *spider.Ctx) !Response {
+    if (c.isHtmx()) return c.view("PostsForm", .{}, .{});
+    return c.redirect("/posts");
+}
+
+pub fn edit(c: *spider.Ctx, id_param: spider.Path(i64, "id")) !Response {
+    const id = id_param.value;
+    const item = try repository.findById(c.arena, id);
+    const name = if (item) |i| i.name else "";
+    return c.view("PostsEditForm", .{ .id = id, .name = name }, .{});
+}
+
+pub fn create(c: *spider.Ctx) !Response {
+    const input = try c.parseForm(model.CreateInput);
+    const created = try repository.create(c.arena, input);
+    if (c.isHtmx()) {
+        const item = created orelse return c.redirect("/posts");
+        const headers = try c.arena.alloc([2][]const u8, 1);
+        headers[0] = .{ "HX-Trigger", "item-saved" };
+        return c.view("PostsCard", .{ .id = item.id, .name = item.name }, .{ .headers = headers });
+    }
+    return c.redirect("/posts");
+}
+
+pub fn update(c: *spider.Ctx, id_param: spider.Path(i64, "id")) !Response {
+    const id = id_param.value;
+    const input = try c.parseForm(model.UpdateInput);
+    const updated = try repository.update(c.arena, id, input);
+    const name = if (updated) |u| u.name else input.name orelse "";
+    if (c.isHtmx()) {
+        const headers = try c.arena.alloc([2][]const u8, 1);
+        headers[0] = .{ "HX-Trigger", "item-saved" };
+        return c.view("PostsCard", .{ .id = id, .name = name }, .{ .headers = headers });
+    }
+    return c.redirect("/posts");
+}
+
+pub fn delete(c: *spider.Ctx, id_param: spider.Path(i64, "id")) !Response {
+    const id = id_param.value;
+    try repository.delete(c.arena, id);
+    if (c.isHtmx()) {
+        const headers = try c.arena.alloc([2][]const u8, 1);
+        headers[0] = .{ "HX-Trigger", "item-deleted" };
+        return c.html("", .{ .headers = headers });
+    }
+    return c.redirect("/posts");
+}

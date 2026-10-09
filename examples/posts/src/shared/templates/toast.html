@@ -1,0 +1,11 @@
+<div x-data="{{show: false, message: '', type: 'success'}}"
+         @item-saved.window="message = 'Saved!'; type = 'success'; show = true; setTimeout(() => show = false, 3000)"
+         @item-deleted.window="message = 'Deleted!'; type = 'error'; show = true; setTimeout(() => show = false, 3000)"
+         x-show="show"
+         x-transition
+         x-cloak
+         class="ui-toast z-50">
+        <div :class="type === 'success' ? 'ui-alert ui-alert-success' : 'ui-alert ui-alert-error'">
+            <span x-text="message"></span>
+        </div>
+    </div>

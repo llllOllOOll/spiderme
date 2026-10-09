@@ -1,0 +1,17 @@
+.{
+    .name = .posts,
+    .version = "0.1.0",
+    .fingerprint = 0x885dbafa8b142167,
+    .minimum_zig_version = "0.17.0",
+    .dependencies = .{
+        .spider = .{
+            .url = "git+https://github.com/llllOllOOll/spider?ref=main#488a34fc8f8fea3e5a3fb2e49ff21a8bbdae86eb",
+            .hash = "spider-0.9.0-P7cGrhlwygAYB0CtIDbZHC6Sn8_iR8cTBwv90F8jXE-M",
+        },
+    },
+    .paths = .{
+        "build.zig",
+        "build.zig.zon",
+        "src",
+    },
+}

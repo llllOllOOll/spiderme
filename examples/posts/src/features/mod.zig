@@ -1,0 +1,13 @@
+pub const home = @import("home/mod.zig");
+
+// A file with `test "..."` blocks only runs if this module's test binary
+// imports it whole (refAllDecls here reaches one level: every <feature>/mod.zig
+// has its own). This test fails, naming the file, when one is left out.
+test {
+    @import("std").testing.refAllDecls(@This());
+}
+
+test "every file with tests is part of this test binary" {
+    try @import("spider").testing.expectAllTestsDiscovered(@import("test_manifest"));
+}
+pub const posts = @import("posts/mod.zig");
