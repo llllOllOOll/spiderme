@@ -19,7 +19,7 @@ Every route takes three arguments: the path, the handler, and a config that says
 
 ## Dynamic segments
 
-A segment that starts with a colon matches any value at that position: `/:id` answers `/posts/4` and `/posts/9`. The handler reads the value by its name with `c.params.get`.
+A segment that starts with a colon matches any value at that position: `/:id` answers `/posts/4` and `/posts/9`. The handler reads the value by its name with `c.params.get`. The value arrives decoded: `/tags/caf%C3%A9` gives `café`.
 
 Posts looks up a post in one place:
 
