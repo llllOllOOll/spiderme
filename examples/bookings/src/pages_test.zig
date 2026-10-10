@@ -566,3 +566,26 @@ test "booking: a webhook that is down does not undo the confirmation" {
     defer page.deinit();
     try page.expectContains("Confirmed");
 }
+
+test "http client: one client for many calls to the same server" {
+    const app = try app_test.running();
+    var url_buf: [64]u8 = undefined;
+    const base_url = try std.fmt.bufPrint(&url_buf, "http://127.0.0.1:{d}", .{app.port});
+
+    // Made once and kept: its connections are reused from call to call.
+    var client = try spider.http_client.Client.init(std.testing.io, std.testing.allocator, .{ .base_url = base_url });
+    defer client.deinit();
+
+    var up = try client.get("/up", .{ .timeout_ms = 3000 });
+    defer up.deinit();
+    try std.testing.expectEqual(std.http.Status.ok, up.status);
+
+    var rooms = try client.get("/rooms", .{ .timeout_ms = 3000 });
+    defer rooms.deinit();
+    try std.testing.expect(std.mem.indexOf(u8, rooms.body_text, "Atlas") != null);
+
+    // An address that is nothing is an answer too: the call succeeds, the status says 404.
+    var missing = try client.get("/nowhere", .{ .timeout_ms = 3000 });
+    defer missing.deinit();
+    try std.testing.expectEqual(std.http.Status.not_found, missing.status);
+}
