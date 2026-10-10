@@ -483,3 +483,18 @@ h1{font-size:34px}
 .ui-bar-6{width:60%}.ui-bar-7{width:70%}.ui-bar-8{width:80%}.ui-bar-9{width:90%}.ui-bar-10{width:100%}
 .ui-header-in>.ui-btn{margin-left:auto}
 select.ui-input{background-image:linear-gradient(45deg,transparent 50%,var(--ink2) 50%),linear-gradient(135deg,var(--ink2) 50%,transparent 50%);background-position:calc(100% - 20px) 21px,calc(100% - 14px) 21px;background-size:6px 6px;background-repeat:no-repeat;padding-right:36px}
+
+/* Sign in, account, and the pages for an error. */
+.ui-auth{max-width:440px;width:100%;margin:0 auto;display:flex;flex-direction:column;gap:24px}
+.ui-auth-wide{max-width:560px}
+.ui-h1-sm{font-size:40px}
+.ui-form{display:flex;flex-direction:column;gap:20px}
+.ui-who{display:flex;gap:16px;align-items:center}
+.ui-who-name{font-size:18px}
+.ui-avatar-lg{width:56px;height:56px}
+.ui-dl-tight{grid-template-columns:100px 1fr}
+.ui-empty-page{margin:24px auto 0;max-width:560px;width:100%}
+.ui-fieldset{border:0;padding:0;margin:0;display:flex;flex-direction:column;gap:4px}
+.ui-fieldset legend{padding:0;margin-bottom:6px}
+.ui-check input{width:22px;height:22px;accent-color:var(--ink);flex:none}
+.ui-danger-zone{display:flex;flex-wrap:wrap;gap:16px;align-items:center;justify-content:space-between}

@@ -6,7 +6,12 @@ extends "layout"
             <h1>{ room.name }</h1>
             <p class="ui-muted ui-inline"><span class="hero-user-group size-5" aria-hidden="true"></span>{ seats }</p>
         </div>
-        <a class="ui-btn ui-btn-primary" href="{ book }"><span class="hero-plus size-5" aria-hidden="true"></span>Book this room</a>
+        <div class="ui-row-actions">
+            if (is_admin) {
+            <a class="ui-btn ui-btn-secondary" href="/rooms/{ room.id }/edit">Edit</a>
+            }
+            <a class="ui-btn ui-btn-primary" href="{ book }"><span class="hero-plus size-5" aria-hidden="true"></span>Book this room</a>
+        </div>
     </div>
 
     <section class="ui-card" aria-label="What the room has">

@@ -253,3 +253,95 @@ test "rooms: the list, one room, and a room that does not exist" {
     defer not_a_number.deinit();
     try not_a_number.expectStatus(404);
 }
+
+const Room = struct { name: []const u8, capacity: []const u8, projector: []const u8 = "", whiteboard: []const u8 = "" };
+
+test "rooms: only an admin makes, changes and deletes them" {
+    const app = try app_test.running();
+    var arena_state: std.heap.ArenaAllocator = .init(std.testing.allocator);
+    defer arena_state.deinit();
+    const arena = arena_state.allocator();
+
+    // Nobody: sent to sign in. Someone who is not an admin: the 403 page.
+    var nobody = try app.get("/rooms/new");
+    defer nobody.deinit();
+    try nobody.expectRedirect("/auth/login");
+    var a_buf: [1024]u8 = undefined;
+    const ana = app.with(&.{try app_test.signUp(app, &a_buf, "Ana Ribeiro", "ana.rooms@example.com")});
+    var refused = try ana.postForm("/rooms/create", Room{ .name = "Grove", .capacity = "5" });
+    defer refused.deinit();
+    try refused.expectStatus(403);
+    try refused.expectContains("Not allowed");
+    var list = try ana.get("/rooms");
+    defer list.deinit();
+    try list.expectNotContains("New room");
+
+    // An account becomes an admin in the database; the next sign-in carries it.
+    var d_buf: [1024]u8 = undefined;
+    _ = try app_test.signUp(app, &d_buf, "Dana Whitfield", "dana.rooms@example.com");
+    try spider.pg.query(void, arena, "UPDATE users SET role = 'admin' WHERE email = $1", .{"dana.rooms@example.com"});
+    var signed_in = try app.postForm("/auth/login", .{ .email = "dana.rooms@example.com", .password = "a good password" });
+    defer signed_in.deinit();
+    var cookie_buf: [1024]u8 = undefined;
+    const dana = app.with(&.{try std.fmt.bufPrint(&cookie_buf, "Cookie: session={s}", .{signed_in.cookie("session").?})});
+
+    var admin_list = try dana.get("/rooms");
+    defer admin_list.deinit();
+    try admin_list.expectContains("New room");
+
+    var blank = try dana.postForm("/rooms/create", Room{ .name = " ", .capacity = "0" });
+    defer blank.deinit();
+    try blank.expectStatus(422);
+    try blank.expectContains("Give the room a name.");
+    try blank.expectContains("a number from 1 to 500");
+    var taken = try dana.postForm("/rooms/create", Room{ .name = "Atlas", .capacity = "5" });
+    defer taken.deinit();
+    try taken.expectStatus(422);
+    try taken.expectContains("Another room has that name.");
+
+    var made = try dana.postForm("/rooms/create", Room{ .name = "Grove", .capacity = "5", .projector = "true", .whiteboard = "true" });
+    defer made.deinit();
+    try made.expectStatus(302);
+    const location = made.header("Location").?;
+    var page = try app.get(location);
+    defer page.deinit();
+    try page.expectContains("<h1>Grove</h1>");
+    try page.expectContains("5 seats");
+    try page.expectContains("Projector");
+    try page.expectContains("Whiteboard");
+    try page.expectNotContains("Screen");
+
+    // The edit form has the room as it is; saving without the projector takes it away.
+    var path_buf: [64]u8 = undefined;
+    var form = try dana.get(try std.fmt.bufPrint(&path_buf, "{s}/edit", .{location}));
+    defer form.deinit();
+    try form.expectContains("value=\"Grove\"");
+    try form.expectContains("name=\"projector\" value=\"true\" checked");
+    try form.expectContains("name=\"screen\" value=\"true\">");
+    var update_buf: [64]u8 = undefined;
+    var updated = try dana.postForm(try std.fmt.bufPrint(&update_buf, "{s}/update", .{location}), Room{ .name = "Grove", .capacity = "7", .whiteboard = "true" });
+    defer updated.deinit();
+    try updated.expectRedirect(location);
+    var after = try app.get(location);
+    defer after.deinit();
+    try after.expectContains("7 seats");
+    try after.expectNotContains("Projector");
+
+    var delete_buf: [64]u8 = undefined;
+    var deleted = try dana.postForm(try std.fmt.bufPrint(&delete_buf, "{s}/delete", .{location}), .{});
+    defer deleted.deinit();
+    try deleted.expectRedirect("/rooms");
+    var gone = try app.get(location);
+    defer gone.deinit();
+    try gone.expectStatus(404);
+    try gone.expectContains("Not found");
+}
+
+test "an address that is nothing gets the 404 page" {
+    const app = try app_test.running();
+    var res = try app.get("/nowhere");
+    defer res.deinit();
+    try res.expectStatus(404);
+    try res.expectContains("There is no page, room or booking at this address.");
+    try res.expectContains("Back to the day view");
+}

@@ -15,3 +15,6 @@ pub const Input = struct {
     capacity: i32,
     features: []const []const u8 = &.{},
 };
+
+/// What a room can have. The form shows one checkbox for each.
+pub const known_features = [_][]const u8{ "projector", "video call", "whiteboard", "screen", "movable tables" };

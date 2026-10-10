@@ -1,0 +1,57 @@
+extends "layout"
+<main class="ui-main ui-narrow">
+    <a class="ui-link ui-back" href="/rooms"><span class="hero-chevron-left size-4" aria-hidden="true"></span>All rooms</a>
+    <h1>{ title }</h1>
+
+    <form class="ui-card ui-form-card" action="{ action }" method="post">
+        <div class="ui-field">
+            <label class="ui-label" for="name">Name</label>
+            if (errors.name != "") {
+            <input class="ui-input" id="name" name="name" type="text" value="{ form.name }" placeholder="For example, Atlas" aria-invalid="true" aria-describedby="name-note">
+            <p class="ui-error" id="name-note" role="alert"><span class="hero-exclamation-triangle size-4" aria-hidden="true"></span><span>{ errors.name }</span></p>
+            } else {
+            <input class="ui-input" id="name" name="name" type="text" value="{ form.name }" placeholder="For example, Atlas">
+            }
+        </div>
+
+        <div class="ui-field">
+            <label class="ui-label" for="capacity">Capacity</label>
+            if (errors.capacity != "") {
+            <input class="ui-input" id="capacity" name="capacity" type="number" min="1" value="{ form.capacity }" placeholder="How many seats" aria-invalid="true" aria-describedby="capacity-note">
+            <p class="ui-error" id="capacity-note" role="alert"><span class="hero-exclamation-triangle size-4" aria-hidden="true"></span><span>{ errors.capacity }</span></p>
+            } else {
+            <input class="ui-input" id="capacity" name="capacity" type="number" min="1" value="{ form.capacity }" placeholder="How many seats">
+            <p class="ui-hint">Number of seats.</p>
+            }
+        </div>
+
+        <fieldset class="ui-fieldset">
+            <legend class="ui-label">Features</legend>
+            for (boxes) |box| {
+            <label class="ui-check">
+                if (box.on) {
+                <input type="checkbox" name="{ box.field }" value="true" checked>
+                } else {
+                <input type="checkbox" name="{ box.field }" value="true">
+                }
+                { box.label }
+            </label>
+            }
+        </fieldset>
+
+        <div class="ui-row-actions">
+            <button class="ui-btn ui-btn-primary ui-btn-lg" type="submit">Save room</button>
+            <a class="ui-btn ui-btn-quiet ui-btn-lg" href="/rooms">Cancel</a>
+        </div>
+    </form>
+
+    if (editing) {
+    <section class="ui-card ui-danger-zone">
+        <div class="ui-stack ui-gap-8">
+            <h3>Delete this room</h3>
+            <p class="ui-muted ui-small">Its bookings go with it. This cannot be undone.</p>
+        </div>
+        <form action="{ delete }" method="post"><button class="ui-btn ui-btn-danger" type="submit"><span class="hero-trash size-5" aria-hidden="true"></span>Delete room</button></form>
+    </section>
+    }
+</main>

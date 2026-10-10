@@ -5,7 +5,11 @@ const repository = @import("repository.zig");
 const rooms = @import("../rooms/repository.zig");
 const grid = @import("../home/grid.zig");
 
+const policy = @import("policy.zig");
+
 const Response = spider.Response;
+/// A booking the route's policy loaded and checked: the visitor may change it.
+const Mine = spider.Loaded(model.Booking);
 
 /// What the form holds: what was asked for in the address, or what was
 /// typed, kept across a refusal.
@@ -194,7 +198,7 @@ pub fn show(c: *spider.Ctx) !Response {
         .confirmed = booking.state == .confirmed,
         .expired = booking.state == .expired,
         .cancelled = booking.state == .cancelled,
-        .can_act = is_mine or c.hasRole("admin"),
+        .can_act = try policy.Bookings.can(c, .cancel, &booking),
         .mine = is_mine,
         .minutes_left = minutes,
         // The bar under the countdown: tenths of the hold that are left.
@@ -203,16 +207,19 @@ pub fn show(c: *spider.Ctx) !Response {
     }, .{});
 }
 
-/// Keeps a held booking. Only its owner (or an admin) may.
-pub fn confirm(c: *spider.Ctx) !Response {
-    const booking = try owned(c);
+// The two handlers below are only reached by the owner of the booking or
+// an admin: the route's policy loaded it and checked, and hands it over.
+
+/// Keeps a held booking.
+pub fn confirm(c: *spider.Ctx, mine_: Mine) !Response {
+    const booking = mine_.value;
     _ = try repository.confirm(c.arena, booking.id);
     return c.redirect(try std.fmt.allocPrint(c.arena, "/bookings/{d}", .{booking.id}));
 }
 
-/// Gives a booking up. Only its owner (or an admin) may.
-pub fn cancel(c: *spider.Ctx) !Response {
-    const booking = try owned(c);
+/// Gives a booking up.
+pub fn cancel(c: *spider.Ctx, mine_: Mine) !Response {
+    const booking = mine_.value;
     _ = try repository.cancel(c.arena, booking.id);
     return c.redirect(try std.fmt.allocPrint(c.arena, "/bookings/{d}", .{booking.id}));
 }
@@ -244,15 +251,6 @@ fn find(c: *spider.Ctx) !model.Booking {
     return try repository.find(c.arena, id) orelse error.NotFound;
 }
 
-/// The booking of the address, when the visitor may change it.
-fn owned(c: *spider.Ctx) !model.Booking {
-    const booking = try find(c);
-    const viewer = viewerId(c) orelse return error.Unauthorized;
-    if (c.hasRole("admin")) return booking;
-    if (booking.user_id == null or booking.user_id.? != viewer) return error.Forbidden;
-    return booking;
-}
-
 fn viewerId(c: *spider.Ctx) ?i64 {
-    return std.fmt.parseInt(i64, c.userId() orelse return null, 10) catch null;
+    return policy.signedInId(c);
 }

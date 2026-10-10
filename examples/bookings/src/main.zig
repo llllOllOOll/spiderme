@@ -41,11 +41,27 @@ pub fn serve(allocator: std.mem.Allocator, io: std.Io) !void {
         // who is there; a route that is not `.public` needs a login.
         .use(spider.session.middleware())
         .mountFeatures(features)
-        .onError(spider.errorHandler(.{ .unauthorized_redirect = "/auth/login", .template_not_found_is_404 = true }))
+        .onError(onError)
         // Port and host come from spider.config.zig; the PORT variable
         // (the environment or .env) replaces the port.
         .listen(.{}) catch |err| return err;
 }
+
+/// Where every error a handler or a middleware returns ends up: a missing
+/// room, booking or page gets the 404 page, something the visitor may not
+/// do the 403 page, nobody signed in the sign-in page; anything else gets
+/// Spider's own answer.
+fn onError(c: *spider.Ctx, err: anyerror) anyerror!spider.Response {
+    if (err == error.NotFound) {
+        return c.view("not-found", .{ .title = "Not found" }, .{ .status = .not_found });
+    }
+    return fallback(c, err);
+}
+
+const fallback = spider.errorHandler(.{
+    .unauthorized_redirect = "/auth/login",
+    .forbidden_view = "not-allowed",
+});
 
 // Routes in routes.zig with declared access, ui-* classes, icons from the
 // active sets, features registered: `spider check` prints the same report.

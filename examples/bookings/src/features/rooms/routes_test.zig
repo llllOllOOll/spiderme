@@ -7,6 +7,11 @@ const routes = @import("routes.zig");
 test "rooms routes: method, path and access" {
     try spider.testing.expectRoutes(routes.build(), &.{
         .{ "GET", "/rooms", "public" },
+        .{ "GET", "/rooms/new", "roles:admin" },
+        .{ "POST", "/rooms/create", "roles:admin" },
         .{ "GET", "/rooms/:id", "public" },
+        .{ "GET", "/rooms/:id/edit", "roles:admin" },
+        .{ "POST", "/rooms/:id/update", "roles:admin" },
+        .{ "POST", "/rooms/:id/delete", "roles:admin" },
     });
 }

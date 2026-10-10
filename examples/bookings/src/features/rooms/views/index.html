@@ -1,6 +1,11 @@
 extends "layout"
 <main class="ui-main">
-    <h1>Rooms</h1>
+    <div class="ui-page-head">
+        <h1>Rooms</h1>
+        if (is_admin) {
+        <a class="ui-btn ui-btn-primary" href="/rooms/new"><span class="hero-plus size-5" aria-hidden="true"></span>New room</a>
+        }
+    </div>
     if (none) {
     <div class="ui-empty">
         <span class="ui-ring"><span class="hero-building-office size-7" aria-hidden="true"></span></span>

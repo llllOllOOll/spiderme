@@ -44,3 +44,18 @@ pub fn allFeatures(arena: std.mem.Allocator) ![]const []const u8 {
     for (rows, out) |row, *feature| feature.* = row.feature;
     return out;
 }
+
+/// Changes a room. error.NameTaken when another room has that name; null
+/// when there is no room with that id.
+pub fn update(arena: std.mem.Allocator, id: i64, input: model.Input) !?model.Room {
+    const sql = "UPDATE rooms SET name = $1, capacity = $2, features = $3 WHERE id = $4 RETURNING " ++ columns;
+    return db.queryOne(model.Room, arena, sql, .{ input.name, input.capacity, db.array([]const u8, input.features), id }) catch |err| switch (err) {
+        error.UniqueViolation => return error.NameTaken,
+        else => return err,
+    };
+}
+
+/// Removes a room, and with it its bookings (the tables say ON DELETE CASCADE).
+pub fn delete(arena: std.mem.Allocator, id: i64) !void {
+    try db.query(void, arena, "DELETE FROM rooms WHERE id = $1", .{id});
+}

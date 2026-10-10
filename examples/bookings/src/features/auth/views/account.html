@@ -1,22 +1,22 @@
 extends "layout"
-
-<main class="min-h-screen flex items-center justify-center p-6">
-    <div class="ui-card w-full max-w-sm p-8 gap-6">
-        <h1 class="text-2xl font-semibold">Your account</h1>
-
-        <dl class="flex flex-col gap-3 text-sm">
-            <div>
-                <dt class="opacity-60">Name</dt>
-                <dd>{ name }</dd>
+<main class="ui-main">
+    <div class="ui-auth ui-auth-wide">
+        <h1 class="ui-h1-sm">Account</h1>
+        <section class="ui-card ui-form">
+            <div class="ui-who">
+                <span class="ui-avatar ui-avatar-lg" aria-hidden="true"><span class="hero-user size-7"></span></span>
+                <div class="ui-stack">
+                    <b class="ui-who-name">{ name }</b>
+                    <span class="ui-muted">{ email }</span>
+                </div>
             </div>
-            <div>
-                <dt class="opacity-60">Email</dt>
-                <dd>{ email }</dd>
+            <dl class="ui-dl ui-dl-tight">
+                <dt>Role</dt><dd>{ role }</dd>
+            </dl>
+            <div class="ui-row-actions">
+                <a class="ui-btn ui-btn-secondary" href="/bookings">My bookings</a>
+                <form action="/auth/logout" method="post"><button class="ui-btn ui-btn-quiet" type="submit">Sign out</button></form>
             </div>
-        </dl>
-
-        <form action="/auth/logout" method="post">
-            <button class="ui-btn" type="submit">Sign out</button>
-        </form>
+        </section>
     </div>
 </main>

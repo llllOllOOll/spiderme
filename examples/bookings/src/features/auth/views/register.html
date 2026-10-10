@@ -1,30 +1,26 @@
 extends "layout"
-
-<main class="min-h-screen flex items-center justify-center p-6">
-    <div class="ui-card w-full max-w-sm p-8 gap-6">
-        <h1 class="text-2xl font-semibold">Create an account</h1>
-
+<main class="ui-main">
+    <div class="ui-auth">
+        <h1 class="ui-h1-sm">Create an account</h1>
         if (problem != "") {
-        <p class="ui-alert ui-alert-error" role="alert">{ problem }</p>
+        <div class="ui-alert ui-alert-danger" role="alert"><span class="hero-exclamation-triangle size-5" aria-hidden="true"></span><span>{ problem }</span></div>
         }
-
-        <form class="flex flex-col gap-4" action="/auth/register" method="post">
-            <label class="ui-field">
-                <span class="ui-label">Name</span>
-                <input class="ui-input" name="name" type="text" value="{ name }" autocomplete="name" maxlength="80" required autofocus>
-            </label>
-            <label class="ui-field">
-                <span class="ui-label">Email</span>
-                <input class="ui-input" name="email" type="email" value="{ email }" autocomplete="email" required>
-            </label>
-            <label class="ui-field">
-                <span class="ui-label">Password</span>
-                <input class="ui-input" name="password" type="password" autocomplete="new-password" minlength="8" required>
-                <span class="text-xs opacity-60">At least 8 characters.</span>
-            </label>
-            <button class="ui-btn ui-btn-primary" type="submit">Create account</button>
+        <form class="ui-card ui-form" action="/auth/register" method="post">
+            <div class="ui-field">
+                <label class="ui-label" for="name">Name</label>
+                <input class="ui-input" id="name" name="name" type="text" value="{ name }" placeholder="Your full name" autocomplete="name" required autofocus>
+            </div>
+            <div class="ui-field">
+                <label class="ui-label" for="email">Email</label>
+                <input class="ui-input" id="email" name="email" type="email" value="{ email }" placeholder="you@example.org" autocomplete="email" required>
+            </div>
+            <div class="ui-field">
+                <label class="ui-label" for="password">Password</label>
+                <input class="ui-input" id="password" name="password" type="password" autocomplete="new-password" required>
+                <p class="ui-hint">At least 8 characters.</p>
+            </div>
+            <button class="ui-btn ui-btn-primary ui-btn-lg" type="submit">Create account</button>
         </form>
-
-        <p class="text-sm">Already have one? <a class="underline" href="/auth/login">Sign in</a></p>
+        <p class="ui-muted">Already have an account? <a class="ui-link" href="/auth/login">Sign in</a></p>
     </div>
 </main>

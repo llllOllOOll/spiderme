@@ -1,25 +1,21 @@
 extends "layout"
-
-<main class="min-h-screen flex items-center justify-center p-6">
-    <div class="ui-card w-full max-w-sm p-8 gap-6">
-        <h1 class="text-2xl font-semibold">Sign in</h1>
-
+<main class="ui-main">
+    <div class="ui-auth">
+        <h1 class="ui-h1-sm">Sign in</h1>
         if (problem != "") {
-        <p class="ui-alert ui-alert-error" role="alert">{ problem }</p>
+        <div class="ui-alert ui-alert-danger" role="alert"><span class="hero-exclamation-triangle size-5" aria-hidden="true"></span><span>{ problem }</span></div>
         }
-
-        <form class="flex flex-col gap-4" action="/auth/login" method="post">
-            <label class="ui-field">
-                <span class="ui-label">Email</span>
-                <input class="ui-input" name="email" type="email" value="{ email }" autocomplete="email" required autofocus>
-            </label>
-            <label class="ui-field">
-                <span class="ui-label">Password</span>
-                <input class="ui-input" name="password" type="password" autocomplete="current-password" required>
-            </label>
-            <button class="ui-btn ui-btn-primary" type="submit">Sign in</button>
+        <form class="ui-card ui-form" action="/auth/login" method="post">
+            <div class="ui-field">
+                <label class="ui-label" for="email">Email</label>
+                <input class="ui-input" id="email" name="email" type="email" value="{ email }" placeholder="you@example.org" autocomplete="email" required autofocus>
+            </div>
+            <div class="ui-field">
+                <label class="ui-label" for="password">Password</label>
+                <input class="ui-input" id="password" name="password" type="password" autocomplete="current-password" required>
+            </div>
+            <button class="ui-btn ui-btn-primary ui-btn-lg" type="submit">Sign in</button>
         </form>
-
-        <p class="text-sm">No account yet? <a class="underline" href="/auth/register">Create one</a></p>
+        <p class="ui-muted">New here? <a class="ui-link" href="/auth/register">Create an account</a></p>
     </div>
 </main>

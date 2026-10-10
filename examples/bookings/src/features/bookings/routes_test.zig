@@ -10,7 +10,7 @@ test "bookings routes: method, path and access" {
         .{ "GET", "/bookings/new", "authenticated" },
         .{ "POST", "/bookings/create", "authenticated" },
         .{ "GET", "/bookings/:id", "public" },
-        .{ "POST", "/bookings/:id/confirm", "authenticated" },
-        .{ "POST", "/bookings/:id/cancel", "authenticated" },
+        .{ "POST", "/bookings/:id/confirm", "policy:booking.confirm" },
+        .{ "POST", "/bookings/:id/cancel", "policy:booking.cancel" },
     });
 }

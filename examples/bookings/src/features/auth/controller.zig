@@ -56,6 +56,8 @@ pub fn account(c: *spider.Ctx) !Response {
         .title = "Your account",
         .name = c.params.get("_auth_name") orelse "",
         .email = c.params.get("_auth_email") orelse "",
+        .role = if (c.hasRole("admin")) "Admin" else "User",
+        .is_admin = c.hasRole("admin"),
     }, .{});
 }
 
