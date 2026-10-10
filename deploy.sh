@@ -1,12 +1,13 @@
 #!/usr/bin/env bash
-# Deploys the site, or the example app, to the server.
+# Deploys the site, or one of the example apps, to the server.
 #
-#     ./deploy.sh [site|posts]            build, send, start the new version, retire the old one
-#     ./deploy.sh [site|posts] status     what is running on the server
-#     ./deploy.sh [site|posts] rollback   go back to the version before the current one
+#     ./deploy.sh [site|posts|bookings]            build, send, start the new version, retire the old one
+#     ./deploy.sh [site|posts|bookings] status     what is running on the server
+#     ./deploy.sh [site|posts|bookings] rollback   go back to the version before the current one
+#     ./deploy.sh bookings database                once, before its first deploy: its database
 #
-# Without a name it is the site: spiderme.org. `posts` is the example app
-# of examples/posts: posts.spiderme.org.
+# Without a name it is the site: spiderme.org. `posts` and `bookings` are
+# the example apps of examples/: posts.spiderme.org, bookings.spiderme.org.
 #
 # How it works. The image is built here and sent to the server over SSH
 # (no registry in between). On the server, a Traefik that is already there
@@ -40,8 +41,11 @@ KEEP_IMAGES=3                            # versions kept on the server for rollb
 #   SETTINGS "KEY=value ..." given to the container as they are (not secret)
 #   SECRETS  names of variables the server makes up once (random) and keeps
 #   LEGACY   a container started by hand before this script existed
+#   DATABASE "container:name" for an app on PostgreSQL: the PostgreSQL
+#            container that is already on the server, and the name of the
+#            app's own database and role in it (see `database` below)
 TARGET="site"
-case "${1:-}" in site | posts)
+case "${1:-}" in site | posts | bookings)
     TARGET="$1"
     shift
     ;;
@@ -58,6 +62,7 @@ case "$TARGET" in
         SETTINGS=""
         SECRETS=""
         LEGACY="spiderme-app"
+        DATABASE=""
         ;;
     posts)
         APP="spiderme-posts"
@@ -69,6 +74,19 @@ case "$TARGET" in
         SETTINGS="SQLITE_PATH=/data/db.sqlite"
         SECRETS="JWT_SECRET POSTS_API_KEY" # sessions; the key of the JSON API
         LEGACY=""
+        DATABASE=""
+        ;;
+    bookings)
+        APP="spiderme-bookings"
+        ROUTE="spiderme-bookings-v1"
+        RULE='Host(`bookings.spiderme.org`)'
+        CONTEXT="examples/bookings"
+        CHECK_URL="https://bookings.spiderme.org"
+        VOLUME=""
+        SETTINGS="PG_HOST=postgres-main PG_PORT=5432 PG_USER=bookings PG_DB=bookings BOOKINGS_URL=https://bookings.spiderme.org"
+        SECRETS="JWT_SECRET PG_PASSWORD" # sessions; the password of its database role
+        LEGACY=""
+        DATABASE="postgres-main:bookings"
         ;;
 esac
 
@@ -82,7 +100,7 @@ fail() {
 # images and the volume of this app.
 remote() {
     # shellcheck disable=SC2029
-    ssh -o BatchMode=yes "$SERVER" "APP='$APP' ROUTE='$ROUTE' NETWORK='$NETWORK' CERT_RESOLVER='$CERT_RESOLVER' KEEP_IMAGES='$KEEP_IMAGES' LEGACY='$LEGACY' RULE='$RULE' VOLUME='$VOLUME' SETTINGS='$SETTINGS' SECRETS='$SECRETS' bash -s -- $*" <<'REMOTE'
+    ssh -o BatchMode=yes "$SERVER" "APP='$APP' ROUTE='$ROUTE' NETWORK='$NETWORK' CERT_RESOLVER='$CERT_RESOLVER' KEEP_IMAGES='$KEEP_IMAGES' LEGACY='$LEGACY' RULE='$RULE' VOLUME='$VOLUME' SETTINGS='$SETTINGS' SECRETS='$SECRETS' DATABASE='$DATABASE' bash -s -- $*" <<'REMOTE'
 set -euo pipefail
 
 # The containers of this app.
@@ -179,6 +197,28 @@ case "$1" in
         retire_others "$2"
         prune_images
         ;;
+    database)
+        # The app's own role and database, made once. The password is the
+        # one in the app's file on this server: it is read here and goes to
+        # psql on its input, so it is never printed nor in a command line.
+        # Running it again changes nothing but sets the same password.
+        [ -n "$DATABASE" ] || { echo "$APP has no database" >&2; exit 1; }
+        container="${DATABASE%%:*}" name="${DATABASE##*:}"
+        password="$(grep '^PG_PASSWORD=' "$(secrets_file)" | cut -d= -f2-)"
+        [ -n "$password" ] || { echo "no PG_PASSWORD in the app's file" >&2; exit 1; }
+        docker exec -i "$container" psql -U postgres -v ON_ERROR_STOP=1 -q -d postgres <<SQL
+DO \$\$ BEGIN
+    IF EXISTS (SELECT FROM pg_roles WHERE rolname = '$name') THEN
+        ALTER ROLE "$name" LOGIN PASSWORD '$password';
+    ELSE
+        CREATE ROLE "$name" LOGIN PASSWORD '$password';
+    END IF;
+END \$\$;
+SELECT 'CREATE DATABASE "$name" OWNER "$name"' WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = '$name') \gexec
+REVOKE CONNECT ON DATABASE "$name" FROM PUBLIC;
+SQL
+        echo "database $name and role $name are in $container"
+        ;;
     current)
         docker ps --filter "label=deploy.app=$APP" --format '{{.Label "deploy.version"}}' | head -n 1
         ;;
@@ -250,6 +290,7 @@ case "${1:-deploy}" in
     deploy) deploy ;;
     status) remote status ;;
     rollback) rollback ;;
+    database) remote database ;;
     -h | --help | help) sed -n '2,20p' "$0" | sed 's/^# \{0,1\}//' ;;
     *) fail "unknown command: $1 (try ./deploy.sh --help)" ;;
 esac
