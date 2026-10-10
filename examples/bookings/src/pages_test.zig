@@ -440,3 +440,129 @@ test "booking: a hold that ran out reads as expired, and offers to book again" {
     defer after.deinit();
     try after.expectContains("Expired");
 }
+
+/// A server that takes one request and answers 204: where the webhook
+/// goes in the test. It keeps what it was sent.
+const Hook = struct {
+    server: std.Io.net.Server,
+    port: u16,
+    received: [2048]u8 = undefined,
+    len: usize = 0,
+
+    fn listen(io: std.Io) !Hook {
+        const address = try std.Io.net.IpAddress.parse("127.0.0.1", 0);
+        var server = try address.listen(io, .{ .reuse_address = true });
+        return .{ .port = server.socket.address.getPort(), .server = server };
+    }
+
+    fn serveOne(self: *Hook) void {
+        const io = std.testing.io;
+        var stream = self.server.accept(io) catch return;
+        defer stream.close(io);
+        var read_buf: [2048]u8 = undefined;
+        var reader = stream.reader(io, &read_buf);
+        // The head, then as many bytes as Content-Length says.
+        while (true) {
+            const chunk = reader.interface.peekGreedy(1) catch break;
+            const n = @min(chunk.len, self.received.len - self.len);
+            @memcpy(self.received[self.len..][0..n], chunk[0..n]);
+            self.len += n;
+            reader.interface.toss(chunk.len);
+            const so_far = self.received[0..self.len];
+            const head_end = std.mem.indexOf(u8, so_far, "\r\n\r\n") orelse continue;
+            const at = std.ascii.findIgnoreCase(so_far, "content-length:") orelse break;
+            const line_end = std.mem.indexOfPos(u8, so_far, at, "\r\n") orelse break;
+            const length = std.fmt.parseInt(usize, std.mem.trim(u8, so_far[at + "content-length:".len .. line_end], " "), 10) catch break;
+            if (self.len >= head_end + 4 + length) break;
+        }
+        var write_buf: [128]u8 = undefined;
+        var writer = stream.writer(io, &write_buf);
+        writer.interface.writeAll("HTTP/1.1 204 No Content\r\nConnection: close\r\n\r\n") catch {};
+        writer.interface.flush() catch {};
+    }
+};
+
+test "booking: confirming it mails who booked and tells the webhook, once" {
+    const app = try app_test.running();
+    const notify = features.bookings.notify;
+    var id_buf: [20]u8 = undefined;
+    const cedar = try roomId(&id_buf, "Cedar");
+    var buf: [1024]u8 = undefined;
+    const ana = app.with(&.{try app_test.signUp(app, &buf, "Ana Ribeiro", "ana.mail@example.com")});
+
+    // The mail goes to a box in memory, the webhook to a server of the test.
+    var outbox: spider.mail.Outbox = .init(std.testing.allocator);
+    defer outbox.deinit();
+    const mailer_before = notify.mailer;
+    const webhook_before = notify.webhook_url;
+    defer notify.mailer = mailer_before;
+    defer notify.webhook_url = webhook_before;
+    notify.mailer = .{ .backend = .{ .memory = &outbox } };
+
+    var hook = try Hook.listen(std.testing.io);
+    defer hook.server.deinit(std.testing.io);
+    var url_buf: [64]u8 = undefined;
+    notify.webhook_url = try std.fmt.bufPrint(&url_buf, "http://127.0.0.1:{d}/hooks/bookings", .{hook.port});
+    const listener = try std.Thread.spawn(.{}, Hook.serveOne, .{&hook});
+
+    var made = try ana.postForm("/bookings/create", Booking{ .room = cedar, .date = "2032-07-19", .start = "10:00", .end = "11:00", .title = "Sprint demo" });
+    defer made.deinit();
+    const location = made.header("Location").?;
+    try std.testing.expectEqual(@as(usize, 0), outbox.count()); // held: nothing is said yet
+
+    var confirm_buf: [64]u8 = undefined;
+    const confirm = try std.fmt.bufPrint(&confirm_buf, "{s}/confirm", .{location});
+    var confirmed = try ana.postForm(confirm, .{});
+    defer confirmed.deinit();
+    try confirmed.expectRedirect(location);
+    listener.join();
+
+    try std.testing.expectEqual(@as(usize, 1), outbox.count());
+    const mail = outbox.last().?;
+    try std.testing.expectEqualStrings("ana.mail@example.com", mail.to[0].address);
+    try std.testing.expectEqualStrings("Ana Ribeiro", mail.to[0].name.?);
+    try std.testing.expectEqualStrings("Confirmed: Cedar, Monday, 19 July 10:00", mail.subject);
+    try std.testing.expect(std.mem.indexOf(u8, mail.text.?, "Sprint demo") != null);
+    try std.testing.expect(std.mem.indexOf(u8, mail.text.?, location) != null);
+
+    const sent = hook.received[0..hook.len];
+    try std.testing.expect(std.mem.startsWith(u8, sent, "POST /hooks/bookings HTTP/1.1"));
+    try std.testing.expect(std.mem.indexOf(u8, sent, "\"event\":\"booking.confirmed\"") != null);
+    try std.testing.expect(std.mem.indexOf(u8, sent, "\"room\":\"Cedar\"") != null);
+    try std.testing.expect(std.mem.indexOf(u8, sent, "\"day\":\"2032-07-19\"") != null);
+
+    // Confirming again changes nothing and says nothing.
+    notify.webhook_url = null;
+    var again = try ana.postForm(confirm, .{});
+    defer again.deinit();
+    try std.testing.expectEqual(@as(usize, 1), outbox.count());
+}
+
+test "booking: a webhook that is down does not undo the confirmation" {
+    const app = try app_test.running();
+    const notify = features.bookings.notify;
+    var id_buf: [20]u8 = undefined;
+    const cedar = try roomId(&id_buf, "Cedar");
+    var buf: [1024]u8 = undefined;
+    const ana = app.with(&.{try app_test.signUp(app, &buf, "Ana Ribeiro", "ana.hookdown@example.com")});
+
+    const webhook_before = notify.webhook_url;
+    defer notify.webhook_url = webhook_before;
+    // A port nothing listens on.
+    var probe = try Hook.listen(std.testing.io);
+    const dead_port = probe.port;
+    probe.server.deinit(std.testing.io);
+    var url_buf: [64]u8 = undefined;
+    notify.webhook_url = try std.fmt.bufPrint(&url_buf, "http://127.0.0.1:{d}/hooks", .{dead_port});
+
+    var made = try ana.postForm("/bookings/create", Booking{ .room = cedar, .date = "2032-07-26", .start = "10:00", .end = "11:00", .title = "Sprint demo" });
+    defer made.deinit();
+    const location = made.header("Location").?;
+    var confirm_buf: [64]u8 = undefined;
+    var confirmed = try ana.postForm(try std.fmt.bufPrint(&confirm_buf, "{s}/confirm", .{location}), .{});
+    defer confirmed.deinit();
+    try confirmed.expectRedirect(location);
+    var page = try ana.get(location);
+    defer page.deinit();
+    try page.expectContains("Confirmed");
+}

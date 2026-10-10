@@ -4,7 +4,12 @@ pub const model = @import("model.zig");
 pub const repository = @import("repository.zig");
 pub const controller = @import("controller.zig");
 pub const policy = @import("policy.zig");
+pub const notify = @import("notify.zig");
 const expiry = @import("jobs.zig");
+
+/// Run by `server.mountFeatures` before the first request: how mail leaves
+/// and who else hears about a confirmed booking.
+pub const boot = notify.boot;
 
 /// Scheduled by `server.mountFeatures`: every half minute, the holds that
 /// ran out are released.

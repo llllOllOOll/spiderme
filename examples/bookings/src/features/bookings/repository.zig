@@ -142,6 +142,11 @@ pub fn aheadForRoom(arena: std.mem.Allocator, room_id: i64) ![]model.Booking {
     return db.query(model.Booking, arena, sql, .{ room_id, timeZone() });
 }
 
+/// The account that made a booking: its name and where to write to it.
+pub fn ownerOf(arena: std.mem.Allocator, user_id: i64) !?@import("notify.zig").Owner {
+    return db.queryOne(@import("notify.zig").Owner, arena, "SELECT name, email FROM users WHERE id = $1", .{user_id});
+}
+
 /// Where the office is, for "today" and "now": the BOOKINGS_TZ variable
 /// ("America/Sao_Paulo"), or UTC.
 pub fn timeZone() []const u8 {

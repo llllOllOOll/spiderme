@@ -7,6 +7,7 @@ const grid = @import("../home/grid.zig");
 const day_view = @import("../home/controller.zig");
 
 const policy = @import("policy.zig");
+const notify = @import("notify.zig");
 
 const Response = spider.Response;
 /// A booking the route's policy loaded and checked: the visitor may change it.
@@ -217,8 +218,14 @@ pub fn show(c: *spider.Ctx) !Response {
 /// Keeps a held booking.
 pub fn confirm(c: *spider.Ctx, mine_: Mine) !Response {
     const booking = mine_.value;
-    _ = try repository.confirm(c.arena, booking.id);
-    day_view.announce(c, booking.day);
+    // Only the request that really confirmed it tells anyone: a second click,
+    // or a hold that ran out, changes nothing and says nothing.
+    if (try repository.confirm(c.arena, booking.id)) {
+        day_view.announce(c, booking.day);
+        const owner = if (booking.user_id) |id| try repository.ownerOf(c.arena, id) else null;
+        const day = try repository.dayInfo(c.arena, booking.day);
+        notify.confirmed(c, booking.*, owner, day.label);
+    }
     return c.redirect(try std.fmt.allocPrint(c.arena, "/bookings/{d}", .{booking.id}));
 }
 
