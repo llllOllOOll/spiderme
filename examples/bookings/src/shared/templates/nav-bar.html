@@ -1,0 +1,20 @@
+<header x-data class="ui-navbar fixed top-0 inset-x-0 z-30 h-14 px-4 gap-2 bg-base-200 border-b border-base-300">
+    <button type="button" class="ui-btn ui-btn-ghost ui-btn-sm ui-btn-square lg:hidden" aria-label="Menu"
+            @click="$store.layout.drawerOpen = !$store.layout.drawerOpen">
+        <span class="hero-bars-3"></span>
+    </button>
+    <a href="/" class="flex items-center gap-2">
+        <img src="/images/logo.png" alt="" class="w-7 h-7 rounded object-cover">
+        <span class="text-sm font-semibold">bookings</span>
+    </a>
+    <div class="ml-auto flex items-center gap-1">
+        <button type="button" class="ui-btn ui-btn-ghost ui-btn-sm ui-btn-square relative" aria-label="Notifications">
+            <span class="hero-bell size-5"></span>
+            <span class="ui-badge ui-badge-primary ui-badge-xs absolute -top-0.5 -right-0.5">3</span>
+        </button>
+        <button type="button" class="ui-btn ui-btn-ghost ui-btn-sm">
+            <span class="grid place-items-center w-7 h-7 rounded-full bg-primary text-primary-content text-xs font-bold">JD</span>
+            <span class="text-sm hidden sm:block">John Doe</span>
+        </button>
+    </div>
+</header>

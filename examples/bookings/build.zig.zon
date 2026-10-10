@@ -1,0 +1,17 @@
+.{
+    .name = .bookings,
+    .version = "0.1.0",
+    .fingerprint = 0x7a853c35c8d5901d,
+    .minimum_zig_version = "0.17.0",
+    .dependencies = .{
+        .spider = .{
+            .url = "git+https://github.com/llllOllOOll/spider?ref=v0.10.0#988512e1dd735cff36ff192c2eb2cb696de9fa8c",
+            .hash = "spider-0.10.0-P7cGrq-p0ABoZxkkM11hYWThs-1GJSC1Gmidig0O2p4R",
+        },
+    },
+    .paths = .{
+        "build.zig",
+        "build.zig.zon",
+        "src",
+    },
+}

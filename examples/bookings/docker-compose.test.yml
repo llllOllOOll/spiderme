@@ -1,0 +1,18 @@
+# A PostgreSQL for the tests only: it keeps its data in memory and is thrown
+# away after each run. `./test.sh` starts it, runs the tests and removes it.
+services:
+  db-test:
+    image: postgres:16-alpine
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=bookings_test
+    ports:
+      - "5563:5432"
+    tmpfs:
+      - /var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d bookings_test"]
+      interval: 1s
+      timeout: 3s
+      retries: 30
