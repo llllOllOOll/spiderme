@@ -30,7 +30,7 @@ Variables come from the environment of the process, and from a file named `.env`
 ```text from=examples/posts/.env.example
 ```
 
-When the same variable is in both, the environment wins over `.env`: that is how a server or a container sets its own values. A file named `.env.local`, if there is one, wins over `.env`.
+When the same variable is in both, the environment wins over the file: that is how a server or a container sets its own values. A file named `.env.local`, if there is one, wins over `.env`, and never over the environment.
 
 Spider reads a few variables itself:
 
