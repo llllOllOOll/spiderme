@@ -4,6 +4,11 @@ pub const model = @import("model.zig");
 pub const repository = @import("repository.zig");
 pub const controller = @import("controller.zig");
 pub const policy = @import("policy.zig");
+const expiry = @import("jobs.zig");
+
+/// Scheduled by `server.mountFeatures`: every half minute, the holds that
+/// ran out are released.
+pub const jobs = .{spider.every(expiry.every_ms, expiry.expireHolds)};
 pub const routes = @import("routes.zig");
 
 // Makes the tests of this feature's files part of `zig build test`.

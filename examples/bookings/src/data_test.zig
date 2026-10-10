@@ -213,6 +213,14 @@ test "a hold that ran out gives the time back" {
     // And the sweep that will run on a timer finds the ones nobody replaced.
     const other = try bookings.create(arena, booking(birch, day, "18:00", "19:00"));
     try spider.pg.query(void, arena, "UPDATE bookings SET held_until = now() - interval '1 minute' WHERE id = $1", .{other.id});
-    try std.testing.expect(try bookings.expireStale(arena) >= 1);
+    const days = try bookings.expireStale(arena);
+    try std.testing.expect(days.len >= 1);
+    var found = false;
+    for (days) |expired_day| {
+        if (std.mem.eql(u8, expired_day, day)) found = true;
+    }
+    try std.testing.expect(found);
+    // Nothing left to release.
+    try std.testing.expectEqual(@as(usize, 0), (try bookings.expireStale(arena)).len);
     try std.testing.expectEqual(features.bookings.model.State.expired, (try bookings.find(arena, other.id)).?.state);
 }

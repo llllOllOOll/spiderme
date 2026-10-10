@@ -108,13 +108,19 @@ pub fn cancel(arena: std.mem.Allocator, id: i64) !bool {
     return changed == 1;
 }
 
-/// Marks as expired every hold that ran out, and says how many.
-pub fn expireStale(arena: std.mem.Allocator) !i64 {
-    return db.query(i64, arena,
-        \\WITH done AS (
-        \\    UPDATE bookings SET state = 'expired' WHERE state = 'held' AND held_until < now() RETURNING 1
-        \\) SELECT count(*) FROM done
+/// Marks as expired every hold that ran out, and gives back the days they
+/// were on ("2026-10-12"), one per booking: the pages showing those days
+/// have something new to draw.
+pub fn expireStale(arena: std.mem.Allocator) ![]const []const u8 {
+    const Row = struct { day: []const u8 };
+    const rows = try db.query(Row, arena,
+        \\UPDATE bookings SET state = 'expired'
+        \\WHERE state = 'held' AND held_until < now()
+        \\RETURNING day::text AS day
     , .{});
+    const days = try arena.alloc([]const u8, rows.len);
+    for (rows, days) |row, *day| day.* = row.day;
+    return days;
 }
 
 /// The bookings of one account: the ones ahead first (soonest on top), then

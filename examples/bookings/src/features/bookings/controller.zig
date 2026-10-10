@@ -195,10 +195,12 @@ pub fn show(c: *spider.Ctx) !Response {
         .booking = booking,
         .day = day,
         .back = try std.fmt.allocPrint(c.arena, "/?date={s}", .{booking.day}),
-        .state = @tagName(booking.state),
-        .held = booking.state == .held,
+        .state = if (booking.state == .held and minutes == 0) "expired" else @tagName(booking.state),
+        // A hold that ran out is over, even in the half minute before the
+        // timer marks it.
+        .held = booking.state == .held and minutes > 0,
         .confirmed = booking.state == .confirmed,
-        .expired = booking.state == .expired,
+        .expired = booking.state == .expired or (booking.state == .held and minutes == 0),
         .cancelled = booking.state == .cancelled,
         .can_act = try policy.Bookings.can(c, .cancel, &booking),
         .mine = is_mine,

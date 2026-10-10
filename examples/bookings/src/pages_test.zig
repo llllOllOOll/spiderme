@@ -403,3 +403,40 @@ test "the day's stream says \"changed\" when a booking of that day is made, and 
     try day.expectContains("Just booked");
     try day.expectContains("hx-sse:connect=\"/events/2032-07-05\"");
 }
+
+test "booking: a hold that ran out reads as expired, and offers to book again" {
+    const app = try app_test.running();
+    var arena_state: std.heap.ArenaAllocator = .init(std.testing.allocator);
+    defer arena_state.deinit();
+    var id_buf: [20]u8 = undefined;
+    const cedar = try roomId(&id_buf, "Cedar");
+    var buf: [1024]u8 = undefined;
+    const ana = app.with(&.{try app_test.signUp(app, &buf, "Ana Ribeiro", "ana.expired@example.com")});
+
+    var made = try ana.postForm("/bookings/create", Booking{ .room = cedar, .date = "2032-07-12", .start = "10:00", .end = "11:00", .title = "Sprint demo" });
+    defer made.deinit();
+    const location = made.header("Location").?;
+
+    // While it is held, the page asks for itself again every 20 seconds.
+    var held = try ana.get(location);
+    defer held.deinit();
+    try held.expectContains("hx-trigger=\"every 20s\"");
+    try held.expectContains("10 min");
+
+    // Eleven minutes pass, and the timer has not come by yet.
+    const id = try std.fmt.parseInt(i64, location["/bookings/".len..], 10);
+    try spider.pg.query(void, arena_state.allocator(), "UPDATE bookings SET held_until = now() - interval '1 minute' WHERE id = $1", .{id});
+    var late = try ana.get(location);
+    defer late.deinit();
+    try late.expectContains("The hold ran out");
+    try late.expectContains("Book it again");
+    try late.expectNotContains("Confirm booking");
+    try late.expectNotContains("hx-trigger=\"every 20s\"");
+
+    // The timer's work, done here by hand: the booking is marked, and its day is named.
+    const days = try features.bookings.repository.expireStale(arena_state.allocator());
+    try std.testing.expect(days.len >= 1);
+    var after = try app.get(location);
+    defer after.deinit();
+    try after.expectContains("Expired");
+}

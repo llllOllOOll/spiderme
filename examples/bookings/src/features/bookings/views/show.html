@@ -1,5 +1,9 @@
 extends "layout"
-<main class="ui-main ui-narrow">
+if (held) {
+<main id="booking" class="ui-main ui-narrow" hx-get="/bookings/{ booking.id }" hx-trigger="every 20s" hx-select="#booking" hx-swap="outerHTML">
+} else {
+<main id="booking" class="ui-main ui-narrow">
+}
     <a class="ui-link ui-back" href="{ back }"><span class="hero-chevron-left size-4" aria-hidden="true"></span>Day view</a>
 
     <div class="ui-stack ui-gap-12">
