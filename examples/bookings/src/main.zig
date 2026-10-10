@@ -53,6 +53,7 @@ test "the app follows Spider's conventions" {
 // Requests against the running app: src/app_test.zig.
 test {
     _ = @import("app_test.zig");
+    _ = @import("data_test.zig");
 }
 
 test "every file with tests is part of this test binary" {

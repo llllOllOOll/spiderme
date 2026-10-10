@@ -9,6 +9,18 @@ const Migration = struct {
 
 const MIGRATIONS = [_]Migration{
     // {{entry}}
+    .{
+        .version = "1791667710_create_rooms",
+        .sql_file = @embedFile("./migrations/1791667710_create_rooms.sql"),
+    },
+    .{
+        .version = "1791667710_create_bookings",
+        .sql_file = @embedFile("./migrations/1791667710_create_bookings.sql"),
+    },
+    .{
+        .version = "1791667711_seed_rooms",
+        .sql_file = @embedFile("./migrations/1791667711_seed_rooms.sql"),
+    },
 };
 
 fn extractUpSection(sql_file: []const u8) []const u8 {

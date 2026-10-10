@@ -31,16 +31,23 @@ fn run() !void {
     try main.serve(gpa, io);
 }
 
-test "the home page answers" {
-    const app = try spider.testing.start(run);
+/// The running app, started once for every test of the project. The tests
+/// of the data (src/data_test.zig) ask for it too: it is what connects to
+/// the database and makes the tables.
+pub fn app() !spider.testing.App {
+    return spider.testing.start(run);
+}
 
-    var res = try app.get("/");
+test "the home page answers" {
+    const running = try app();
+
+    var res = try running.get("/");
     defer res.deinit();
     try res.expectStatus(200);
 }
 
 test "the database answers" {
-    _ = try spider.testing.start(run);
+    _ = try app();
     var arena: std.heap.ArenaAllocator = .init(std.testing.allocator);
     defer arena.deinit();
 

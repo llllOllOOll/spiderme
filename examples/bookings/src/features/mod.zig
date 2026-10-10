@@ -1,4 +1,6 @@
 pub const home = @import("home/mod.zig");
+pub const rooms = @import("rooms/mod.zig");
+pub const bookings = @import("bookings/mod.zig");
 
 // A file with `test "..."` blocks only runs if this module's test binary
 // imports it whole (refAllDecls here reaches one level: every <feature>/mod.zig
