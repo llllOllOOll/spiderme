@@ -380,9 +380,8 @@ test "the day's stream says \"changed\" when a booking of that day is made, and 
     defer seen.deinit(std.testing.allocator);
     try readUntil(&reader.interface, &seen, "text/event-stream");
     try readUntil(&reader.interface, &seen, "retry:");
-    // The stream is open; its handler joins the day's channel right after.
-    // A moment, so that the booking below is not made in between.
-    try std.Io.sleep(io, .fromMilliseconds(200), .awake);
+    // The stream opens for the client once its handler listens, so what is
+    // made from here on is not missed.
 
     // A booking of another day says nothing here; one of this day does.
     var other = try ana.postForm("/bookings/create", Booking{ .room = cedar, .date = "2032-07-06", .start = "10:00", .end = "11:00", .title = "Another day" });
@@ -402,6 +401,7 @@ test "the day's stream says \"changed\" when a booking of that day is made, and 
     try day.expectContains("ui-cell-changed");
     try day.expectContains("Just booked");
     try day.expectContains("hx-sse:connect=\"/events/2032-07-05\"");
+    try day.expectContains("hx-trigger=\"changed from:body, every 60s\"");
 }
 
 test "booking: a hold that ran out reads as expired, and offers to book again" {
