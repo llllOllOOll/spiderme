@@ -522,7 +522,7 @@ fn indexPage(arena: std.mem.Allocator, builders: []const Builder) Error!Page {
         \\
     );
     for (builders) |builder| {
-        try out.print(arena, "## {s}\n\n", .{builder.title});
+        try out.print(arena, "## [{s}](/docs/{s})\n\n", .{ builder.title, builder.slug });
         for (builder.entries.items) |entry| {
             try names.print(arena, "{s} ", .{entry.name});
             try out.print(arena, "- [spider.{s}](/docs/{s}#{s})", .{
@@ -576,9 +576,9 @@ fn oneLine(arena: std.mem.Allocator, doc: []const u8) ![]const u8 {
     return protectNames(arena, out);
 }
 
-/// One line of prose with every bare name that has two or more `_` put in
-/// backticks: the site's Markdown reads `_` as the mark of italics, so
-/// `max_body_bytes` written without them would lose its underscores. What
+/// One line of prose with every bare name that has a `_` put in backticks:
+/// the site's Markdown reads `_` as the mark of italics, so two names such
+/// as `org_roles` and `quiet_log` on one line would lose an underscore each. What
 /// already is inside backticks, and a link's address, are left alone.
 fn protectNames(arena: std.mem.Allocator, line: []const u8) ![]const u8 {
     var out: std.ArrayList(u8) = .empty;
@@ -615,7 +615,7 @@ fn protectNames(arena: std.mem.Allocator, line: []const u8) ![]const u8 {
             if (line[end] == '_') underscores += 1;
         }
         const word = line[i..end];
-        if (underscores >= 2) {
+        if (underscores >= 1) {
             try out.print(arena, "`{s}`", .{word});
         } else {
             try out.appendSlice(arena, word);
@@ -625,25 +625,29 @@ fn protectNames(arena: std.mem.Allocator, line: []const u8) ![]const u8 {
     return out.items;
 }
 
-/// A doc comment as the Markdown of a page. An example written as an
-/// indented block (four spaces after a blank line) becomes a fenced one:
-/// the site's Markdown has no indented code blocks.
+/// A doc comment as the Markdown of a page. Two things differ from how
+/// comments are written: a paragraph or a list item wrapped over several
+/// lines becomes one line (the site's Markdown starts a paragraph at every
+/// line break), and an example written as an indented block (four spaces
+/// after a blank line) becomes a fenced one.
 pub fn docMarkdown(arena: std.mem.Allocator, doc: []const u8) ![]const u8 {
     var out: std.ArrayList(u8) = .empty;
+    var block: std.ArrayList(u8) = .empty; // the paragraph or list item being joined
     var lines = std.mem.splitScalar(u8, doc, '\n');
     var in_fence = false; // a ``` block of the comment itself
     var in_indented = false; // an indented block being turned into one
     var previous_blank = true;
-    var previous_list = false;
+    var in_list = false;
     while (lines.next()) |line| {
         const text = std.mem.trimStart(u8, line, " ");
         if (std.mem.startsWith(u8, text, "```")) {
+            try flush(arena, &out, &block);
             if (in_indented) {
                 try out.appendSlice(arena, "```\n");
                 in_indented = false;
             }
             in_fence = !in_fence;
-            try out.print(arena, "{s}\n", .{line});
+            try out.print(arena, "{s}\n", .{text});
             previous_blank = false;
             continue;
         }
@@ -659,8 +663,7 @@ pub fn docMarkdown(arena: std.mem.Allocator, doc: []const u8) ![]const u8 {
             }
             if (text.len == 0) {
                 // A blank line inside the example, or its end: look ahead.
-                const rest = lines.rest();
-                const next = std.mem.trimStart(u8, rest, "\n");
+                const next = std.mem.trimStart(u8, lines.rest(), "\n");
                 if (std.mem.startsWith(u8, next, "    ")) {
                     try out.append(arena, '\n');
                     continue;
@@ -669,18 +672,55 @@ pub fn docMarkdown(arena: std.mem.Allocator, doc: []const u8) ![]const u8 {
             try out.appendSlice(arena, "```\n");
             in_indented = false;
         }
-        if (indented and previous_blank and !previous_list) {
+        if (indented and previous_blank and !in_list) {
+            try flush(arena, &out, &block);
             try out.appendSlice(arena, "```zig\n");
             try out.print(arena, "{s}\n", .{line[4..]});
             in_indented = true;
             continue;
         }
-        try out.print(arena, "{s}\n", .{try protectNames(arena, line)});
-        if (text.len > 0) previous_list = std.mem.startsWith(u8, text, "- ") or std.mem.startsWith(u8, text, "* ") or (text.len > 1 and std.ascii.isDigit(text[0]) and (text[1] == '.' or text[1] == ')')) or (previous_list and line.len != text.len);
-        previous_blank = text.len == 0;
+        if (text.len == 0) {
+            try flush(arena, &out, &block);
+            try out.append(arena, '\n');
+            previous_blank = true;
+            // A list goes on after a blank line only if an item follows.
+            in_list = in_list and listItem(std.mem.trimStart(u8, lines.rest(), " \n"));
+            continue;
+        }
+        previous_blank = false;
+        if (listItem(text)) {
+            try flush(arena, &out, &block);
+            in_list = true;
+            // Keep the indentation: it is what nests one list in another.
+            try block.appendSlice(arena, line);
+            continue;
+        }
+        if (text[0] == '#') {
+            try flush(arena, &out, &block);
+            try out.print(arena, "{s}\n", .{text});
+            continue;
+        }
+        if (block.items.len > 0) try block.append(arena, ' ');
+        try block.appendSlice(arena, text);
     }
+    try flush(arena, &out, &block);
     if (in_indented) try out.appendSlice(arena, "```\n");
     return std.mem.trim(u8, out.items, "\n");
+}
+
+/// Writes the joined paragraph or list item, its bare names protected.
+fn flush(arena: std.mem.Allocator, out: *std.ArrayList(u8), block: *std.ArrayList(u8)) !void {
+    if (block.items.len == 0) return;
+    try out.print(arena, "{s}\n", .{try protectNames(arena, block.items)});
+    block.clearRetainingCapacity();
+}
+
+/// `- x`, `* x`, `1. x` or `1) x`.
+fn listItem(text: []const u8) bool {
+    if (std.mem.startsWith(u8, text, "- ") or std.mem.startsWith(u8, text, "* ")) return true;
+    var digits: usize = 0;
+    while (digits < text.len and std.ascii.isDigit(text[digits])) digits += 1;
+    return digits > 0 and digits + 1 < text.len and (text[digits] == '.' or text[digits] == ')') and text[digits + 1] == ' ';
 }
 
 // ── tests ───────────────────────────────────────────────────────────────
@@ -899,9 +939,19 @@ test "docMarkdown: an indented example becomes a fenced block; lists and fences 
         "Text:\n\n```zig\nconst x = 1;\n\nconst y = 2;\n```\n\nMore.",
         try docMarkdown(a, "Text:\n\n    const x = 1;\n\n    const y = 2;\n\nMore."),
     );
-    // A list whose items continue on indented lines is not code.
-    const list = "Does:\n\n- one thing\n    that goes on\n- another";
-    try t.expectEqualStrings(list, try docMarkdown(a, list));
+    // A list whose items continue on indented lines is not code; each item
+    // becomes one line.
+    try t.expectEqualStrings(
+        "Does:\n\n- one thing that goes on\n- another\n  - nested one more line",
+        try docMarkdown(a, "Does:\n\n- one thing\n    that goes on\n- another\n  - nested\n    one more line"),
+    );
+    // A paragraph written over several lines is one line.
+    try t.expectEqualStrings(
+        "First line and second line.\n\nNext paragraph, with `a_name` in it.",
+        try docMarkdown(a, "First line\nand second line.\n\nNext paragraph,\nwith a_name in it."),
+    );
+    // Numbered steps.
+    try t.expectEqualStrings("In order:\n\n1. first step\n2. second step, wrapped", try docMarkdown(a, "In order:\n\n1. first\n   step\n2. second step,\n   wrapped"));
     // A fenced block is left as written, indentation included.
     const fenced = "Use:\n\n```zig\nif (x) {\n    y();\n}\n```";
     try t.expectEqualStrings(fenced, try docMarkdown(a, fenced));
@@ -912,7 +962,8 @@ test "protectNames: a bare name with underscores keeps them" {
     defer arena.deinit();
     const a = arena.allocator();
     try t.expectEqualStrings("Set `max_body_bytes` or `static_max_file_bytes`.", try protectNames(a, "Set max_body_bytes or `static_max_file_bytes`."));
-    try t.expectEqualStrings("one_under stays, [a_b_c text](/docs/x_y_z) too", try protectNames(a, "one_under stays, [a_b_c text](/docs/x_y_z) too"));
+    try t.expectEqualStrings("`one_under` too, [a_b_c text](/docs/x_y_z) not", try protectNames(a, "one_under too, [a_b_c text](/docs/x_y_z) not"));
+    try t.expectEqualStrings("no underscore, nothing changes: a-b c.d", try protectNames(a, "no underscore, nothing changes: a-b c.d"));
     try t.expectEqualStrings("names like `_auth_sub` and `__session`", try protectNames(a, "names like _auth_sub and __session"));
 }
 

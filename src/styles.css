@@ -206,7 +206,7 @@ input:focus-visible,
    (text, code, the footer) is this wide. */
 .column { max-width: 58ch; font-size: 18px; }
 
-.prose { color: var(--text); line-height: 1.55; }
+.prose { color: var(--text); line-height: 1.55; overflow-wrap: break-word; }
 
 .prose h1 {
     margin: 0 0 16px;
@@ -246,6 +246,9 @@ input:focus-visible,
 .prose code {
     font-family: var(--mono);
     font-size: 0.82em;
+    /* A long name or type in the middle of a sentence breaks rather than
+       pushing the page wider than a phone. */
+    overflow-wrap: anywhere;
 }
 .prose pre {
     margin: 0 0 16px;
@@ -258,7 +261,7 @@ input:focus-visible,
     font-size: 13px;
     line-height: 1.65;
 }
-.prose pre code { font-size: inherit; }
+.prose pre code { font-size: inherit; overflow-wrap: normal; }
 /* Spider's Markdown wraps a fenced block in .code-block and puts the
    language name in a bar above it: not shown here. */
 .prose .code-block-bar { display: none; }

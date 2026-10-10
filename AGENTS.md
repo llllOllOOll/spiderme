@@ -254,7 +254,8 @@ Don't delete the "every file with tests is part of this test binary" tests.
   ---
   ```
 
-  `section` is `start`, `guide` or `reference`; `order` places the page in
+  `section` is `start`, `guide` or `reference` (`api` is generated, see
+  below); `order` places the page in
   its section, lowest first. All three are required.
 - **To add a page: write one `.md` file there. Nothing else.**
 - `tools/docs_index.zig` runs in the build: it reads the headers and
@@ -263,6 +264,27 @@ Don't delete the "every file with tests is part of this test binary" tests.
   already used in the section stops the build and names the file. So does a
   link `[text](/docs/<slug>)` to a page that does not exist. Its tests run in
   `zig build test`.
+- **The API reference (section `api`) is generated, not written.** The
+  same build step runs `tools/api_reference.zig`: it starts at Spider's
+  `src/spider.zig`, follows every name it exports to its declaration
+  (`tools/api_source.zig` reads the Zig source) and writes one page per
+  part of the API, plus the list at `/docs/api`. To change what a page
+  says, change the `///` comment in Spider; nothing in `content/docs`.
+  - Shown: a `pub` name with a `///` comment. Left out: a name with a
+    `// internal:` note above it, a file whose `//!` header starts with
+    `Internal:`, and names or fields starting with `_`.
+  - Which page a source file goes to, and the order of the pages, is the
+    table `placements` in `tools/api_reference.zig`. A file it does not
+    name gets a page of its own: a new export of Spider shows up without
+    editing the table.
+  - A name `src/spider.zig` exports that cannot be followed stops the build
+    (`ApiNameNotFound`, `ApiFileNotFound`) and says which.
+  - The site's Markdown reads `_` as italics and starts a paragraph at every
+    line break: the generator puts names in backticks and joins wrapped
+    lines. Keep that in mind when a comment looks odd on its page.
+  - Headings get an `id` (`src/features/docs/controller.zig`); the generator
+    makes the same ids for its links. Change one, change the other (both
+    have a test with the same examples).
 - One route serves every page: `GET /docs/:page`
   (`src/features/docs/controller.zig`). The sidebar, the "Next" link and the
   search come from the generated index (`src/features/docs/pages.zig`).
