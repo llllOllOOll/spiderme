@@ -1,0 +1,133 @@
+extends "layout"
+<main class="ui-main">
+    <a class="ui-link ui-back" href="{ back }"><span class="hero-chevron-left size-4" aria-hidden="true"></span>Day view</a>
+    <h1>New booking</h1>
+
+    <div id="booking" class="ui-stack ui-gap-24">
+        if (refused) {
+        <div class="ui-alert ui-alert-danger" role="alert">
+            <span class="hero-exclamation-triangle size-5" aria-hidden="true"></span>
+            <span>This booking was not made. Nothing you typed is lost: change what is marked and try again.</span>
+        </div>
+        }
+
+        <div class="ui-cols">
+            <form class="ui-card ui-form-card" action="/bookings/create" method="post" hx-post="/bookings/create" hx-target="#booking" hx-select="#booking" hx-swap="outerHTML">
+                <div class="ui-field">
+                    <label class="ui-label" for="room">Room</label>
+                    <select class="ui-input" id="room" name="room">
+                        for (rooms) |room| {
+                        if (room.selected) {
+                        <option value="{ room.value }" selected>{ room.label }</option>
+                        } else {
+                        <option value="{ room.value }">{ room.label }</option>
+                        }
+                        }
+                    </select>
+                </div>
+
+                <div class="ui-field">
+                    <label class="ui-label" for="date">Date</label>
+                    <input class="ui-input" id="date" name="date" type="date" value="{ form.date }" required>
+                </div>
+
+                <div class="ui-pair">
+                    <div class="ui-field">
+                        <label class="ui-label" for="start">Start</label>
+                        if (errors.time != "") {
+                        <select class="ui-input" id="start" name="start" aria-invalid="true" aria-describedby="time-note">
+                        } else {
+                        <select class="ui-input" id="start" name="start">
+                        }
+                            for (starts) |time| {
+                            if (time.selected) {
+                            <option value="{ time.value }" selected>{ time.label }</option>
+                            } else {
+                            <option value="{ time.value }">{ time.label }</option>
+                            }
+                            }
+                        </select>
+                    </div>
+                    <div class="ui-field">
+                        <label class="ui-label" for="end">End</label>
+                        if (errors.time != "") {
+                        <select class="ui-input" id="end" name="end" aria-invalid="true" aria-describedby="time-note">
+                        } else {
+                        <select class="ui-input" id="end" name="end">
+                        }
+                            for (ends) |time| {
+                            if (time.selected) {
+                            <option value="{ time.value }" selected>{ time.label }</option>
+                            } else {
+                            <option value="{ time.value }">{ time.label }</option>
+                            }
+                            }
+                        </select>
+                    </div>
+                </div>
+                if (errors.time != "") {
+                <p class="ui-error ui-error-tight" id="time-note" role="alert"><span class="hero-exclamation-triangle size-4" aria-hidden="true"></span><span>{ errors.time }</span></p>
+                }
+
+                <div class="ui-field">
+                    <label class="ui-label" for="title">Title</label>
+                    if (errors.title != "") {
+                    <input class="ui-input" id="title" name="title" type="text" value="{ form.title }" placeholder="What is the meeting?" aria-invalid="true" aria-describedby="title-note">
+                    <p class="ui-error" id="title-note" role="alert"><span class="hero-exclamation-triangle size-4" aria-hidden="true"></span><span>{ errors.title }</span></p>
+                    } else {
+                    <input class="ui-input" id="title" name="title" type="text" value="{ form.title }" placeholder="What is the meeting?">
+                    <p class="ui-hint">Up to 80 characters.</p>
+                    }
+                </div>
+
+                <div class="ui-field">
+                    <label class="ui-label" for="note">Note <span class="ui-muted ui-plain">(optional)</span></label>
+                    <textarea class="ui-input" id="note" name="note" rows="4">{ form.note }</textarea>
+                    if (errors.note != "") {
+                    <p class="ui-error" role="alert"><span class="hero-exclamation-triangle size-4" aria-hidden="true"></span><span>{ errors.note }</span></p>
+                    } else {
+                    <p class="ui-hint">Up to 500 characters.</p>
+                    }
+                </div>
+
+                <div class="ui-stack ui-gap-12">
+                    <p class="ui-hint">Your booking is held for 10 minutes. Confirm it on the next page to keep it.</p>
+                    <div class="ui-row-actions">
+                        <button class="ui-btn ui-btn-primary ui-btn-lg" type="submit" hx-disable="this">Book room</button>
+                        <a class="ui-btn ui-btn-quiet ui-btn-lg" href="{ back }">Cancel</a>
+                    </div>
+                </div>
+            </form>
+
+            <aside class="ui-card ui-side-card" aria-label="Taken times">
+                <div class="ui-stack ui-gap-8">
+                    <h3>{ room_name } on { day.label }</h3>
+                    if (strip.len == 0) {
+                    <p class="ui-muted ui-small">Free all day.</p>
+                    } else {
+                    <p class="ui-muted ui-small">Taken at these times.</p>
+                    }
+                </div>
+                <div>
+                    <div class="ui-mini" role="img" aria-label="Taken times for { room_name }">
+                        for (strip) |piece| {
+                        <div class="ui-mini-taken ui-mini-at-{ piece.at } ui-mini-len-{ piece.len }"></div>
+                        }
+                        if (show_asked) {
+                        <div class="ui-mini-asked ui-mini-at-{ asked_at } ui-mini-len-{ asked_len }"></div>
+                        }
+                    </div>
+                    <div class="ui-mini-ticks"><span>08</span><span>12</span><span>16</span><span>20</span></div>
+                </div>
+                if (show_asked) {
+                <p class="ui-error"><span class="hero-exclamation-triangle size-4" aria-hidden="true"></span><span>Red outline: the time you asked for overlaps a booking.</span></p>
+                }
+                <ul class="ui-taken">
+                    for (strip) |piece| {
+                    <li><span class="ui-taken-when">{ piece.range } · { piece.state }</span><span class="ui-muted ui-small">{ piece.title }</span></li>
+                    }
+                </ul>
+            </aside>
+        </div>
+    </div>
+</main>

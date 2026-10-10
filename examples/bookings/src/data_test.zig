@@ -23,7 +23,7 @@ fn booking(room_id: i64, day: []const u8, starts: []const u8, ends: []const u8) 
 }
 
 test "rooms: the sample rooms, by name, with their features as text" {
-    _ = try app_test.app();
+    _ = try app_test.running();
     var arena_state: std.heap.ArenaAllocator = .init(std.testing.allocator);
     defer arena_state.deinit();
     const arena = arena_state.allocator();
@@ -36,7 +36,7 @@ test "rooms: the sample rooms, by name, with their features as text" {
 }
 
 test "rooms: filtered by the features they must have" {
-    _ = try app_test.app();
+    _ = try app_test.running();
     var arena_state: std.heap.ArenaAllocator = .init(std.testing.allocator);
     defer arena_state.deinit();
     const arena = arena_state.allocator();
@@ -54,7 +54,7 @@ test "rooms: filtered by the features they must have" {
 }
 
 test "rooms: a name that is taken is NameTaken" {
-    _ = try app_test.app();
+    _ = try app_test.running();
     var arena_state: std.heap.ArenaAllocator = .init(std.testing.allocator);
     defer arena_state.deinit();
     const arena = arena_state.allocator();
@@ -65,7 +65,7 @@ test "rooms: a name that is taken is NameTaken" {
 }
 
 test "a booking is made held, and shows on its day" {
-    _ = try app_test.app();
+    _ = try app_test.running();
     var arena_state: std.heap.ArenaAllocator = .init(std.testing.allocator);
     defer arena_state.deinit();
     const arena = arena_state.allocator();
@@ -87,7 +87,7 @@ test "a booking is made held, and shows on its day" {
 }
 
 test "a room cannot have two bookings at the same time" {
-    _ = try app_test.app();
+    _ = try app_test.running();
     var arena_state: std.heap.ArenaAllocator = .init(std.testing.allocator);
     defer arena_state.deinit();
     const arena = arena_state.allocator();
@@ -116,7 +116,7 @@ test "a room cannot have two bookings at the same time" {
 }
 
 test "twenty requests for the same time: exactly one gets it" {
-    _ = try app_test.app();
+    _ = try app_test.running();
     var arena_state: std.heap.ArenaAllocator = .init(std.testing.allocator);
     defer arena_state.deinit();
     const arena = arena_state.allocator();
@@ -150,7 +150,7 @@ test "twenty requests for the same time: exactly one gets it" {
 }
 
 test "a booking outside the rules of the day is InvalidBooking" {
-    _ = try app_test.app();
+    _ = try app_test.running();
     var arena_state: std.heap.ArenaAllocator = .init(std.testing.allocator);
     defer arena_state.deinit();
     const arena = arena_state.allocator();
@@ -171,7 +171,7 @@ test "a booking outside the rules of the day is InvalidBooking" {
 }
 
 test "confirm and cancel; a cancelled booking frees its time" {
-    _ = try app_test.app();
+    _ = try app_test.running();
     var arena_state: std.heap.ArenaAllocator = .init(std.testing.allocator);
     defer arena_state.deinit();
     const arena = arena_state.allocator();
@@ -192,7 +192,7 @@ test "confirm and cancel; a cancelled booking frees its time" {
 }
 
 test "a hold that ran out gives the time back" {
-    _ = try app_test.app();
+    _ = try app_test.running();
     var arena_state: std.heap.ArenaAllocator = .init(std.testing.allocator);
     defer arena_state.deinit();
     const arena = arena_state.allocator();

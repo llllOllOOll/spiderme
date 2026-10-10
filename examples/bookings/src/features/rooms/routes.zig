@@ -1,7 +1,13 @@
 const spider = @import("spider");
+const controller = @import("controller.zig");
 
-/// Routes of the rooms feature, mounted by `server.mountFeatures(features)` in
-/// src/main.zig. None yet: the pages come next.
+/// Routes of the rooms, mounted by `server.mountFeatures(features)` in
+/// src/main.zig. Anyone may look at the rooms.
 pub fn build() spider.Group {
-    return spider.Group.init("/rooms");
+    var g = spider.Group.init("/rooms");
+    _ = g
+        .defaults(.{ .public = true })
+        .get("", controller.index, .{})
+        .get("/:id", controller.show, .{});
+    return g;
 }

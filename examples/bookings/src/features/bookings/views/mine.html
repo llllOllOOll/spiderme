@@ -1,0 +1,27 @@
+extends "layout"
+<main class="ui-main">
+    <h1>My bookings</h1>
+    if (none) {
+    <div class="ui-empty">
+        <span class="ui-ring"><span class="hero-calendar size-7" aria-hidden="true"></span></span>
+        <h2>You have no bookings</h2>
+        <p class="ui-muted ui-measure">Pick a free time on the day view to book a room.</p>
+        <a class="ui-btn ui-btn-primary" href="/">See today</a>
+    </div>
+    } else {
+    <div class="ui-stack ui-gap-12">
+        for (bookings) |booking| {
+        <div class="ui-list-row">
+            <div class="ui-stack ui-gap-8">
+                <a class="ui-link ui-row-title" href="/bookings/{ booking.id }">{ booking.title }</a>
+                <span class="ui-muted ui-small">{ booking.room } · { booking.day } · { booking.starts }–{ booking.ends }</span>
+            </div>
+            <div class="ui-row-actions">
+                <StateBadge state="{ booking.state }" />
+                <a class="ui-btn ui-btn-secondary ui-btn-sm" href="/bookings/{ booking.id }">Open</a>
+            </div>
+        </div>
+        }
+    </div>
+    }
+</main>

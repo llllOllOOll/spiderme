@@ -1,0 +1,45 @@
+extends "layout"
+<main class="ui-main ui-narrow">
+    <a class="ui-link ui-back" href="/rooms"><span class="hero-chevron-left size-4" aria-hidden="true"></span>Rooms</a>
+    <div class="ui-page-head">
+        <div class="ui-stack ui-gap-8">
+            <h1>{ room.name }</h1>
+            <p class="ui-muted ui-inline"><span class="hero-user-group size-5" aria-hidden="true"></span>{ seats }</p>
+        </div>
+        <a class="ui-btn ui-btn-primary" href="{ book }"><span class="hero-plus size-5" aria-hidden="true"></span>Book this room</a>
+    </div>
+
+    <section class="ui-card" aria-label="What the room has">
+        <div class="ui-stack ui-gap-12">
+            <h3>What it has</h3>
+            <div class="ui-tags">
+                for (features) |feature| {
+                <span class="ui-tag">{ feature }</span>
+                }
+                if (bare) {
+                <span class="ui-muted">No equipment: a room and a door.</span>
+                }
+            </div>
+        </div>
+    </section>
+
+    <section class="ui-stack ui-gap-12" aria-label="Bookings ahead">
+        <h2>Booked ahead</h2>
+        if (none) {
+        <div class="ui-empty">
+            <h3>Nothing booked</h3>
+            <p class="ui-muted ui-measure">This room is free from today on.</p>
+        </div>
+        } else {
+        for (bookings) |booking| {
+        <div class="ui-list-row">
+            <div class="ui-stack ui-gap-8">
+                <a class="ui-link ui-row-title" href="/bookings/{ booking.id }">{ booking.title }</a>
+                <span class="ui-muted ui-small">{ booking.day } · { booking.starts }–{ booking.ends } · { booking.booked_by }</span>
+            </div>
+            <StateBadge state="{ booking.state }" />
+        </div>
+        }
+        }
+    </section>
+</main>

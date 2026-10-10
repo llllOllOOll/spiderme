@@ -1,97 +1,134 @@
 extends "layout"
-
-<div class="min-h-screen flex flex-col items-center justify-center p-6">
-
-    <div class="flex flex-col items-center gap-3 mb-12">
-        <img src="/images/logo.png" alt="Spider Logo" class="w-14 h-14 object-contain" />
-        <p class="text-xs font-mono tracking-widest uppercase opacity-30">Spider</p>
+<main class="ui-main">
+    <div class="ui-page-head">
+        <div class="ui-stack ui-gap-8">
+            <h1>{ day.label }</h1>
+            if (day.is_today) {
+            <p class="ui-muted">Today · open 08:00–20:00</p>
+            } else {
+            <p class="ui-muted">Open 08:00–20:00</p>
+            }
+        </div>
+        <div class="ui-datenav" role="group" aria-label="Change day">
+            <a class="ui-btn ui-btn-secondary" href="{ prev }"><span class="hero-chevron-left size-4" aria-hidden="true"></span>Previous</a>
+            <a class="ui-btn ui-btn-secondary" href="{ today }">Today</a>
+            <a class="ui-btn ui-btn-secondary" href="{ next }">Next<span class="hero-chevron-right size-4" aria-hidden="true"></span></a>
+        </div>
     </div>
 
-    <div class="w-full max-w-2xl rounded-xl overflow-hidden border border-base-content/10">
+    if (no_rooms) {
+    <div class="ui-empty">
+        <span class="ui-ring"><span class="hero-calendar size-7" aria-hidden="true"></span></span>
+        <h2>No rooms yet</h2>
+        if (is_admin) {
+        <p class="ui-muted ui-measure">Rooms are what people book. Create the first one, then the day will appear here.</p>
+        <a class="ui-btn ui-btn-primary ui-btn-lg" href="/rooms/new"><span class="hero-plus size-5" aria-hidden="true"></span>Create the first room</a>
+        } else {
+        <p class="ui-muted ui-measure">Rooms are what people book. An admin has to create the first one.</p>
+        }
+    </div>
+    } else {
 
-        <div class="grid grid-cols-2 border-b border-base-content/10">
-
-            <a href="https://spiderme.org/docs" target="_blank"
-               class="group flex flex-col gap-5 p-8 bg-base-200 hover:bg-base-300 transition-colors border-r border-base-content/10">
-                <div class="w-10 h-10 rounded-lg flex items-center justify-center text-base-content/40 bg-base-content/5">
-                    <span class="hero-book-open size-5" aria-hidden="true"></span>
-                </div>
-                <div>
-                    <div class="flex items-center justify-between mb-2">
-                        <span class="text-sm font-medium">Documentation</span>
-                        <span class="hero-arrow-right size-4 text-base-content/20 group-hover:text-base-content/50 transition-colors" aria-hidden="true"></span>
-                    </div>
-                    <p class="text-xs text-base-content/40 leading-relaxed">
-                        Everything you need to build with Spider. Routing, templates, middleware, and HTMX patterns.
-                    </p>
-                </div>
-            </a>
-
-            <a href="https://spiderme.org/docs/quickstart" target="_blank"
-               class="group flex flex-col gap-5 p-8 bg-base-200 hover:bg-base-300 transition-colors">
-                <div class="w-10 h-10 rounded-lg flex items-center justify-center text-base-content/40 bg-base-content/5">
-                    <span class="hero-command-line size-5" aria-hidden="true"></span>
-                </div>
-                <div>
-                    <div class="flex items-center justify-between mb-2">
-                        <span class="text-sm font-medium">Quick start</span>
-                        <span class="hero-arrow-right size-4 text-base-content/20 group-hover:text-base-content/50 transition-colors" aria-hidden="true"></span>
-                    </div>
-                    <p class="text-xs text-base-content/40 leading-relaxed">
-                        Get a Spider project running in minutes. Install Zig, clone the starter,
-                        run <code class="text-warning font-mono text-xs">zig build run</code>.
-                    </p>
-                </div>
-            </a>
-
+    <div id="day" class="ui-stack ui-gap-24">
+        <div class="ui-filters" role="group" aria-label="Show rooms with">
+            <span class="ui-small ui-muted ui-filters-label">Rooms with</span>
+            for (filters) |filter| {
+            if (filter.on) {
+            <a class="ui-chip" href="{ filter.href }" aria-pressed="true" hx-get="{ filter.href }" hx-target="#day" hx-select="#day" hx-swap="outerHTML" hx-push-url="true"><span class="hero-check size-4" aria-hidden="true"></span>{ filter.label }</a>
+            } else {
+            <a class="ui-chip" href="{ filter.href }" aria-pressed="false" hx-get="{ filter.href }" hx-target="#day" hx-select="#day" hx-swap="outerHTML" hx-push-url="true">{ filter.label }</a>
+            }
+            }
+            if (filtering) {
+            <a class="ui-btn ui-btn-quiet ui-btn-sm" href="{ clear }" hx-get="{ clear }" hx-target="#day" hx-select="#day" hx-swap="outerHTML" hx-push-url="true">Clear filters</a>
+            }
         </div>
 
-        <div class="grid grid-cols-2">
+        if (no_match) {
+        <div class="ui-empty">
+            <span class="ui-ring"><span class="hero-information-circle size-7" aria-hidden="true"></span></span>
+            <h2>No room has { wanted }</h2>
+            <p class="ui-muted ui-measure">Try fewer features, or clear the filters to see every room.</p>
+            <a class="ui-btn ui-btn-secondary" href="{ clear }" hx-get="{ clear }" hx-target="#day" hx-select="#day" hx-swap="outerHTML" hx-push-url="true">Clear filters</a>
+        </div>
+        } else {
 
-            <a href="https://github.com/llllOllOOll/spider" target="_blank"
-               class="group flex flex-col gap-5 p-8 bg-base-200 hover:bg-base-300 transition-colors border-r border-base-content/10">
-                <div class="w-10 h-10 rounded-lg flex items-center justify-center text-base-content/40 bg-base-content/5">
-                    <span class="hero-code-bracket size-5" aria-hidden="true"></span>
-                </div>
-                <div>
-                    <div class="flex items-center justify-between mb-2">
-                        <span class="text-sm font-medium">GitHub</span>
-                        <span class="hero-arrow-right size-4 text-base-content/20 group-hover:text-base-content/50 transition-colors" aria-hidden="true"></span>
-                    </div>
-                    <p class="text-xs text-base-content/40 leading-relaxed">
-                        Browse the source, open issues, and contribute. Spider is open source and built in the open.
-                    </p>
-                </div>
-            </a>
-
-            <a href="https://spiderme.org" target="_blank"
-               class="group flex flex-col gap-5 p-8 bg-base-200 hover:bg-base-300 transition-colors">
-                <div class="w-10 h-10 rounded-lg flex items-center justify-center text-base-content/40 bg-base-content/5">
-                    <span class="hero-globe-alt size-5" aria-hidden="true"></span>
-                </div>
-                <div>
-                    <div class="flex items-center justify-between mb-2">
-                        <span class="text-sm font-medium">Ecosystem</span>
-                        <span class="hero-arrow-right size-4 text-base-content/20 group-hover:text-base-content/50 transition-colors" aria-hidden="true"></span>
-                    </div>
-                    <p class="text-xs text-base-content/40 leading-relaxed">
-                        HTMX, Alpine.js, and Zig's standard library work seamlessly
-                        with Spider. No bundlers, no node_modules.
-                    </p>
-                </div>
-            </a>
-
+        <div class="ui-legend" aria-label="Legend">
+            <span><i class="ui-sw ui-sw-free"></i>Free</span>
+            <span><i class="ui-sw ui-sw-held"></i>Held</span>
+            <span><i class="ui-sw ui-sw-booked"></i>Booked</span>
+            <span><i class="ui-sw ui-sw-mine"></i>Yours</span>
+            if (day.is_today) {
+            <span><i class="ui-sw ui-sw-past"></i>Earlier today</span>
+            }
         </div>
 
-    </div>
+        <nav class="ui-room-tabs" aria-label="Room">
+            for (tabs) |tab| {
+            if (tab.on) {
+            <a class="ui-chip" href="{ tab.href }" aria-pressed="true">{ tab.name }</a>
+            } else {
+            <a class="ui-chip" href="{ tab.href }" aria-pressed="false">{ tab.name }</a>
+            }
+            }
+        </nav>
 
-    <div class="flex items-center gap-4 mt-8 text-xs font-mono opacity-20">
-        <span>Spider v0.10.0 · Zig 0.17.0</span>
-        <a href="https://discord.gg/Z9aMYY6g" target="_blank"
-           class="inline-flex items-center gap-1 hover:opacity-60 transition-opacity">
-            <span class="hero-chat-bubble-left-right size-4" aria-hidden="true"></span>
-            Discord
-        </a>
-    </div>
+        <div class="ui-day">
+            <div class="ui-day-grid ui-cols-{ cols }">
+                <div class="ui-day-head ui-day-head-first"></div>
+                for (columns) |column| {
+                <div class="ui-day-head{ column.on }">
+                    <a href="/rooms/{ column.id }">{ column.name }</a>
+                    <span><span class="hero-user-group size-4" aria-hidden="true"></span>{ column.seats }</span>
+                </div>
+                }
 
-</div>
+                <div class="ui-day-time">
+                    for (hours) |hour| {
+                    <b class="ui-hour-{ hour.index }">{ hour.label }</b>
+                    }
+                    if (has_now) {
+                    <span class="ui-now-tag ui-now-{ now_step }">{ day.now }</span>
+                    }
+                </div>
+
+                for (columns) |column| {
+                <div class="ui-day-col{ column.on }">
+                    for (column.cells) |cell| {
+                    if (cell.kind == "free") {
+                    <a class="ui-cell ui-cell-free{ cell.line }" href="{ cell.href }" aria-label="Book { column.name } at { cell.time }"><span class="hero-plus size-4" aria-hidden="true"></span>Book<span class="ui-show-s"> { cell.time }</span></a>
+                    } else if (cell.kind == "past") {
+                    <span class="ui-cell-past{ cell.line }"></span>
+                    } else {
+                    <span class="ui-cell-taken{ cell.line }"></span>
+                    }
+                    }
+                    for (column.blocks) |block| {
+                    <a class="ui-cell { block.look } ui-at-{ block.at } ui-len-{ block.len }" href="/bookings/{ block.id }" aria-label="{ block.label }">
+                        if (block.one) {
+                        <div class="ui-ct"><span>{ block.title }</span></div>
+                        } else {
+                        <div class="ui-ct ui-wrap"><span>{ block.title }</span></div>
+                        }
+                        if (block.held) {
+                        <div class="ui-cm"><span class="hero-clock size-3" aria-hidden="true"></span>Held · { block.minutes_left } min left</div>
+                        }
+                        if (block.show_who) {
+                        <div class="ui-cm">{ block.who }</div>
+                        }
+                        if (block.show_range) {
+                        <div class="ui-cm">{ block.range }</div>
+                        }
+                    </a>
+                    }
+                    if (has_now) {
+                    <div class="ui-now-line ui-now-{ now_step }"></div>
+                    }
+                </div>
+                }
+            </div>
+        </div>
+        }
+    </div>
+    }
+</main>

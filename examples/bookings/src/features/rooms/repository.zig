@@ -34,3 +34,13 @@ pub fn create(arena: std.mem.Allocator, input: model.Input) !model.Room {
     };
     return row.?;
 }
+
+/// Every feature some room has, in alphabetical order: the choices of the
+/// filter.
+pub fn allFeatures(arena: std.mem.Allocator) ![]const []const u8 {
+    const Row = struct { feature: []const u8 };
+    const rows = try db.query(Row, arena, "SELECT DISTINCT unnest(features) AS feature FROM rooms ORDER BY 1", .{});
+    const out = try arena.alloc([]const u8, rows.len);
+    for (rows, out) |row, *feature| feature.* = row.feature;
+    return out;
+}

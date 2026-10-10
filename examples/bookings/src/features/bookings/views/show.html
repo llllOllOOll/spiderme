@@ -1,0 +1,63 @@
+extends "layout"
+<main class="ui-main ui-narrow">
+    <a class="ui-link ui-back" href="{ back }"><span class="hero-chevron-left size-4" aria-hidden="true"></span>Day view</a>
+
+    <div class="ui-stack ui-gap-12">
+        <div><StateBadge state="{ state }" /></div>
+        <h1>{ booking.title }</h1>
+        <p class="ui-muted">{ booking.room } · { day.label } · { booking.starts }–{ booking.ends }</p>
+    </div>
+
+    if (held) {
+    <section class="ui-hold" aria-label="Hold">
+        <div class="ui-stack ui-gap-8">
+            <span class="ui-hold-label"><span class="hero-clock size-5" aria-hidden="true"></span>if (mine) { Held for you } else { Held }</span>
+            <div class="ui-countdown" role="timer">{ minutes_left } min</div>
+            <p>left to confirm.</p>
+        </div>
+        <div class="ui-bar" role="progressbar" aria-valuemin="0" aria-valuemax="10" aria-valuenow="{ minutes_left }" aria-label="Minutes left"><i class="ui-bar-{ tenths }"></i></div>
+        <p>After that the slot is free again and someone else can book it.</p>
+        if (can_act) {
+        <div class="ui-row-actions">
+            <form action="/bookings/{ booking.id }/confirm" method="post"><button class="ui-btn ui-btn-primary ui-btn-lg" type="submit">Confirm booking</button></form>
+            <form action="/bookings/{ booking.id }/cancel" method="post"><button class="ui-btn ui-btn-danger ui-btn-lg" type="submit">Cancel booking</button></form>
+        </div>
+        }
+    </section>
+    }
+
+    if (expired) {
+    <div class="ui-alert ui-alert-neutral" role="status">
+        <span class="hero-clock size-5" aria-hidden="true"></span>
+        <span>The hold ran out before this booking was confirmed, so the time is free again. <a class="ui-link" href="{ rebook }">Book it again</a></span>
+    </div>
+    }
+
+    if (cancelled) {
+    <div class="ui-alert ui-alert-neutral" role="status">
+        <span class="hero-x-circle size-5" aria-hidden="true"></span>
+        <span>This booking was cancelled. The time is free again.</span>
+    </div>
+    }
+
+    <section class="ui-card" aria-label="Details">
+        <dl class="ui-dl">
+            <dt>Room</dt><dd><a class="ui-link" href="/rooms/{ booking.room_id }">{ booking.room }</a></dd>
+            <dt>Date</dt><dd>{ day.label }</dd>
+            <dt>Time</dt><dd>{ booking.starts }–{ booking.ends }</dd>
+            <dt>Booked by</dt><dd>{ booking.booked_by }</dd>
+            if (booking.note) {
+            <dt>Note</dt><dd>{ booking.note }</dd>
+            }
+            <dt>State</dt><dd><StateBadge state="{ state }" /></dd>
+        </dl>
+    </section>
+
+    if (confirmed) {
+    if (can_act) {
+    <div class="ui-row-actions">
+        <form action="/bookings/{ booking.id }/cancel" method="post"><button class="ui-btn ui-btn-danger" type="submit">Cancel booking</button></form>
+    </div>
+    }
+    }
+</main>

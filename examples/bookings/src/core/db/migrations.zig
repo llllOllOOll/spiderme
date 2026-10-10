@@ -21,6 +21,14 @@ const MIGRATIONS = [_]Migration{
         .version = "1791667711_seed_rooms",
         .sql_file = @embedFile("./migrations/1791667711_seed_rooms.sql"),
     },
+    .{
+        .version = "1791668113_create_users",
+        .sql_file = @embedFile("./migrations/1791668113_create_users.sql"),
+    },
+    .{
+        .version = "1791668114_bookings_belong_to_users",
+        .sql_file = @embedFile("./migrations/1791668114_bookings_belong_to_users.sql"),
+    },
 };
 
 fn extractUpSection(sql_file: []const u8) []const u8 {

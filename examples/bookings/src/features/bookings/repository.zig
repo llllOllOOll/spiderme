@@ -8,7 +8,7 @@ const columns =
     \\b.day::text AS day,
     \\to_char(b.starts, 'HH24:MI') AS starts,
     \\to_char(b.ends, 'HH24:MI') AS ends,
-    \\b.title, b.note, b.booked_by, b.state,
+    \\b.title, b.note, b.booked_by, b.user_id, b.state,
     \\CASE WHEN b.state = 'held'
     \\     THEN greatest(0, ceil(extract(epoch FROM b.held_until - now()) / 60))::integer
     \\END AS minutes_left
@@ -54,10 +54,10 @@ pub fn create(arena: std.mem.Allocator, input: model.Input) !model.Booking {
                 \\WHERE room_id = $1 AND day = $2::date AND state = 'held' AND held_until < now()
             , .{ in.room_id, in.day });
             return tx.query(i64, work.arena,
-                \\INSERT INTO bookings (room_id, day, starts, ends, title, note, booked_by, held_until)
-                \\VALUES ($1, $2::date, $3::time, $4::time, $5, $6, $7, now() + make_interval(mins => $8))
+                \\INSERT INTO bookings (room_id, day, starts, ends, title, note, booked_by, user_id, held_until)
+                \\VALUES ($1, $2::date, $3::time, $4::time, $5, $6, $7, $8, now() + make_interval(mins => $9))
                 \\RETURNING id
-            , .{ in.room_id, in.day, in.starts, in.ends, in.title, in.note, in.booked_by, @as(i32, model.hold_minutes) });
+            , .{ in.room_id, in.day, in.starts, in.ends, in.title, in.note, in.booked_by, in.user_id, @as(i32, model.hold_minutes) });
         }
     }.run) catch |err| switch (err) {
         // What the database said, in the app's words. The names are the
@@ -114,4 +114,52 @@ pub fn expireStale(arena: std.mem.Allocator) !i64 {
         \\    UPDATE bookings SET state = 'expired' WHERE state = 'held' AND held_until < now() RETURNING 1
         \\) SELECT count(*) FROM done
     , .{});
+}
+
+/// The bookings of one account: the ones ahead first (soonest on top), then
+/// the ones behind.
+pub fn ofUser(arena: std.mem.Allocator, user_id: i64) ![]model.Booking {
+    const sql = "SELECT " ++ columns ++ from ++
+        \\WHERE b.user_id = $1
+        \\ORDER BY (b.day + b.ends < (now() AT TIME ZONE $2)) , abs(extract(epoch FROM (b.day + b.starts) - (now() AT TIME ZONE $2)))
+    ;
+    return db.query(model.Booking, arena, sql, .{ user_id, timeZone() });
+}
+
+/// The bookings of one room from today on, that still take it.
+pub fn aheadForRoom(arena: std.mem.Allocator, room_id: i64) ![]model.Booking {
+    const sql = "SELECT " ++ columns ++ from ++
+        \\WHERE b.room_id = $1 AND b.state IN ('held', 'confirmed') AND b.day >= (now() AT TIME ZONE $2)::date
+        \\ORDER BY b.day, b.starts LIMIT 20
+    ;
+    return db.query(model.Booking, arena, sql, .{ room_id, timeZone() });
+}
+
+/// Where the office is, for "today" and "now": the BOOKINGS_TZ variable
+/// ("America/Sao_Paulo"), or UTC.
+pub fn timeZone() []const u8 {
+    return spider.env.getOr("BOOKINGS_TZ", "UTC");
+}
+
+/// `day` ("2026-10-12") as the pages talk about it, or today when it is
+/// null or not a date. PostgreSQL does the calendar: the weekday, the day
+/// before, the day after, and what time it is where the office is.
+pub fn dayInfo(arena: std.mem.Allocator, day: ?[]const u8) !model.Day {
+    const sql =
+        \\SELECT d::text AS day,
+        \\       to_char(d, 'FMDay, FMDD FMMonth') AS label,
+        \\       (d - 1)::text AS prev, (d + 1)::text AS next,
+        \\       d = t AS is_today, d < t AS is_past,
+        \\       to_char(n, 'HH24:MI') AS now,
+        \\       (extract(hour FROM n) * 60 + extract(minute FROM n))::integer AS now_minutes
+        \\FROM (SELECT coalesce($1::date, (now() AT TIME ZONE $2)::date) AS d,
+        \\             (now() AT TIME ZONE $2)::date AS t,
+        \\             now() AT TIME ZONE $2 AS n) AS clock
+    ;
+    const asked = db.queryOne(model.Day, arena, sql, .{ day, timeZone() }) catch |err| switch (err) {
+        // Not a date: the page shows today.
+        error.InvalidDatetimeFormat, error.DatetimeFieldOverflow => null,
+        else => return err,
+    };
+    return asked orelse (try db.queryOne(model.Day, arena, sql, .{ @as(?[]const u8, null), timeZone() })).?;
 }

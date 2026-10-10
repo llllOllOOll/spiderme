@@ -1,0 +1,31 @@
+extends "layout"
+<main class="ui-main">
+    <h1>Rooms</h1>
+    if (none) {
+    <div class="ui-empty">
+        <span class="ui-ring"><span class="hero-building-office size-7" aria-hidden="true"></span></span>
+        <h2>No rooms yet</h2>
+        <p class="ui-muted ui-measure">Rooms are what people book.</p>
+    </div>
+    } else {
+    <div class="ui-grid3">
+        for (rooms) |room| {
+        <article class="ui-room-card">
+            <div class="ui-stack ui-gap-8">
+                <h3><a href="/rooms/{ room.id }">{ room.name }</a></h3>
+                <span class="ui-muted ui-small ui-inline"><span class="hero-user-group size-4" aria-hidden="true"></span>{ room.seats }</span>
+            </div>
+            <div class="ui-tags">
+                for (room.features) |feature| {
+                <span class="ui-tag">{ feature }</span>
+                }
+                if (room.bare) {
+                <span class="ui-muted ui-small">No equipment</span>
+                }
+            </div>
+            <a class="ui-btn ui-btn-secondary" href="/rooms/{ room.id }">See the room</a>
+        </article>
+        }
+    </div>
+    }
+</main>

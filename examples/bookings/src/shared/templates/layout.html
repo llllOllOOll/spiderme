@@ -1,19 +1,45 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="dark">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{ title ?? "bookings" }</title>
+    <title>{ title ?? "Bookings" } · Bookings</title>
     <link rel="icon" type="image/png" href="/favicon.png">
     <link rel="shortcut icon" href="/favicon.ico">
     <link rel="stylesheet" href="/css/app.css">
-    <script src="/js/htmx.min.js"></script>
-    <script defer src="/js/stores.js"></script>
-    <script defer src="/js/alpine.min.js"></script>
-    <style>[x-cloak] { display: none !important; }</style>
+    <script defer src="/vendor/htmx-4.0.0.min.js"></script>
 </head>
-<body class="bg-base-100 text-base-content min-h-screen">
-    <Toast />
+<body class="ui-page">
+    <header class="ui-header">
+        <div class="ui-header-in">
+            <a class="ui-brand" href="/">
+                <svg width="14" height="30" viewBox="0 0 14 32" aria-hidden="true"><line x1="7" y1="0" x2="7" y2="22" stroke="#FF5300" stroke-width="2"/><circle cx="7" cy="25" r="6" fill="#FF5300"/></svg>
+                Bookings
+            </a>
+            <nav class="ui-nav" aria-label="Main">
+                if (nav == "day") { <a href="/" aria-current="page">Day</a> } else { <a href="/">Day</a> }
+                if (nav == "rooms") { <a href="/rooms" aria-current="page">Rooms</a> } else { <a href="/rooms">Rooms</a> }
+                if (current_user) {
+                if (nav == "mine") { <a href="/bookings" aria-current="page">My bookings</a> } else { <a href="/bookings">My bookings</a> }
+                }
+            </nav>
+            if (current_user) {
+            <a class="ui-user" href="/auth/account">
+                <span class="ui-avatar" aria-hidden="true"><span class="hero-user size-5"></span></span>
+                <span class="ui-hide-s">{ current_user.name }</span>
+                if (is_admin) { <span class="ui-badge ui-badge-admin">Admin</span> }
+            </a>
+            } else {
+            <a class="ui-btn ui-btn-secondary" href="/auth/login">Sign in</a>
+            }
+        </div>
+    </header>
+
     { slot }
+
+    <footer class="ui-footer">
+        <span>Bookings is an example app for Spider.</span>
+        <a class="ui-link" href="https://github.com/llllOllOOll/spider">Built with Spider</a>
+    </footer>
 </body>
 </html>

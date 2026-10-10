@@ -37,8 +37,11 @@ pub fn serve(allocator: std.mem.Allocator, io: std.Io) !void {
     // `spider routes` prints what got registered.
     server
         .use(spider.logger)
+        // Reads the login cookie (or a bearer token) and tells the routes
+        // who is there; a route that is not `.public` needs a login.
+        .use(spider.session.middleware())
         .mountFeatures(features)
-        .onError(spider.errorHandler(.{ .template_not_found_is_404 = true }))
+        .onError(spider.errorHandler(.{ .unauthorized_redirect = "/auth/login", .template_not_found_is_404 = true }))
         // Port and host come from spider.config.zig; the PORT variable
         // (the environment or .env) replaces the port.
         .listen(.{}) catch |err| return err;
@@ -54,6 +57,7 @@ test "the app follows Spider's conventions" {
 test {
     _ = @import("app_test.zig");
     _ = @import("data_test.zig");
+    _ = @import("pages_test.zig");
 }
 
 test "every file with tests is part of this test binary" {
