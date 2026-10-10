@@ -29,7 +29,9 @@ extends "layout"
     </div>
     } else {
 
-    <div id="day" class="ui-stack ui-gap-24">
+    <div hx-sse:connect="/events/{ day.day }" hx-swap="none"></div>
+
+    <div id="day" class="ui-stack ui-gap-24" hx-get="{ self }" hx-trigger="changed from:body, every 60s" hx-select="#day" hx-swap="outerHTML">
         <div class="ui-filters" role="group" aria-label="Show rooms with">
             <span class="ui-small ui-muted ui-filters-label">Rooms with</span>
             for (filters) |filter| {
@@ -61,6 +63,7 @@ extends "layout"
             if (day.is_today) {
             <span><i class="ui-sw ui-sw-past"></i>Earlier today</span>
             }
+            <span class="ui-live ui-push"><i></i>Live: updates by itself</span>
         </div>
 
         <nav class="ui-room-tabs" aria-label="Room">
@@ -104,7 +107,7 @@ extends "layout"
                     }
                     }
                     for (column.blocks) |block| {
-                    <a class="ui-cell { block.look } ui-at-{ block.at } ui-len-{ block.len }" href="/bookings/{ block.id }" aria-label="{ block.label }">
+                    <a class="ui-cell { block.look } ui-at-{ block.at } ui-len-{ block.len }{ block.changed }" href="/bookings/{ block.id }" aria-label="{ block.label }">
                         if (block.one) {
                         <div class="ui-ct"><span>{ block.title }</span></div>
                         } else {
@@ -118,6 +121,9 @@ extends "layout"
                         }
                         if (block.show_range) {
                         <div class="ui-cm">{ block.range }</div>
+                        }
+                        if (block.fresh) {
+                        <span class="ui-just">Just booked</span>
                         }
                     </a>
                     }

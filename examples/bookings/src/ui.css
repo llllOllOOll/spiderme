@@ -498,3 +498,11 @@ select.ui-input{background-image:linear-gradient(45deg,transparent 50%,var(--ink
 .ui-fieldset legend{padding:0;margin-bottom:6px}
 .ui-check input{width:22px;height:22px;accent-color:var(--ink);flex:none}
 .ui-danger-zone{display:flex;flex-wrap:wrap;gap:16px;align-items:center;justify-content:space-between}
+
+/* A booking made a moment ago is pointed out, then settles: the ring and
+   the tag fade by themselves after six seconds. No other motion. */
+@keyframes ui-settle{to{outline-color:transparent;box-shadow:0 0 0 7px rgba(255,83,0,0)}}
+@keyframes ui-leave{to{opacity:0;visibility:hidden}}
+.ui-cell-changed{animation:ui-settle 1s ease 6s forwards}
+.ui-just{animation:ui-leave 1s ease 6s forwards}
+@media (prefers-reduced-motion:reduce){.ui-cell-changed,.ui-just{animation-duration:.01s}}

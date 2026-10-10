@@ -5,5 +5,6 @@ const routes = @import("routes.zig");
 test "home routes: method, path and access" {
     try spider.testing.expectRoutes(routes.build(), &.{
         .{ "GET", "/", "public" },
+        .{ "GET", "/events/:day", "public" },
     });
 }

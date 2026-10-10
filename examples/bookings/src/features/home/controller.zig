@@ -4,6 +4,40 @@ const grid = @import("grid.zig");
 const rooms = @import("../rooms/repository.zig");
 const bookings = @import("../bookings/repository.zig");
 
+/// The stream a day view listens to: one event, "changed", whenever a
+/// booking of that day is made, confirmed, cancelled or expires. It says
+/// that something changed, not what: each page then asks for its own grid,
+/// because the grid is not the same for everyone (yours are marked as yours).
+///
+///     /events/2026-10-12
+pub fn events(sse: *spider.Sse) !void {
+    const day = sse.param("day") orelse return;
+    if (!isDay(day)) return;
+    try sse.join(try channelOf(sse.arena, day));
+    sse.wait();
+}
+
+/// Tells every page showing `day` that it changed.
+pub fn announce(c: *spider.Ctx, day: []const u8) void {
+    const channel = channelOf(c.arena, day) catch return;
+    c.sseHub().emitTo(channel, "changed", .{ .day = day });
+}
+
+fn channelOf(a: std.mem.Allocator, day: []const u8) ![]const u8 {
+    return std.fmt.allocPrint(a, "day:{s}", .{day});
+}
+
+/// "2026-10-12": ten characters, digits and two hyphens.
+fn isDay(text: []const u8) bool {
+    if (text.len != 10) return false;
+    for (text, 0..) |ch, i| {
+        if (i == 4 or i == 7) {
+            if (ch != '-') return false;
+        } else if (!std.ascii.isDigit(ch)) return false;
+    }
+    return true;
+}
+
 /// A feature in the filter: its name, whether it is on, and the address
 /// that turns it the other way.
 const Filter = struct { label: []const u8, on: bool, href: []const u8 };
@@ -55,6 +89,8 @@ pub fn index(c: *spider.Ctx) !spider.Response {
         .nav = "day",
         .is_admin = c.hasRole("admin"),
         .day = day,
+        // This same view again: what the page asks for when the day changes.
+        .self = if (shown) |room| try std.fmt.allocPrint(a, "{s}&room={d}", .{ try address(a, day.day, wanted), room }) else try address(a, day.day, wanted),
         .prev = try address(a, day.prev, wanted),
         .next = try address(a, day.next, wanted),
         .today = try address(a, null, wanted),

@@ -5,6 +5,9 @@ const controller = @import("controller.zig");
 /// the home page stays open once the app has a login (spider g auth).
 pub fn build() spider.Group {
     var g = spider.Group.init("");
-    _ = g.get("/", controller.index, .{ .public = true });
+    _ = g
+        .get("/", controller.index, .{ .public = true })
+        // The stream that tells a day view its day changed.
+        .sseWith("/events/:day", controller.events, .{ .public = true, .quiet_log = true });
     return g;
 }

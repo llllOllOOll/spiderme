@@ -4,6 +4,7 @@ const model = @import("model.zig");
 const repository = @import("repository.zig");
 const rooms = @import("../rooms/repository.zig");
 const grid = @import("../home/grid.zig");
+const day_view = @import("../home/controller.zig");
 
 const policy = @import("policy.zig");
 
@@ -101,6 +102,7 @@ pub fn create(c: *spider.Ctx) !Response {
         },
         else => return err,
     };
+    day_view.announce(c, made.day);
     return go(c, try std.fmt.allocPrint(c.arena, "/bookings/{d}", .{made.id}));
 }
 
@@ -214,6 +216,7 @@ pub fn show(c: *spider.Ctx) !Response {
 pub fn confirm(c: *spider.Ctx, mine_: Mine) !Response {
     const booking = mine_.value;
     _ = try repository.confirm(c.arena, booking.id);
+    day_view.announce(c, booking.day);
     return c.redirect(try std.fmt.allocPrint(c.arena, "/bookings/{d}", .{booking.id}));
 }
 
@@ -221,6 +224,7 @@ pub fn confirm(c: *spider.Ctx, mine_: Mine) !Response {
 pub fn cancel(c: *spider.Ctx, mine_: Mine) !Response {
     const booking = mine_.value;
     _ = try repository.cancel(c.arena, booking.id);
+    day_view.announce(c, booking.day);
     return c.redirect(try std.fmt.allocPrint(c.arena, "/bookings/{d}", .{booking.id}));
 }
 

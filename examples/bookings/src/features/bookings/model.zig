@@ -32,6 +32,8 @@ pub const Booking = struct {
     /// For a held booking: whole minutes until the hold ends, 0 once it
     /// has. null in every other state.
     minutes_left: ?i32 = null,
+    /// Made in the last few seconds: the day view points it out.
+    fresh: bool = false,
 };
 
 /// What the booking form sends.

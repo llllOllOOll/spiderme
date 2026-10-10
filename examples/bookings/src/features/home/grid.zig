@@ -61,6 +61,9 @@ pub const Block = struct {
     show_who: bool,
     show_range: bool,
     label: []const u8,
+    /// " ui-cell-changed" for a booking made a moment ago, else "".
+    changed: []const u8,
+    fresh: bool,
 };
 
 pub const Column = struct {
@@ -115,6 +118,8 @@ pub fn columns(
                 .label = try std.fmt.allocPrint(arena, "{s}, {s} to {s}, {s} by {s}", .{
                     b.title, b.starts, b.ends, if (held) "held" else "booked", if (mine) "you" else b.booked_by,
                 }),
+                .changed = if (b.fresh) " ui-cell-changed" else "",
+                .fresh = b.fresh,
             });
         }
 

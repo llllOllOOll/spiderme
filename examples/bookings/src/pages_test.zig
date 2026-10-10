@@ -345,3 +345,61 @@ test "an address that is nothing gets the 404 page" {
     try res.expectContains("There is no page, room or booking at this address.");
     try res.expectContains("Back to the day view");
 }
+
+/// Reads from an open stream until `needle` shows up, or fails after the
+/// socket's receive timeout.
+fn readUntil(reader: *std.Io.Reader, seen: *std.ArrayList(u8), needle: []const u8) !void {
+    while (std.mem.indexOf(u8, seen.items, needle) == null) {
+        const chunk = reader.peekGreedy(1) catch return error.StreamSaidNothing;
+        try seen.appendSlice(std.testing.allocator, chunk);
+        reader.toss(chunk.len);
+    }
+}
+
+test "the day's stream says \"changed\" when a booking of that day is made, and only then" {
+    const app = try app_test.running();
+    const io = std.testing.io;
+    var id_buf: [20]u8 = undefined;
+    const cedar = try roomId(&id_buf, "Cedar");
+    var buf: [1024]u8 = undefined;
+    const ana = app.with(&.{try app_test.signUp(app, &buf, "Ana Ribeiro", "ana.stream3@example.com")});
+
+    // What a day view does: open the stream of its day and keep it open.
+    const address = try std.Io.net.IpAddress.parse("127.0.0.1", app.port);
+    var stream = try address.connect(io, .{ .mode = .stream });
+    defer stream.close(io);
+    const timeout = std.posix.timeval{ .sec = 3, .usec = 0 };
+    try std.posix.setsockopt(stream.socket.handle, std.posix.SOL.SOCKET, std.posix.SO.RCVTIMEO, std.mem.asBytes(&timeout));
+    var write_buf: [256]u8 = undefined;
+    var writer = stream.writer(io, &write_buf);
+    try writer.interface.writeAll("GET /events/2032-07-05 HTTP/1.1\r\nHost: 127.0.0.1\r\nAccept: text/event-stream\r\n\r\n");
+    try writer.interface.flush();
+    var read_buf: [2048]u8 = undefined;
+    var reader = stream.reader(io, &read_buf);
+    var seen: std.ArrayList(u8) = .empty;
+    defer seen.deinit(std.testing.allocator);
+    try readUntil(&reader.interface, &seen, "text/event-stream");
+    try readUntil(&reader.interface, &seen, "retry:");
+    // The stream is open; its handler joins the day's channel right after.
+    // A moment, so that the booking below is not made in between.
+    try std.Io.sleep(io, .fromMilliseconds(200), .awake);
+
+    // A booking of another day says nothing here; one of this day does.
+    var other = try ana.postForm("/bookings/create", Booking{ .room = cedar, .date = "2032-07-06", .start = "10:00", .end = "11:00", .title = "Another day" });
+    defer other.deinit();
+    try other.expectStatus(302);
+    var made = try ana.postForm("/bookings/create", Booking{ .room = cedar, .date = "2032-07-05", .start = "10:00", .end = "11:00", .title = "Sprint demo" });
+    defer made.deinit();
+    try made.expectStatus(302);
+
+    try readUntil(&reader.interface, &seen, "event: changed");
+    try readUntil(&reader.interface, &seen, "2032-07-05");
+    try std.testing.expect(std.mem.indexOf(u8, seen.items, "2032-07-06") == null);
+
+    // And the page that asks again finds it there, pointed out as new.
+    var day = try app.get("/?date=2032-07-05");
+    defer day.deinit();
+    try day.expectContains("ui-cell-changed");
+    try day.expectContains("Just booked");
+    try day.expectContains("hx-sse:connect=\"/events/2032-07-05\"");
+}

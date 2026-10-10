@@ -40,6 +40,9 @@ pub fn serve(allocator: std.mem.Allocator, io: std.Io) !void {
         // Reads the login cookie (or a bearer token) and tells the routes
         // who is there; a route that is not `.public` needs a login.
         .use(spider.session.middleware())
+        // A comment line down every open stream each 30 seconds: proxies
+        // close a connection that says nothing.
+        .sseHeartbeat(null)
         .mountFeatures(features)
         .onError(onError)
         // Port and host come from spider.config.zig; the PORT variable
