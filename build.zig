@@ -114,9 +114,16 @@ pub fn build(b: *std.Build) void {
     // Code blocks of the pages come from files of the repository, the
     // example app above all (tools/snippets.zig).
     docs_index_run.addDirectoryArg(b.path("."));
+    // The pages of the API reference are written from the comments in
+    // Spider's source (tools/api_reference.zig).
+    docs_index_run.addDirectoryArg(spider_dep.path("."));
     spider_build.watchSources(b, docs_index_run, "content/docs", &.{".md"});
     spider_build.watchSources(b, docs_index_run, "examples/posts/src", &.{ ".zig", ".html", ".css", ".sql" });
     features_mod.addImport("docs_index", b.createModule(.{ .root_source_file = docs_index }));
+    // Its tests read the same source, where the build found it.
+    const docs_tool_options = b.addOptions();
+    docs_tool_options.addOptionPathDirectory("spider_root", spider_dep.path("."));
+    docs_tool.root_module.addOptions("docs_tool_options", docs_tool_options);
     // The tool's own tests, including one over the real pages.
     test_step.dependOn(&b.addRunArtifact(b.addTest(.{ .root_module = docs_tool.root_module })).step);
 

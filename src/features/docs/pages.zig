@@ -4,6 +4,9 @@
 //! header (title, section, order); tools/docs_index.zig reads them at build
 //! time and generates the `docs_index` module used here. **To add a page,
 //! write one `.md` file there. Nothing in this directory changes.**
+//!
+//! The pages of the API section are not files: the same tool writes them
+//! from the comments in Spider's source (tools/api_reference.zig).
 
 const std = @import("std");
 const index = @import("docs_index");
@@ -20,6 +23,7 @@ pub fn sectionTitle(section: Section) []const u8 {
         .start => "Start",
         .guide => "Guide",
         .reference => "Reference",
+        .api => "API",
     };
 }
 
@@ -32,6 +36,9 @@ pub const zig_version = "0.17.0";
 /// "Edit this page" links to `edit_base ++ slug ++ ".md"`.
 pub const edit_base = "https://github.com/llllOllOOll/spiderme/edit/main/content/docs/";
 
+/// A generated page links to `source_base ++ <its file of Spider>`.
+pub const source_base = "https://github.com/llllOllOOll/spider/blob/main/";
+
 pub fn indexOf(slug: []const u8) ?usize {
     for (all, 0..) |page, i| {
         if (std.mem.eql(u8, page.slug, slug)) return i;
@@ -40,14 +47,16 @@ pub fn indexOf(slug: []const u8) ?usize {
 }
 
 /// Pages whose title or slug contains `query`, ignoring case, in reading
-/// order. An empty query matches nothing.
+/// order; and the pages of the API reference that document a name
+/// containing it. An empty query matches nothing.
 pub fn search(arena: std.mem.Allocator, query: []const u8) ![]const Page {
     const needle = std.mem.trim(u8, query, " \t");
     var found: std.ArrayList(Page) = .empty;
     if (needle.len == 0) return found.items;
     for (all) |page| {
         if (std.ascii.findIgnoreCase(page.title, needle) != null or
-            std.ascii.findIgnoreCase(page.slug, needle) != null)
+            std.ascii.findIgnoreCase(page.slug, needle) != null or
+            std.ascii.findIgnoreCase(page.keywords, needle) != null)
         {
             try found.append(arena, page);
         }
@@ -84,9 +93,15 @@ test "search: by title or slug, any case; nothing for an empty query" {
     var arena_state = std.heap.ArenaAllocator.init(std.testing.allocator);
     defer arena_state.deinit();
     const arena = arena_state.allocator();
-    const routing = try search(arena, "ROUT");
-    try std.testing.expectEqual(@as(usize, 1), routing.len);
+    // The guide's page first: results are in reading order.
+    const routing = try search(arena, "ROUTING");
+    try std.testing.expect(routing.len >= 1);
     try std.testing.expectEqualStrings("router", routing[0].slug);
+    // A function of the API, by its name: the page of the reference that
+    // documents it.
+    const by_name = try search(arena, "redirectwith");
+    try std.testing.expectEqual(@as(usize, 1), by_name.len);
+    try std.testing.expectEqualStrings("api-ctx", by_name[0].slug);
     try std.testing.expectEqual(@as(usize, 0), (try search(arena, "  ")).len);
     try std.testing.expectEqual(@as(usize, 0), (try search(arena, "no such page")).len);
 }
