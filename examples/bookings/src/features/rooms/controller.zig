@@ -50,17 +50,15 @@ fn seats(a: std.mem.Allocator, capacity: i32) ![]const u8 {
     return std.fmt.allocPrint(a, "{d} {s}", .{ capacity, if (capacity == 1) "seat" else "seats" });
 }
 
-/// "projector, whiteboard" -> the two names, capitalized for the page.
-fn featureList(a: std.mem.Allocator, text: []const u8) ![]const []const u8 {
-    var out: std.ArrayList([]const u8) = .empty;
-    var it = std.mem.splitSequence(u8, text, ", ");
-    while (it.next()) |name| {
-        if (name.len == 0) continue;
-        const shown = try a.dupe(u8, name);
-        shown[0] = std.ascii.toUpper(shown[0]);
-        try out.append(a, shown);
+/// The names of the features, capitalized for the page.
+fn featureList(a: std.mem.Allocator, features: []const []const u8) ![]const []const u8 {
+    const out = try a.alloc([]const u8, features.len);
+    for (features, out) |name, *shown| {
+        const copy = try a.dupe(u8, name);
+        if (copy.len > 0) copy[0] = std.ascii.toUpper(copy[0]);
+        shown.* = copy;
     }
-    return out.items;
+    return out;
 }
 
 // ── the room form: admins only (see routes.zig) ─────────────────────────
@@ -105,8 +103,7 @@ pub fn create(c: *spider.Ctx) !spider.Response {
 pub fn edit(c: *spider.Ctx) !spider.Response {
     const room = try wanted(c);
     var form: Form = .{ .name = room.name, .capacity = try std.fmt.allocPrint(c.arena, "{d}", .{room.capacity}) };
-    var it = std.mem.splitSequence(u8, room.features, ", ");
-    while (it.next()) |feature| {
+    for (room.features) |feature| {
         if (std.mem.eql(u8, feature, "projector")) form.projector = true;
         if (std.mem.eql(u8, feature, "video call")) form.video_call = true;
         if (std.mem.eql(u8, feature, "whiteboard")) form.whiteboard = true;

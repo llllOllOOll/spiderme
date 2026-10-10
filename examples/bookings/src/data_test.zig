@@ -22,7 +22,7 @@ fn booking(room_id: i64, day: []const u8, starts: []const u8, ends: []const u8) 
     return .{ .room_id = room_id, .day = day, .starts = starts, .ends = ends, .title = "Design review", .booked_by = "Ana Ribeiro" };
 }
 
-test "rooms: the sample rooms, by name, with their features as text" {
+test "rooms: the sample rooms, by name, each with its list of features" {
     _ = try app_test.running();
     var arena_state: std.heap.ArenaAllocator = .init(std.testing.allocator);
     defer arena_state.deinit();
@@ -32,7 +32,9 @@ test "rooms: the sample rooms, by name, with their features as text" {
     try std.testing.expect(all.len >= 6);
     try std.testing.expectEqualStrings("Atlas", all[0].name);
     try std.testing.expectEqual(@as(i32, 12), all[0].capacity);
-    try std.testing.expectEqualStrings("projector, video call, whiteboard", all[0].features);
+    try std.testing.expectEqual(@as(usize, 3), all[0].features.len);
+    try std.testing.expectEqualStrings("projector", all[0].features[0]);
+    try std.testing.expectEqualStrings("whiteboard", all[0].features[2]);
 }
 
 test "rooms: filtered by the features they must have" {
@@ -61,7 +63,8 @@ test "rooms: a name that is taken is NameTaken" {
 
     try std.testing.expectError(error.NameTaken, rooms.create(arena, .{ .name = "Atlas", .capacity = 4 }));
     const made = try rooms.create(arena, .{ .name = "Fir", .capacity = 3, .features = &.{"screen"} });
-    try std.testing.expectEqualStrings("screen", made.features);
+    try std.testing.expectEqual(@as(usize, 1), made.features.len);
+    try std.testing.expectEqualStrings("screen", made.features[0]);
 }
 
 test "a booking is made held, and shows on its day" {

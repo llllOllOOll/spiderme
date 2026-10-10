@@ -65,9 +65,16 @@ What to know about the types:
 
 Values go in the last argument and the SQL says where with `$1`, `$2`. A value is never written into the SQL text.
 
-## A list as one parameter
+## Lists
 
-A room has a list of features, a `TEXT[]` column. "Every room with a projector and a whiteboard" is one comparison, and the wanted features go in as one parameter, however many there are:
+PostgreSQL has arrays, and a room's features are one: a `TEXT[]` column. In the struct it is a slice, and the row fills it:
+
+```zig from=examples/bookings/src/features/rooms/model.zig decl=Room
+```
+
+A slice of text takes a `TEXT[]`, a slice of `i64` a `BIGINT[]`, and so on. An empty array is an empty slice.
+
+Going the other way, a list is one parameter, however many values it has. "Every room with a projector and a whiteboard" is one comparison:
 
 ```zig from=examples/bookings/src/features/rooms/repository.zig decl=columns,withFeatures
 ```

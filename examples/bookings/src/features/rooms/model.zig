@@ -4,9 +4,9 @@ pub const Room = struct {
     name: []const u8,
     /// How many people fit.
     capacity: i32,
-    /// What the room has, as one line of text: "projector, whiteboard".
-    /// Empty for a room with nothing.
-    features: []const u8,
+    /// What the room has: "projector", "whiteboard". Empty for a room with
+    /// nothing.
+    features: []const []const u8,
 };
 
 /// What the room form sends.

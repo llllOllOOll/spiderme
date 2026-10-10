@@ -3,9 +3,8 @@ const spider = @import("spider");
 const db = spider.pg;
 const model = @import("model.zig");
 
-// `features` is a list in the database (TEXT[]). A row comes back with it
-// as one line of text, which is how the pages show it.
-const columns = "id, name, capacity, array_to_string(features, ', ') AS features";
+// `features` is a list in the database (TEXT[]) and a slice in the struct.
+const columns = "id, name, capacity, features";
 
 /// Every room, by name.
 pub fn all(arena: std.mem.Allocator) ![]model.Room {

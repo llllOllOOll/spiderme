@@ -82,7 +82,7 @@ test "booking: needs an account; made, it is held and goes to its page" {
 
     var made = try ana.postForm("/bookings/create", Booking{ .room = cedar, .date = "2032-05-10", .start = "11:00", .end = "12:00", .title = "  Sprint demo  ", .note = "Bring the laptop" });
     defer made.deinit();
-    try made.expectStatus(302);
+    try made.expectStatus(303);
     const location = made.header("Location").?;
     try std.testing.expect(std.mem.startsWith(u8, location, "/bookings/"));
 
@@ -115,7 +115,7 @@ test "booking: a taken time comes back as the form, with the booking in the way 
 
     var first = try tomas.postForm("/bookings/create", Booking{ .room = delta, .date = "2032-05-17", .start = "13:00", .end = "17:00", .title = "Customer workshop" });
     defer first.deinit();
-    try first.expectStatus(302);
+    try first.expectStatus(303);
 
     var refused = try ana.postForm("/bookings/create", Booking{ .room = delta, .date = "2032-05-17", .start = "12:30", .end = "13:30", .title = "Sprint demo", .note = "Quick demo for the team" });
     defer refused.deinit();
@@ -130,7 +130,7 @@ test "booking: a taken time comes back as the form, with the booking in the way 
     // Right before it is fine.
     var fits = try ana.postForm("/bookings/create", Booking{ .room = delta, .date = "2032-05-17", .start = "12:00", .end = "13:00", .title = "Sprint demo" });
     defer fits.deinit();
-    try fits.expectStatus(302);
+    try fits.expectStatus(303);
 }
 
 test "booking: what is wrong with the form is said beside its field" {
@@ -387,10 +387,10 @@ test "the day's stream says \"changed\" when a booking of that day is made, and 
     // A booking of another day says nothing here; one of this day does.
     var other = try ana.postForm("/bookings/create", Booking{ .room = cedar, .date = "2032-07-06", .start = "10:00", .end = "11:00", .title = "Another day" });
     defer other.deinit();
-    try other.expectStatus(302);
+    try other.expectStatus(303);
     var made = try ana.postForm("/bookings/create", Booking{ .room = cedar, .date = "2032-07-05", .start = "10:00", .end = "11:00", .title = "Sprint demo" });
     defer made.deinit();
-    try made.expectStatus(302);
+    try made.expectStatus(303);
 
     try readUntil(&reader.interface, &seen, "event: changed");
     try readUntil(&reader.interface, &seen, "2032-07-05");

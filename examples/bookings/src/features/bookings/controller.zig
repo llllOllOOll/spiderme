@@ -104,7 +104,8 @@ pub fn create(c: *spider.Ctx) !Response {
         else => return err,
     };
     day_view.announce(c, made.day);
-    return go(c, try std.fmt.allocPrint(c.arena, "/bookings/{d}", .{made.id}));
+    // A form htmx posted gets the address in a header, any other a redirect.
+    return c.htmxRedirect(try std.fmt.allocPrint(c.arena, "/bookings/{d}", .{made.id}));
 }
 
 /// "Delta is already booked from 13:00 to 17:00."
@@ -248,15 +249,6 @@ pub fn mine(c: *spider.Ctx) !Response {
         .bookings = all,
         .none = all.len == 0,
     }, .{});
-}
-
-/// Sends the visitor to `url` after a form. A form htmx posted gets the
-/// address in a header instead of a redirect: the browser would follow a
-/// redirect by itself and hand htmx the next page as if it were the answer
-/// to swap in.
-fn go(c: *spider.Ctx, url: []const u8) !Response {
-    if (c.isHtmx()) return c.text("", .{ .headers = try c.htmx(.{ .redirect = url }) });
-    return c.redirect(url);
 }
 
 fn find(c: *spider.Ctx) !model.Booking {

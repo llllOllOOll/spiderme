@@ -179,8 +179,8 @@ test "columns: a booking is one block, its slots are taken, earlier today is ove
     const arena = arena_state.allocator();
 
     const rooms = [_]Room{
-        .{ .id = 1, .name = "Atlas", .capacity = 12, .features = "projector" },
-        .{ .id = 2, .name = "Echo", .capacity = 1, .features = "" },
+        .{ .id = 1, .name = "Atlas", .capacity = 12, .features = &.{"projector"} },
+        .{ .id = 2, .name = "Echo", .capacity = 1, .features = &.{} },
     };
     const bookings = [_]Booking{
         .{ .id = 10, .room_id = 1, .room = "Atlas", .day = "2026-10-12", .starts = "09:00", .ends = "10:30", .title = "Quarterly planning", .booked_by = "Ana Ribeiro", .user_id = 7, .state = .confirmed },
