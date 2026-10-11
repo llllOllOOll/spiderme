@@ -19,7 +19,7 @@ A feature lists its jobs in its `mod.zig`:
 
 `spider.every` takes how often, in milliseconds, and the function to run. `server.mountFeatures` in `src/main.zig` finds the list and starts the timers when the server starts listening. The first run comes one interval after that.
 
-This is the function:
+Bookings has two. This is the first:
 
 ```zig from=examples/bookings/src/features/bookings/jobs.zig decl=every_ms,expireHolds
 ```

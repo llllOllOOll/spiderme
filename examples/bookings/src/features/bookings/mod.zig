@@ -12,8 +12,12 @@ const expiry = @import("jobs.zig");
 pub const boot = notify.boot;
 
 /// Scheduled by `server.mountFeatures`: every half minute, the holds that
-/// ran out are released.
-pub const jobs = .{spider.every(expiry.every_ms, expiry.expireHolds)};
+/// ran out are released; once an hour, old bookings are deleted when
+/// BOOKINGS_KEEP_DAYS asks for it.
+pub const jobs = .{
+    spider.every(expiry.every_ms, expiry.expireHolds),
+    spider.every(expiry.cleanup_every_ms, expiry.removeOld),
+};
 pub const routes = @import("routes.zig");
 
 // Makes the tests of this feature's files part of `zig build test`.

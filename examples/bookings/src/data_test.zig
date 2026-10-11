@@ -227,3 +227,25 @@ test "a hold that ran out gives the time back" {
     try std.testing.expectEqual(@as(usize, 0), (try bookings.expireStale(arena)).len);
     try std.testing.expectEqual(features.bookings.model.State.expired, (try bookings.find(arena, other.id)).?.state);
 }
+
+test "old bookings: the ones more than a week behind are deleted, the rest stay" {
+    _ = try app_test.running();
+    var arena_state: std.heap.ArenaAllocator = .init(std.testing.allocator);
+    defer arena_state.deinit();
+    const arena = arena_state.allocator();
+    const birch = try roomId(arena, "Birch");
+
+    const old = try bookings.create(arena, booking(birch, "2001-03-05", "09:00", "10:00"));
+    const ahead = try bookings.create(arena, booking(birch, "2034-03-06", "09:00", "10:00"));
+    const recent = try spider.pg.queryOne(struct { id: i64 }, arena,
+        \\INSERT INTO bookings (room_id, day, starts, ends, title, booked_by, state)
+        \\VALUES ($1, (now() AT TIME ZONE 'UTC')::date - 3, '09:00', '10:00', 'Three days ago', 'Ana Ribeiro', 'confirmed')
+        \\RETURNING id
+    , .{birch});
+
+    try std.testing.expect(try bookings.removeOlderThan(arena, 7) >= 1);
+    try std.testing.expect(try bookings.find(arena, old.id) == null);
+    try std.testing.expect(try bookings.find(arena, ahead.id) != null);
+    try std.testing.expect(try bookings.find(arena, recent.?.id) != null);
+    try std.testing.expectEqual(@as(usize, 0), try bookings.removeOlderThan(arena, 7));
+}

@@ -123,6 +123,18 @@ pub fn expireStale(arena: std.mem.Allocator) ![]const []const u8 {
     return days;
 }
 
+/// Deletes the bookings whose day is more than `days` days behind today,
+/// whatever their state, and says how many there were.
+pub fn removeOlderThan(arena: std.mem.Allocator, days: u32) !usize {
+    const Row = struct { id: i64 };
+    const rows = try db.query(Row, arena,
+        \\DELETE FROM bookings
+        \\WHERE day < (now() AT TIME ZONE $1)::date - $2::int
+        \\RETURNING id
+    , .{ timeZone(), @as(i32, @intCast(days)) });
+    return rows.len;
+}
+
 /// The bookings of one account: the ones ahead first (soonest on top), then
 /// the ones behind.
 pub fn ofUser(arena: std.mem.Allocator, user_id: i64) ![]model.Booking {

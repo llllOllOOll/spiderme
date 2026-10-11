@@ -83,7 +83,7 @@ case "$TARGET" in
         CONTEXT="examples/bookings"
         CHECK_URL="https://bookings.spiderme.org"
         VOLUME=""
-        SETTINGS="PG_HOST=postgres-main PG_PORT=5432 PG_USER=bookings PG_DB=bookings BOOKINGS_URL=https://bookings.spiderme.org"
+        SETTINGS="PG_HOST=postgres-main PG_PORT=5432 PG_USER=bookings PG_DB=bookings BOOKINGS_URL=https://bookings.spiderme.org BOOKINGS_KEEP_DAYS=7"
         SECRETS="JWT_SECRET PG_PASSWORD" # sessions; the password of its database role
         LEGACY=""
         DATABASE="postgres-main:bookings"
