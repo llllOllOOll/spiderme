@@ -5,6 +5,19 @@ const spider = @import("spider");
 /// What a main() would do to serve. The tests start it once
 /// (`spider.testing.start(run)`) and share it.
 pub fn run() !void {
+    // One client for the bucket, made once. In an app the values come from
+    // the environment: `spider.r2.R2.initFromEnv(io)`.
+    // (`io` is the one main() received; this package has no main.)
+    const io = std.Options.debug_io;
+    store = try spider.r2.R2.init(io, .{
+        .account_id = "0a1b2c3d4e5f",
+        .access_key = "an-access-key-id",
+        .secret_key = "a-secret-access-key",
+        .bucket = "guide-files",
+        .pub_url = "https://files.guide.example",
+    });
+    defer store.deinit();
+
     var server = spider.app(.{});
     defer server.deinit();
 
@@ -22,6 +35,9 @@ pub fn run() !void {
         .get("/orders.xlsx", exportOrders, .{ .public = true })
         .post("/orders/import", importOrders, .{ .public = true })
         .get("/tickets/:code/qr.svg", ticketQr, .{ .public = true })
+        .post("/avatars/sign", signAvatarUpload, .{ .public = true })
+        .get("/invoices/:number", invoice, .{ .public = true })
+        .post("/reports", keepReport, .{ .public = true })
         .listen(.{});
 }
 
@@ -212,4 +228,39 @@ fn ticketQr(c: *spider.Ctx) !spider.Response {
         .content_type = "image/svg+xml",
         .disposition = .@"inline",
     });
+}
+
+// ── files in a bucket ───────────────────────────────────────────────────
+
+var store: spider.r2.R2 = undefined;
+
+/// Where the browser may send one avatar, straight to the bucket: the file
+/// never passes through the app.
+fn signAvatarUpload(c: *spider.Ctx) !spider.Response {
+    // The app names the object: nothing of the name comes from the visitor.
+    const key = try store.objectKey(c.arena, "account-7", "avatars", try std.fmt.allocPrint(c.arena, "{s}.png", .{c.requestId()}));
+    // Good for five minutes, for a PNG and nothing else.
+    const url = try store.presignedPut(c.arena, key, "image/png", 300);
+    return c.json(.{ .key = key, .upload_to = url, .shown_at = try store.publicUrl(c.arena, key) }, .{});
+}
+
+/// A private file: the visitor is sent to an address that works for one
+/// minute, after the app checked that the invoice is theirs.
+fn invoice(c: *spider.Ctx) !spider.Response {
+    const number = c.params.get("number") orelse return error.NotFound;
+    const key = try std.fmt.allocPrint(c.arena, "account-7/invoices/{s}.pdf", .{number});
+    return c.redirect(try store.presignedGet(c.arena, key, 60));
+}
+
+/// A file the app itself makes and keeps. This one talks to R2, so the
+/// tests of this package do not call it.
+fn keepReport(c: *spider.Ctx) !spider.Response {
+    const csv = "caption,bytes\nThe team,20480\n";
+    try store.put(c, "account-7/reports/photos.csv", csv, "text/csv");
+
+    if (try store.head(c, "account-7/reports/old.csv")) {
+        try store.delete(c, "account-7/reports/old.csv");
+    }
+    const back = try store.get(c, "account-7/reports/photos.csv");
+    return c.text(back, .{});
 }

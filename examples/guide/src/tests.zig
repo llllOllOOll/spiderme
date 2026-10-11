@@ -3,6 +3,7 @@ test {
     _ = @import("files_test.zig");
     _ = @import("logging_test.zig");
     _ = @import("security_test.zig");
+    _ = @import("storage_test.zig");
     _ = @import("uploads_test.zig");
     _ = @import("websocket_test.zig");
 }

@@ -1,7 +1,7 @@
 ---
 title: Middleware
 section: guide
-order: 70
+order: 80
 ---
 
 # Middleware
