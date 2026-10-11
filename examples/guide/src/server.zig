@@ -39,6 +39,8 @@ pub fn run() !void {
         .post("/avatars/sign", signAvatarUpload, .{ .public = true })
         .get("/invoices/:number", invoice, .{ .public = true })
         .post("/reports", keepReport, .{ .public = true })
+        .get("/auth/google", googleLogin, .{ .public = true })
+        .get("/auth/google/callback", googleCallback, .{ .public = true })
         .get("/tasks", tasks, .{ .public = true })
         .post("/tasks", addTask, .{ .public = true })
         .post("/tasks/:id/archive", archiveTask, .{ .public = true })
@@ -300,4 +302,30 @@ fn addTask(c: *spider.Ctx) !spider.Response {
 fn archiveTask(c: *spider.Ctx) !spider.Response {
     _ = c;
     return error.Forbidden;
+}
+
+// ── sign in with Google ─────────────────────────────────────────────────
+
+/// The OAuth client made in the Google Cloud console. An app reads the id
+/// and the secret from the environment. (`pub var` so that the tests can
+/// point the two calls to Google at servers of their own.)
+pub var google: spider.google.GoogleConfig = .{
+    .client_id = "1234-abcd.apps.googleusercontent.com",
+    .client_secret = "only-for-the-tests",
+    .redirect_uri = "http://127.0.0.1:3000/auth/google/callback",
+};
+
+/// "Sign in with Google" links here.
+fn googleLogin(c: *spider.Ctx) !spider.Response {
+    return spider.google.login(c, google);
+}
+
+/// Google sends the visitor back here.
+fn googleCallback(c: *spider.Ctx) !spider.Response {
+    const profile = try spider.google.callback(c, google);
+
+    // Google said who this is, and that is all it does. The app now finds
+    // or makes its own account for `profile.id` and signs it in, the way
+    // it signs anyone in (see the Login page).
+    return c.json(.{ .google_id = profile.id, .email = profile.email, .name = profile.name }, .{});
 }

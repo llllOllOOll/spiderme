@@ -1,7 +1,7 @@
 ---
 title: Push notifications
 section: guide
-order: 180
+order: 190
 ---
 
 # Push notifications

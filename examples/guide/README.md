@@ -9,3 +9,8 @@ page cannot show code that stopped working.
 `src/server.zig` is one small server with a route or two per subject; each
 `src/*_test.zig` asks it the way a browser or another program would. The
 site's own `zig build test` runs these too.
+
+Signing in at Keycloak needs a Keycloak, so those examples are apart, in
+`login/`, with a script that starts one for the run and removes it:
+
+    ./login-test.sh

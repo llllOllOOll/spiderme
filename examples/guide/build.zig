@@ -26,4 +26,14 @@ pub fn build(b: *std.Build) void {
         .imports = &.{.{ .name = "spider", .module = spider_mod }},
     }) });
     b.step("test", "Run the examples").dependOn(&b.addRunArtifact(tests).step);
+
+    // Signing in at Keycloak needs a Keycloak: a step of its own, run by
+    // login-test.sh, which starts one for the occasion.
+    const login_tests = b.addTest(.{ .root_module = b.createModule(.{
+        .root_source_file = b.path("login/tests.zig"),
+        .target = target,
+        .optimize = optimize,
+        .imports = &.{.{ .name = "spider", .module = spider_mod }},
+    }) });
+    b.step("test-login", "Run the login examples (needs login/docker-compose.yml up)").dependOn(&b.addRunArtifact(login_tests).step);
 }

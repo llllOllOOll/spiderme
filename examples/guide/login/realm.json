@@ -1,0 +1,76 @@
+{
+  "realm": "guide",
+  "enabled": true,
+  "sslRequired": "none",
+  "roles": {
+    "realm": [
+      {
+        "name": "editor"
+      }
+    ]
+  },
+  "clients": [
+    {
+      "clientId": "guide-app",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": false,
+      "secret": "only-for-the-tests",
+      "standardFlowEnabled": true,
+      "directAccessGrantsEnabled": false,
+      "redirectUris": [
+        "http://127.0.0.1:3000/auth/callback"
+      ],
+      "protocolMappers": [
+        {
+          "name": "realm roles in the ID token",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-realm-role-mapper",
+          "config": {
+            "claim.name": "realm_access.roles",
+            "multivalued": "true",
+            "jsonType.label": "String",
+            "id.token.claim": "true",
+            "access.token.claim": "true",
+            "userinfo.token.claim": "false"
+          }
+        }
+      ]
+    }
+  ],
+  "users": [
+    {
+      "username": "ana",
+      "enabled": true,
+      "email": "ana@guide.example",
+      "emailVerified": true,
+      "firstName": "Ana",
+      "lastName": "Ribeiro",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "a good password",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "editor"
+      ]
+    },
+    {
+      "username": "bo",
+      "enabled": true,
+      "email": "bo@guide.example",
+      "emailVerified": true,
+      "firstName": "Bo",
+      "lastName": "Larsen",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "a good password",
+          "temporary": false
+        }
+      ]
+    }
+  ]
+}

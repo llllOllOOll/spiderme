@@ -133,7 +133,7 @@ Authorization: Bearer <token>
 
 ## Keycloak
 
-`spider g auth --provider=keycloak` generates a login through a Keycloak realm instead: the accounts and the sign-in page are Keycloak's.
+`spider g auth --provider=keycloak` generates a login through a Keycloak realm instead: the accounts and the sign-in page are Keycloak's. [Login with a provider](/docs/login-providers) shows it, and signing in with Google.
 
 ## What is not there yet
 
