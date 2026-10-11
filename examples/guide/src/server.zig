@@ -24,6 +24,7 @@ pub fn run() !void {
     try server
         .use(spider.loggerWith(.{ .quiet_paths = &.{ "/up", "/assets/**" } }))
         .use(spider.forceHttps(.{ .default_base_url = "https://guide.example" }))
+        .use(spider.varyHtmx)
         .get("/whoami", whoami, .{ .public = true })
         .post("/notes", addNote, .{ .public = true })
         .post("/hooks/payments", paymentHook, .{ .public = true, .allow_http = true })
@@ -38,6 +39,10 @@ pub fn run() !void {
         .post("/avatars/sign", signAvatarUpload, .{ .public = true })
         .get("/invoices/:number", invoice, .{ .public = true })
         .post("/reports", keepReport, .{ .public = true })
+        .get("/tasks", tasks, .{ .public = true })
+        .post("/tasks", addTask, .{ .public = true })
+        .post("/tasks/:id/archive", archiveTask, .{ .public = true })
+        .onError(spider.errorHandler(.{}))
         .listen(.{});
 }
 
@@ -263,4 +268,36 @@ fn keepReport(c: *spider.Ctx) !spider.Response {
     }
     const back = try store.get(c, "account-7/reports/photos.csv");
     return c.text(back, .{});
+}
+
+// ── answering htmx ──────────────────────────────────────────────────────
+
+const task_list = "<ul id=\"tasks\"><li>Write the report</li></ul>";
+
+/// The same address gives a whole page to a browser and only the list to
+/// htmx, which already has the page around it.
+fn tasks(c: *spider.Ctx) !spider.Response {
+    if (c.isHtmx()) return c.html(task_list, .{});
+    return c.html("<!DOCTYPE html><title>Tasks</title><h1>Tasks</h1>" ++ task_list, .{});
+}
+
+/// Answers with the new item and says, in headers, where it goes and what
+/// the page should announce.
+fn addTask(c: *spider.Ctx) !spider.Response {
+    return c.html("<li>Call the supplier</li>", .{
+        .status = .created,
+        .headers = try c.htmx(.{
+            // Wherever the form said the answer goes, it goes here instead.
+            .retarget = "#tasks",
+            .reswap = .beforeend,
+            // An event on the page, with data: a script or `hx-trigger` hears it.
+            .trigger = try c.hxEvent("notice", .{ .message = "Task added", .type = "success" }),
+        }),
+    });
+}
+
+/// Fails: the error handler answers, in the way the caller can show.
+fn archiveTask(c: *spider.Ctx) !spider.Response {
+    _ = c;
+    return error.Forbidden;
 }

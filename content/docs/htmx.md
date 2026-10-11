@@ -78,14 +78,48 @@ The day view does the same when the server says something changed, instead of on
 
 ## What the server can tell htmx
 
-A handler reads what kind of request it has, and says more than HTML through response headers:
+The handlers above answer htmx and a plain browser alike. When a handler has more to say to htmx, it says it in the response's headers. The code of this section is from `examples/guide` ([source](https://github.com/llllOllOOll/spiderme/tree/main/examples/guide)): a small server kept as tests, for what the example apps do not use.
 
-- `c.isHtmx()` is true for a request htmx made. A handler can then render only the part that changes instead of the page. `c.isBoosted()` is true for a navigation made through `hx-boost`.
-- `c.htmxRedirect(url)`: where to go after a form, as above.
-- `c.htmx(.{ ... })` builds response headers for the last argument of `c.html` or `c.view`: `.trigger` (an event for the page), `.retarget` and `.reswap` (put this answer somewhere else, or another way), `.reselect`, `.push_url`, `.replace_url`, `.redirect`, `.location`, `.refresh`. `.trigger_after_swap` and `.trigger_after_settle` are for htmx 2 only: htmx 4 ignores those headers.
-- `c.hxEvent(name, data)` writes the value of `.trigger` for an event that carries data.
-- `spider.varyHtmx` is a middleware that adds `Vary: HX-Request` to HTML responses. Use it when a handler answers htmx with a part and everyone else with the page at the same address: a cache then keeps the two apart.
-- `spider.errorHandler` answers an error on an htmx request with its status, `HX-Reswap: none` and an `HX-Trigger` event (`spider:toast`, with a message and a type), so the page can say what went wrong without losing what is on screen. The page has to listen for the event.
+### Only the part
+
+`c.isHtmx()` is true for a request htmx made. A handler can then send only what changes:
+
+```zig from=examples/guide/src/server.zig decl=task_list,tasks
+```
+
+Two answers now live at one address, and a cache between the app and the visitor could give one for the other. `spider.varyHtmx`, a middleware, marks every HTML answer so that it does not:
+
+```zig from=examples/guide/src/htmx_test.zig decl=htmx decl="htmx: the same address gives the page to a browser and the part to htmx"
+```
+
+`c.isBoosted()` is true for a navigation made through `hx-boost`.
+
+### Where the answer goes, and an event for the page
+
+`c.htmx(.{ ... })` builds headers for the last argument of `c.html` or `c.view`:
+
+```zig from=examples/guide/src/server.zig decl=addTask
+```
+
+```zig from=examples/guide/src/htmx_test.zig decl="htmx: an answer says where it goes and what the page should announce"
+```
+
+- `.retarget` and `.reswap` put this answer somewhere else, or another way, than the element asked for. `.reselect` takes a part of it.
+- `.trigger` raises an event on the page. `c.hxEvent(name, data)` writes one that carries data; a plain name is an event without any.
+- `.push_url` and `.replace_url` change the address in the browser's bar, `.redirect` and `.location` go to another page, `.refresh = true` reloads this one.
+- `.trigger_after_swap` and `.trigger_after_settle` are for htmx 2 only: htmx 4 ignores those headers.
+
+### When a handler fails
+
+`spider.errorHandler` answers an error according to who asked. For htmx it keeps the status, tells it to swap nothing, and raises an event with a message, so the page says what went wrong and the visitor keeps what was on screen:
+
+```zig from=examples/guide/src/server.zig decl=archiveTask
+```
+
+```zig from=examples/guide/src/htmx_test.zig decl="htmx: an error keeps the page as it is and raises a notice"
+```
+
+The event is `spider:toast` (`.toast_event` changes the name) and carries `message` and `type`. Showing it is the page's part: a listener for the event that puts the message on screen.
 
 ## htmx 2 and htmx 4
 
