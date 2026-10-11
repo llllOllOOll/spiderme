@@ -6,4 +6,5 @@ pub const routes = @import("routes.zig");
 test {
     @import("std").testing.refAllDecls(@This());
     _ = @import("routes_test.zig");
+    _ = @import("markdown_test.zig");
 }
