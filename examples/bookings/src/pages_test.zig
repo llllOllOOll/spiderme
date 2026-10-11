@@ -337,6 +337,32 @@ test "rooms: only an admin makes, changes and deletes them" {
     try gone.expectContains("Not found");
 }
 
+test "htmx: what the pages ask it to do" {
+    const app = try app_test.running();
+    var id_buf: [20]u8 = undefined;
+    const cedar = try roomId(&id_buf, "Cedar");
+    var buf: [1024]u8 = undefined;
+    const ana = app.with(&.{try app_test.signUp(app, &buf, "Ana Ribeiro", "ana.attrs@example.com")});
+
+    // A filter is a link that works by itself; htmx only replaces the day.
+    var day = try app.get("/?date=2032-08-02");
+    defer day.deinit();
+    try day.expectContains("href=\"/?date=2032-08-02&amp;with=projector\" aria-pressed=\"false\" hx-get=\"/?date=2032-08-02&amp;with=projector\" hx-target=\"#day\" hx-select=\"#day\" hx-swap=\"outerHTML\" hx-push-url=\"true\"");
+
+    // The form posts to the same address with and without htmx.
+    var form = try ana.get("/bookings/new");
+    defer form.deinit();
+    try form.expectContains("action=\"/bookings/create\" method=\"post\" hx-post=\"/bookings/create\" hx-target=\"#booking\" hx-select=\"#booking\" hx-swap=\"outerHTML\"");
+    try form.expectContains("type=\"submit\" hx-disable=\"this\"");
+
+    // A booking's page asks for itself again while it is open.
+    var made = try ana.postForm("/bookings/create", Booking{ .room = cedar, .date = "2032-08-02", .start = "10:00", .end = "11:00", .title = "Sprint demo" });
+    defer made.deinit();
+    var page = try ana.get(made.header("Location").?);
+    defer page.deinit();
+    try page.expectContains("hx-trigger=\"every 20s\" hx-select=\"#booking\" hx-swap=\"outerHTML\"");
+}
+
 test "an address that is nothing gets the 404 page" {
     const app = try app_test.running();
     var res = try app.get("/nowhere");

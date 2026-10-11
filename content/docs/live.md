@@ -1,7 +1,7 @@
 ---
 title: Live pages (SSE)
 section: guide
-order: 51
+order: 52
 ---
 
 # Live pages (SSE)
