@@ -40,17 +40,12 @@ The layout sees the same data as the page. `{ title ?? "Posts" }` uses the title
 
 ## Components
 
-A template can be used as a tag. The tag is the file name in PascalCase: `PostCard.html` and `post-card.html` are both `<PostCard>`. Its attributes become its values, and what is written inside the tag becomes its `{ slot }`.
-
-The feed above writes one `<PostCard ... />` for each post. This is the component:
+A template can be used as a tag: `PostCard.html` is `<PostCard>`. The feed above writes one for each post. This is the component:
 
 ```html from=examples/posts/src/features/posts/views/PostCard.html
 ```
 
-A component lives next to the views of its feature, or in `src/shared/templates` when several features use it, like the link that goes back a page:
-
-```html from=examples/posts/src/shared/templates/back-link.html
-```
+[Components](/docs/components) is the page about them: attributes, what goes inside the tag, components made of components, and sending one alone to htmx.
 
 ## HTML from Zig
 

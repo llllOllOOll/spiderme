@@ -1,7 +1,7 @@
 ---
 title: QR codes
 section: guide
-order: 220
+order: 230
 ---
 
 # QR codes

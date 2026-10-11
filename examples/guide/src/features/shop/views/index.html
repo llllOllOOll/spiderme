@@ -1,0 +1,6 @@
+extends "layout"
+<Panel heading="Products">
+    <input type="search" name="q" value="{ q }" hx-get="/shop" hx-trigger="input changed delay:300ms" hx-target="#products" hx-swap="outerHTML">
+    <ResultCount />
+    <ProductList />
+</Panel>

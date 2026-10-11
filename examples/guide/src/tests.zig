@@ -1,5 +1,6 @@
 //! The root of the tests: every file with tests is named here.
 test {
+    _ = @import("components_test.zig");
     _ = @import("files_test.zig");
     _ = @import("google_test.zig");
     _ = @import("htmx_test.zig");

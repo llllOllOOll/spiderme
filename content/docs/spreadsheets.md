@@ -1,7 +1,7 @@
 ---
 title: Spreadsheets (xlsx)
 section: guide
-order: 210
+order: 220
 ---
 
 # Spreadsheets (xlsx)

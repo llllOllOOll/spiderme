@@ -41,6 +41,9 @@ pub fn run() !void {
         .post("/reports", keepReport, .{ .public = true })
         .get("/auth/google", googleLogin, .{ .public = true })
         .get("/auth/google/callback", googleCallback, .{ .public = true })
+        .get("/shop", shop, .{ .public = true })
+        .get("/shop/typo", shopTypo, .{ .public = true })
+        .get("/shop/receipt", receipt, .{ .public = true })
         .get("/tasks", tasks, .{ .public = true })
         .post("/tasks", addTask, .{ .public = true })
         .post("/tasks/:id/archive", archiveTask, .{ .public = true })
@@ -328,4 +331,42 @@ fn googleCallback(c: *spider.Ctx) !spider.Response {
     // or makes its own account for `profile.id` and signs it in, the way
     // it signs anyone in (see the Login page).
     return c.json(.{ .google_id = profile.id, .email = profile.email, .name = profile.name }, .{});
+}
+
+// ── a page made of components ───────────────────────────────────────────
+
+const Product = struct { id: i64, name: []const u8, price: []const u8, on_sale: bool };
+
+const catalogue = [_]Product{
+    .{ .id = 1, .name = "Notebook", .price = "$4.50", .on_sale = false },
+    .{ .id = 2, .name = "Pen & ink set", .price = "$12.00", .on_sale = true },
+    .{ .id = 3, .name = "Desk lamp", .price = "$39.90", .on_sale = false },
+};
+
+/// The shop, and its search. A browser gets the page; htmx, which already
+/// has the page, gets the two parts that change.
+fn shop(c: *spider.Ctx) !spider.Response {
+    const q = c.queryDecoded("q") orelse "";
+    var found: std.ArrayList(Product) = .empty;
+    for (catalogue) |product| {
+        if (q.len == 0 or std.ascii.findIgnoreCase(product.name, q) != null) try found.append(c.arena, product);
+    }
+    const data = .{ .title = "Shop", .q = q, .products = found.items, .count = found.items.len };
+
+    if (!c.isHtmx()) return c.view("shop/index", data, .{});
+
+    // The list goes where the request pointed (`hx-target`). The count is
+    // somewhere else on the page: it says `hx-swap-oob`, and htmx puts it
+    // where the element with its id is.
+    const list = try c.viewFragment("shop/index", "ProductList", data, .{});
+    const count = try c.viewFragment("shop/index", "ResultCount", data, .{});
+    return c.html(try std.mem.concat(c.arena, u8, &.{ list.body orelse "", count.body orelse "" }), .{});
+}
+
+fn shopTypo(c: *spider.Ctx) !spider.Response {
+    return c.view("shop/typo", .{}, .{});
+}
+
+fn receipt(c: *spider.Ctx) !spider.Response {
+    return c.view("shop/receipt", .{ .total = "$7.50" }, .{});
 }

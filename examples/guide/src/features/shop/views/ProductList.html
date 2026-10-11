@@ -1,0 +1,8 @@
+<div id="products">
+    for (products) |product| {
+    <ProductCard id="{ product.id }" name="{ product.name }" price="{ product.price }" on_sale="{ product.on_sale }" />
+    }
+    if (products.len == 0) {
+    <p>Nothing matches "{ q }".</p>
+    }
+</div>
