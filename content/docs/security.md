@@ -1,7 +1,7 @@
 ---
 title: Security in production
 section: guide
-order: 210
+order: 230
 ---
 
 # Security in production
@@ -20,7 +20,7 @@ The code is from `examples/guide` ([source](https://github.com/llllOllOOll/spide
 
 A page on another site can make a visitor's browser post a form to your app, with the visitor's cookies: that is CSRF. Spider refuses it before any route is looked at, and it is on by default. There is no token to put in forms.
 
-A browser says where a request comes from. A request that changes something (anything but GET, HEAD and OPTIONS) and comes from another site gets a 403. The app's own pages pass, and so does a program that is not a browser (a script, a webhook, another server): it carries nobody's cookies.
+A browser says where a request comes from. A request that changes something (anything but GET, HEAD and OPTIONS) and comes from another site gets a 403. A warning in the log says which request and from where. The app's own pages pass, and so does a program that is not a browser (a script, a webhook, another server): it carries nobody's cookies.
 
 ```zig from=examples/guide/src/security_test.zig decl="cross-site: a form on another site cannot post here; the app's own pages and other programs can"
 ```

@@ -1,7 +1,7 @@
 ---
 title: Configuration
 section: guide
-order: 200
+order: 220
 ---
 
 # Configuration

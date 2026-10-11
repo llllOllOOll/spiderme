@@ -19,6 +19,9 @@ pub fn run() !void {
         .sseWith("/ticks", ticks, .{ .public = true })
         .wsWith("/rooms/:room/chat", chat, .{ .public = true })
         .wsWith("/staff/feed", staffFeed, .{ .authenticated = true })
+        .get("/orders.xlsx", exportOrders, .{ .public = true })
+        .post("/orders/import", importOrders, .{ .public = true })
+        .get("/tickets/:code/qr.svg", ticketQr, .{ .public = true })
         .listen(.{});
 }
 
@@ -94,4 +97,119 @@ fn isPng(bytes: []const u8) bool {
 fn photoReport(c: *spider.Ctx) !spider.Response {
     const csv = "caption,bytes\nThe team,20480\n";
     return c.download(csv, .{ .filename = "photos.csv", .content_type = "text/csv" });
+}
+
+// ── a spreadsheet ───────────────────────────────────────────────────────
+
+const xlsx = spider.xlsx;
+
+const Order = struct { customer: []const u8, items: i64, total: f64 };
+
+const orders = [_]Order{
+    .{ .customer = "Ana Ribeiro", .items = 3, .total = 149.70 },
+    .{ .customer = "Bo Larsen", .items = 1, .total = 49.90 },
+    .{ .customer = "Cy Okafor", .items = 12, .total = 598.80 },
+};
+
+/// The orders as an Excel file the browser saves.
+fn exportOrders(c: *spider.Ctx) !spider.Response {
+    const book = try xlsx.Workbook.init(c.arena);
+    defer book.deinit();
+
+    const sheet = try book.addSheet("Orders");
+    try sheet.setColumnWidth(0, 28);
+
+    // Rows and columns count from zero: this is the first row.
+    const heading: xlsx.Style = .{ .bold = true, .fill = 0xDDEEFF, .border = .thin };
+    try sheet.setRow(0, 0, &.{ .{ .text = "Customer" }, .{ .text = "Items" }, .{ .text = "Total" } }, heading);
+
+    for (orders, 1..) |order, row| {
+        const r: u32 = @intCast(row);
+        try sheet.set(r, 0, .{ .text = order.customer });
+        try sheet.set(r, 1, .int(order.items));
+        try sheet.setStyled(r, 2, .{ .number = order.total }, .{ .number_format = .thousands_decimal });
+    }
+
+    // The heading stays in view while the rows scroll, with filter buttons.
+    try sheet.freeze(1, 0);
+    try sheet.setAutoFilter(.{ .first_row = 0, .first_col = 0, .last_row = orders.len, .last_col = 2 });
+
+    return c.download(try book.toOwnedSlice(c.arena), .{
+        .filename = "orders.xlsx",
+        .content_type = spider.content_types.xlsx,
+    });
+}
+
+/// Reads a spreadsheet someone uploaded: a heading, then one order per row.
+fn importOrders(c: *spider.Ctx) !spider.Response {
+    const form = try c.parseMultipart();
+    const files = form.getFile("sheet") orelse return c.text("Choose a file.", .{ .status = .unprocessable_entity });
+
+    // The default limits are for files from strangers: size, rows, and
+    // how far a small file may expand.
+    const book = xlsx.Reader.open(c.arena, files[0].data, .{}) catch {
+        return c.text("That is not a spreadsheet this app can read.", .{ .status = .unprocessable_entity });
+    };
+    defer book.deinit();
+
+    const rows = try book.rows(0, .{});
+    defer rows.deinit();
+
+    var count: usize = 0;
+    var items: f64 = 0;
+    while (try rows.next()) |row| {
+        if (row.number == 0) continue; // the heading
+        var customer: []const u8 = "";
+        var quantity: f64 = 0;
+        // A row only has the cells that were filled: go by `cell.column`,
+        // not by position.
+        for (row.cells) |cell| switch (cell.column) {
+            0 => switch (cell.value) {
+                .text => |text| customer = text,
+                else => {},
+            },
+            1 => switch (cell.value) {
+                .number => |n| quantity = n,
+                else => {},
+            },
+            else => {},
+        };
+        if (customer.len == 0) continue;
+        count += 1;
+        items += quantity;
+    }
+    return c.json(.{ .orders = count, .items = items }, .{});
+}
+
+// ── a QR code ───────────────────────────────────────────────────────────
+
+/// A ticket's link as a QR code, drawn as SVG.
+fn ticketQr(c: *spider.Ctx) !spider.Response {
+    const code = c.params.get("code") orelse return error.NotFound;
+    const link = try std.fmt.allocPrint(c.arena, "https://guide.example/tickets/{s}", .{code});
+
+    const qr = try spider.qrcode.QR.encodeAuto(c.arena, link, .medium);
+
+    // A scanner needs a light margin around the code: four modules.
+    const margin = 4;
+    const side = qr.size + 2 * margin;
+    var svg: std.ArrayList(u8) = .empty;
+    try svg.print(c.arena,
+        \\<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {d} {d}" shape-rendering="crispEdges">
+        \\<rect width="{d}" height="{d}" fill="#fff"/>
+        \\
+    , .{ side, side, side, side });
+    for (0..qr.size) |y| {
+        for (0..qr.size) |x| {
+            if (!qr.getModule(@intCast(x), @intCast(y))) continue;
+            try svg.print(c.arena, "<rect x=\"{d}\" y=\"{d}\" width=\"1\" height=\"1\"/>", .{ x + margin, y + margin });
+        }
+    }
+    try svg.appendSlice(c.arena, "</svg>\n");
+
+    return c.download(svg.items, .{
+        .filename = "ticket.svg",
+        .content_type = "image/svg+xml",
+        .disposition = .@"inline",
+    });
 }
