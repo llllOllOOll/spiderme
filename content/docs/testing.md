@@ -81,3 +81,22 @@ To test what needs a login, sign up in the test and keep the cookie. This helper
 - `expectStatus`, `expectContains`, `expectNotContains`, `expectHeader`, `expectRedirect`
 
 A failed expectation prints the request and the start of the body, so you see what the server answered.
+
+## Other things to test
+
+The same `app` reaches everything the server does. Where each kind is shown:
+
+- **A database of its own.** With SQLite, a file the tests create, as `run` does above. With PostgreSQL, a server that exists for one run: [PostgreSQL](/docs/postgres) has the script.
+- **Mail.** The tests send to memory and read what was sent: [Mail](/docs/mail).
+- **What the app asks of other servers.** A test starts a small server of its own and points the app at it: [HTTP client](/docs/http-client).
+- **A stream of events.** The test opens the stream and reads what arrives: [Live pages](/docs/live).
+- **A WebSocket.** [WebSocket](/docs/websocket) has a client of a few lines.
+- **An upload.** A multipart body written by hand: [Uploads and downloads](/docs/uploads).
+- **A request htmx made.** The same request with the `HX-Request: true` header: [htmx](/docs/htmx).
+- **What a proxy adds.** `X-Forwarded-For`, `X-Forwarded-Proto` and the rest are header lines: [Security in production](/docs/security).
+
+## When a test seems not to run
+
+- **Nothing changed, so nothing ran.** `zig build test` keeps the result of a run that passed and does not repeat it while the code is the same. A database or a file the tests read is not part of that. `zig build test --summary all` says `cached` beside what it did not run again; change a source file to run it.
+- **The file is not part of the tests.** A new file with tests has to be imported from a file that already is. A project made by `spider new` fails the build, naming the file, when one is left out.
+- **The code logs an error.** A test fails when what it runs logs at `.err`, even with every check passing ("errors were logged"). Code that fails on purpose in a test logs at `.warn`.
