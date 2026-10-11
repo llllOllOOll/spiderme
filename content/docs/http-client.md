@@ -59,3 +59,39 @@ The test of the webhook starts a small server of its own, points the app at it, 
 
 ```zig from=examples/bookings/src/pages_test.zig decl=Hook
 ```
+
+## Through a proxy
+
+Some networks let nothing out except through a proxy, and some services only accept calls from an address they know, which a proxy with a fixed address provides. `proxy_url` sends a call through one:
+
+```zig from=examples/guide/src/outbound_test.zig decl="proxy: the call asks the proxy for a way to the server, then goes through it"
+```
+
+- The address is `http://host:port` for an HTTP proxy, or `socks5://host:port` for a SOCKS5 one. A user and a password go in it: `http://user:pass@host:port`.
+- The call asks the proxy for a tunnel to the server and talks to the server through it. With `https`, the proxy carries the bytes and cannot read them.
+- Without `proxy_url`, the environment decides: `http_proxy`, `https_proxy` and `all_proxy`, with `no_proxy` for the hosts that go direct. With none of them set there is no proxy.
+
+A `Client` takes its proxy when it is made, in `Client.init(io, allocator, .{ .base_url, .proxy_url })`, and keeps it:
+
+```zig from=examples/guide/src/outbound_test.zig decl="proxy: a client is tied to the proxy it was made with"
+```
+
+## Showing a certificate (mTLS)
+
+Some APIs, banks above all, want the caller to prove who it is with a certificate of its own. That is another function, `spider.http_client_mtls.request`:
+
+```zig from=examples/guide/src/outbound_test.zig decl="client certificate: a server that is not there is an error by name"
+```
+
+- The certificate is `.pem` (the certificate and its key, as text) or `.pkcs12` (the bytes of a `.pfx` or `.p12` file and its password), the format certificate authorities usually hand out.
+- The answer has `status` and `body`, and `res.json(T, allocator)` parses it. A 4xx or a 5xx is an answer, not an error. Free it with `res.deinit(allocator)`.
+- `error.MtlsTransportFailed`: the server could not be reached or the handshake failed, a refused certificate included; the log has the reason. `error.MtlsTimeout` after `timeout_ms`, 30 seconds unless the call says otherwise.
+
+It works differently from the rest of the client, and it shows:
+
+- It runs the `curl` program, so `curl` has to be in the container. Zig's own TLS cannot present a certificate yet.
+- The certificate and the key are written to files only the app's user can read, in `/tmp`, for the time of the call.
+- The call blocks its thread until the answer comes, and it does not use a `Client`: every call opens a connection.
+- The server's own certificate has to be one the system trusts. There is no option to trust a private authority.
+
+The test above covers a server that is not there. A call that succeeds needs a server that asks for a certificate, which the tests of this site do not have.
