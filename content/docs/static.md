@@ -1,7 +1,7 @@
 ---
 title: Static files
 section: guide
-order: 250
+order: 260
 ---
 
 # Static files
