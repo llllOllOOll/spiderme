@@ -10,7 +10,7 @@ Files in the `public` folder are served as they are: `public/favicon.png` is `/f
 
 They are answered before any route or middleware runs, so a static file never needs a login.
 
-The code on this page is from [Posts](https://posts.spiderme.org), the example app in `examples/posts`.
+The code on this page is from [Posts](https://posts.spiderme.org), the example app in `examples/posts` ([source](https://github.com/llllOllOOll/spiderme/tree/main/examples/posts)).
 
 ## What goes there
 

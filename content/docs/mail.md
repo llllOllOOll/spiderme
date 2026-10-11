@@ -8,7 +8,7 @@ order: 54
 
 `spider.mail` sends mail through a provider's API: Brevo, Resend or Postmark. It is not a mail server, and there is no SMTP. While you develop, it writes the mail to the log.
 
-The code on this page is from Bookings, the example app in `examples/bookings`, which mails whoever booked a room when the booking is confirmed.
+The code on this page is from [Bookings](https://bookings.spiderme.org), the example app in `examples/bookings` ([source](https://github.com/llllOllOOll/spiderme/tree/main/examples/bookings)), which mails whoever booked a room when the booking is confirmed.
 
 ## A mailer
 

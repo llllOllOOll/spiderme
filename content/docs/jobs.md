@@ -8,7 +8,7 @@ order: 53
 
 Some work is nobody's request: releasing what expired, sending what was queued, cleaning up. A feature declares it as a job, and the server runs it on a timer.
 
-The code on this page is from Bookings, the example app in `examples/bookings`. A new booking holds its room for ten minutes; if nobody confirms it, the time has to become free again, whether or not anyone is looking.
+The code on this page is from [Bookings](https://bookings.spiderme.org), the example app in `examples/bookings` ([source](https://github.com/llllOllOOll/spiderme/tree/main/examples/bookings)). A new booking holds its room for ten minutes; if nobody confirms it, the time has to become free again, whether or not anyone is looking.
 
 ## A job
 

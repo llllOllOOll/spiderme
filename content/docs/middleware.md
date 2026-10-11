@@ -8,7 +8,7 @@ order: 40
 
 A middleware is a function that runs around a handler. It can stop the request, let it through, or change the response on the way back.
 
-The code on this page is from [Posts](https://posts.spiderme.org), the example app in `examples/posts`. Its JSON API has two middlewares.
+The code on this page is from [Posts](https://posts.spiderme.org), the example app in `examples/posts` ([source](https://github.com/llllOllOOll/spiderme/tree/main/examples/posts)). Its JSON API has two middlewares.
 
 ## Writing one
 

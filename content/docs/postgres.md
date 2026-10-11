@@ -8,7 +8,7 @@ order: 36
 
 [Database](/docs/database) shows migrations and queries with SQLite, which is what a new project uses. This page is about a project on PostgreSQL: what changes, and what the database can then do for the app.
 
-The code is from Bookings, the example app in `examples/bookings`: people book meeting rooms by the half hour, and a room cannot have two bookings at the same time.
+The code is from [Bookings](https://bookings.spiderme.org), the example app in `examples/bookings` ([source](https://github.com/llllOllOOll/spiderme/tree/main/examples/bookings)): people book meeting rooms by the half hour, and a room cannot have two bookings at the same time.
 
 ## A project on PostgreSQL
 

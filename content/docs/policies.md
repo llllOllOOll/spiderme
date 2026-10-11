@@ -8,7 +8,7 @@ order: 47
 
 `.authenticated` and `.roles` say who may call a route. Some rules are about the thing the route works on: a post is changed by who wrote it, whoever else is signed in. That is a policy.
 
-The code on this page is from [Posts](https://posts.spiderme.org), the example app in `examples/posts`. Anyone with an account writes posts there, and each account changes and deletes its own.
+The code on this page is from [Posts](https://posts.spiderme.org), the example app in `examples/posts` ([source](https://github.com/llllOllOOll/spiderme/tree/main/examples/posts)). Anyone with an account writes posts there, and each account changes and deletes its own.
 
 ## The rules, in one file
 

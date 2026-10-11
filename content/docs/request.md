@@ -8,7 +8,7 @@ order: 20
 
 A handler receives `c: *spider.Ctx`. Everything the client sent is read through it: path parameters, the query string, headers, cookies and the body.
 
-Where it can, this page shows code from [Posts](https://posts.spiderme.org), the example app in `examples/posts`.
+Where it can, this page shows code from [Posts](https://posts.spiderme.org), the example app in `examples/posts` ([source](https://github.com/llllOllOOll/spiderme/tree/main/examples/posts)).
 
 ## Path and query
 

@@ -8,7 +8,7 @@ order: 56
 
 `spider.http_client` calls other servers: an API, a webhook, a payment provider.
 
-The code on this page is from Bookings, the example app in `examples/bookings`. When a booking is confirmed it tells an address of the office's choosing, so that another system can follow along.
+The code on this page is from [Bookings](https://bookings.spiderme.org), the example app in `examples/bookings` ([source](https://github.com/llllOllOOll/spiderme/tree/main/examples/bookings)). When a booking is confirmed it tells an address of the office's choosing, so that another system can follow along.
 
 ## A request
 

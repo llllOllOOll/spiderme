@@ -8,7 +8,7 @@ order: 51
 
 A page that shows what other people are doing goes stale while it is open. With server-sent events (SSE) the page keeps one connection to the server, and the server says on it when something changed. It is plain HTTP: no other port, no other protocol, and the browser connects again by itself when the connection drops.
 
-The code on this page is from Bookings, the example app in `examples/bookings`. Its day view shows every room's bookings; when someone books, confirms or cancels, everyone looking at that day sees it without reloading.
+The code on this page is from [Bookings](https://bookings.spiderme.org), the example app in `examples/bookings` ([source](https://github.com/llllOllOOll/spiderme/tree/main/examples/bookings)). Its day view shows every room's bookings; when someone books, confirms or cancels, everyone looking at that day sees it without reloading.
 
 ## A stream is a route
 

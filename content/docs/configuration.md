@@ -8,7 +8,7 @@ order: 57
 
 An app has two places for settings. What is the same everywhere goes in `spider.config.zig`, which is compiled in. What changes from one machine to another, and what is secret, goes in the environment.
 
-The code on this page is from [Posts](https://posts.spiderme.org), the example app in `examples/posts`.
+The code on this page is from [Posts](https://posts.spiderme.org), the example app in `examples/posts` ([source](https://github.com/llllOllOOll/spiderme/tree/main/examples/posts)).
 
 ## spider.config.zig
 

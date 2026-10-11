@@ -8,7 +8,7 @@ order: 50
 
 A template is an HTML file with values in braces. `c.view` renders one with the data a handler gives it.
 
-The code on this page is from [Posts](https://posts.spiderme.org), the example app in `examples/posts`. This is the handler of its feed:
+The code on this page is from [Posts](https://posts.spiderme.org), the example app in `examples/posts` ([source](https://github.com/llllOllOOll/spiderme/tree/main/examples/posts)). This is the handler of its feed:
 
 ```zig from=examples/posts/src/features/posts/controller.zig decl=index
 ```

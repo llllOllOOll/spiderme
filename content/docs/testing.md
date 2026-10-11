@@ -12,7 +12,7 @@ zig build test
 
 It runs every test of the project. A new project has a few already, and this page shows how to add the most useful kind: tests that send requests to the app.
 
-The code on this page is from [Posts](https://posts.spiderme.org), the example app in `examples/posts`.
+The code on this page is from [Posts](https://posts.spiderme.org), the example app in `examples/posts` ([source](https://github.com/llllOllOOll/spiderme/tree/main/examples/posts)).
 
 ## What a new project checks
 
