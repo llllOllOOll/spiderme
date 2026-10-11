@@ -17,6 +17,8 @@ pub fn run() !void {
         .post("/photos", addPhoto, .{ .public = true })
         .get("/photos/report", photoReport, .{ .public = true })
         .sseWith("/ticks", ticks, .{ .public = true })
+        .wsWith("/rooms/:room/chat", chat, .{ .public = true })
+        .wsWith("/staff/feed", staffFeed, .{ .authenticated = true })
         .listen(.{});
 }
 
@@ -42,6 +44,24 @@ fn paymentHook(c: *spider.Ctx) !spider.Response {
 /// A stream that says one thing and ends.
 fn ticks(sse: *spider.Sse) !void {
     try sse.send("tick", .{ .n = 1 });
+}
+
+// ── a socket ────────────────────────────────────────────────────────────
+
+/// A chat room: what one connection says, everyone in the same room hears.
+fn chat(ws: *spider.Ws) !void {
+    const room = ws.param("room") orelse return;
+    try ws.join(room);
+    try ws.send("welcome");
+
+    // Until the visitor leaves. When the handler returns, the socket closes.
+    while (try ws.next()) |message| {
+        ws.broadcastTo(room, message.data);
+    }
+}
+
+fn staffFeed(ws: *spider.Ws) !void {
+    while (try ws.next()) |_| {}
 }
 
 // ── files ───────────────────────────────────────────────────────────────

@@ -1,7 +1,7 @@
 ---
 title: Logging
 section: guide
-order: 180
+order: 190
 ---
 
 # Logging
