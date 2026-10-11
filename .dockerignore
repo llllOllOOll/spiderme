@@ -23,3 +23,10 @@ examples/posts/zig-out/
 examples/posts/.zig-cache/
 examples/posts/zig-pkg/
 examples/posts/bin/
+
+# The other examples: their sources are read by the build, their caches are not.
+examples/*/.zig-cache/
+examples/*/zig-pkg/
+examples/*/zig-out/
+examples/*/bin/
+examples/*/.env

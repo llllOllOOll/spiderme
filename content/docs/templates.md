@@ -1,7 +1,7 @@
 ---
 title: Templates
 section: guide
-order: 50
+order: 100
 ---
 
 # Templates

@@ -1,7 +1,7 @@
 ---
 title: htmx
 section: guide
-order: 51
+order: 120
 ---
 
 # htmx

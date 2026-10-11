@@ -1,7 +1,7 @@
 ---
 title: HTTP client
 section: guide
-order: 56
+order: 160
 ---
 
 # HTTP client

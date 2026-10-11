@@ -1,7 +1,7 @@
 ---
 title: PostgreSQL
 section: guide
-order: 36
+order: 60
 ---
 
 # PostgreSQL

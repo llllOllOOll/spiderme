@@ -1,7 +1,7 @@
 ---
 title: Mail
 section: guide
-order: 54
+order: 150
 ---
 
 # Mail
