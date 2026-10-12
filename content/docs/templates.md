@@ -63,4 +63,4 @@ The template then uses `{ body }` like any other value:
 
 ## Where templates are read from
 
-In a debug build, which is what `spider dev` and `zig build run` make, templates are read from disk on every request: save the file and reload the page. In a release build they are compiled into the binary, so a deploy needs nothing but the binary.
+In a debug build, which is what `spider dev` and `zig build run` make, templates are read from disk on every request: save the file and reload the page. In a release build they are compiled into the binary, so a deploy needs nothing but the binary. Either can be chosen for every build: see [The build](/docs/build#Templates-in-the-binary-or-on-disk).

@@ -139,6 +139,12 @@ pub fn build(b: *std.Build) void {
     guide_tests.setCwd(b.path("examples/guide"));
     guide_tests.has_side_effects = true;
     test_step.dependOn(&guide_tests.step);
+    // What the build page says about optional parts and templates is kept
+    // as tests in examples/build.
+    const build_tests = b.addSystemCommand(&.{ b.graph.zig_exe, "build", "test" });
+    build_tests.setCwd(b.path("examples/build"));
+    build_tests.has_side_effects = true;
+    test_step.dependOn(&build_tests.step);
 
     // `spider dev` runs `zig build dev --watch`: build the app, then tell the
     // supervisor where the new binary is and whether the page's files (the
