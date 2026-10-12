@@ -33,6 +33,8 @@ pub fn build(b: *std.Build) void {
     disk_elsewhere.expectStdErrMatch("views_dir \"./src\" not found");
     test_step.dependOn(&disk_elsewhere.step);
 
+    test_step.dependOn(checkTemplateList(b, embedded));
+
     const spider_mod = spider(b, target, optimize, .auto).module("spider");
 
     // A part that was asked for: the test compiles and runs.
@@ -108,4 +110,14 @@ fn embedTemplates(b: *std.Build, spider_dep: *std.Build.Dependency, exe: *std.Bu
     gen.addArg("src/");
     gen.addArg("src/embedded_templates.zig");
     exe.step.dependOn(&gen.step);
+}
+
+/// What that file has for this project: one line, for its one template.
+fn checkTemplateList(b: *std.Build, exe: *std.Build.Step.Compile) *std.Build.Step {
+    const check = b.addCheckFile(b.path("src/embedded_templates.zig"), .{ .expected_matches = &.{
+        "    hello_index: []const u8 = @embedFile(\"features/hello/views/index.html\"),",
+    } });
+    // After the app is compiled, so after the file was written.
+    check.step.dependOn(&exe.step);
+    return &check.step;
 }

@@ -6,9 +6,11 @@ order: 265
 
 # The build
 
-Two files at the root of a project decide how it is built. `build.zig.zon` names Spider and the exact version the project uses. `build.zig` says what the project asks of Spider: which optional parts, where templates come from, how the app is compiled. `spider new` writes both. This page is what to know before changing them.
+Spider has a lot in it, and an app gets only what it asks for. A database driver, file storage, QR codes, spreadsheets: each is a library the project adds when it needs it, with one line. What a project did not ask for is not compiled and is not in its binary.
 
-The code is from `examples/build` ([source](https://github.com/llllOllOOll/spiderme/tree/main/examples/build)): one small app that its own tests build in more than one way.
+Two files at the root of the project say what it asked for. `build.zig.zon` names Spider and the exact version in use. `build.zig` says which optional parts are on, where templates come from and how the app is compiled. `spider new` writes both. This page is what to know before changing them.
+
+The code is from `examples/build` ([source](https://github.com/llllOllOOll/spiderme/tree/main/examples/build)): one small app that its own tests build in more than one way. Everything here, the sizes included, was run on Spider 0.10.1.
 
 ## build.zig.zon: which Spider
 
@@ -48,7 +50,9 @@ Everything a project can ask for:
 
 ## Optional parts
 
-The five parts above are off until the project asks for them. The rest of Spider is always there: routing, templates, forms, live pages, WebSocket, login, mail, push, jobs, the HTTP client.
+Think of the five parts above as libraries that ship with Spider: SQLite, PostgreSQL, file storage, QR codes, spreadsheets. None of them is on by default. A project turns on the ones it needs and leaves the rest out.
+
+What every app has without asking is the web framework itself: routing, templates, forms, live pages, WebSocket, login, mail, push, jobs, the HTTP client. Even there, only the code the app reaches is compiled into it.
 
 A part that was not asked for is not compiled and is not in the binary. Code that uses it does not compile:
 
@@ -67,7 +71,7 @@ The error names the part, and the fix is its line in `build.zig`. A part that wa
 Good to know:
 
 - Asking costs nothing until the code uses the part. A new project built with all five asked for and none used gives the same binary, to the byte, as one that asked for none.
-- A part that is used adds only itself. Making a QR code in that project added about 7 KB to a release build of 365 KB.
+- A part that is used adds only itself. Making a QR code in that project added about 7 KB to a release build of 366 KB.
 - There is nothing more to download. The optional parts come inside the Spider package; the line in `build.zig` decides what is compiled, not what is fetched.
 
 ## Templates: in the binary or on disk
@@ -82,7 +86,24 @@ and `build.zig` writes that file before it compiles the app:
 ```zig from=examples/build/build.zig decl=embedTemplates
 ```
 
-`src/embedded_templates.zig` is written again by every build and stays out of git. `spider new` sets all of this up.
+`spider new` sets all of this up.
+
+### The program that finds the templates
+
+`generate-templates` is a small program that comes with Spider. The build compiles it and runs it before the app, every time. It walks `src/`, finds every `.html` and `.md` file, and writes `src/embedded_templates.zig`: a list with one line per file. For the example's one template the whole list is:
+
+```zig
+hello_index: []const u8 = @embedFile("features/hello/views/index.html"),
+```
+
+- The file is a list, not a copy: each line points at a template. Whether the templates then go into the binary is the choice below.
+- It is written again by every build, so it stays out of git and is never edited by hand.
+- A template added, renamed or removed is in the list after the next build. Nothing registers templates by hand.
+- The name on the left is how the file is found: `features/hello/views/index.html` is the view `"hello/index"`. A file whose name starts with a capital letter is a [component](/docs/components), known by that name alone.
+
+The build of a new project runs two more programs that come with Spider: one lists the files that have tests, so that none is left out of `zig build test` ([Testing](/docs/testing)), and one tells `spider dev` that a new build is ready ([Development](/docs/development)). All three run on your machine during the build. None of them is in the app.
+
+### In the binary or on disk
 
 Where the templates then come from is `.templates` on the Spider dependency:
 
@@ -117,7 +138,7 @@ Good to know:
 zig build -Doptimize=ReleaseSmall
 ```
 
-A new project with no database is about 25 MB in Debug and under 400 KB in ReleaseSmall, on Linux x86_64. `ReleaseSafe` keeps the safety checks and `ReleaseFast` favours speed; both embed the templates too. The [Dockerfile](/docs/docker) of a new project uses `ReleaseSmall`.
+A new project with no database is about 25 MB in Debug and 366 KB in ReleaseSmall, on Linux x86_64. `ReleaseSafe` keeps the safety checks and `ReleaseFast` favours speed; both embed the templates too, and are between 6 and 7 MB. The [Dockerfile](/docs/docker) of a new project uses `ReleaseSmall`.
 
 ## The I/O backend
 
