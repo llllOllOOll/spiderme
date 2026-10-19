@@ -151,6 +151,11 @@ pub fn build(b: *std.Build) void {
     modules_tests.setCwd(b.path("examples/modules"));
     modules_tests.has_side_effects = true;
     test_step.dependOn(&modules_tests.step);
+    // Pixels, the live pixel board at pixels.spiderme.org (WebSocket, QR code).
+    const pixels_tests = b.addSystemCommand(&.{ b.graph.zig_exe, "build", "test" });
+    pixels_tests.setCwd(b.path("examples/pixels"));
+    pixels_tests.has_side_effects = true;
+    test_step.dependOn(&pixels_tests.step);
 
     // `spider dev` runs `zig build dev --watch`: build the app, then tell the
     // supervisor where the new binary is and whether the page's files (the

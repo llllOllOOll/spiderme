@@ -28,9 +28,9 @@ volume `spiderme-posts-data`, and its secrets (`JWT_SECRET`,
 there on the first deploy and never copied anywhere else.
 
 - The server is shared with other systems. The script only touches
-  containers labelled `deploy.app=spiderme-site` or `spiderme-posts`,
-  images with those names and the volume `spiderme-posts-data`; do the
-  same by hand.
+  containers labelled `deploy.app=spiderme-site`, `spiderme-posts`,
+  `spiderme-bookings` or `spiderme-pixels`, images with those names and
+  the volume `spiderme-posts-data`; do the same by hand.
 - Traefik on the server routes by container labels. If you change the
   labels in the script, change `ROUTE` too (the comment there says why).
 - The site serves `/install.sh`, a copy of `scripts/install.sh` of the
@@ -262,7 +262,8 @@ Don't delete the "every file with tests is part of this test binary" tests.
 - Code blocks show code of the examples, which have tests of their own:
   `examples/posts` (SQLite), `examples/bookings` (PostgreSQL: `./test.sh`
   starts a database for the run), `examples/guide`, `examples/build` and
-  `examples/modules` (its migrations on PostgreSQL: `./test-db.sh`). The
+  `examples/modules` (its migrations on PostgreSQL: `./test-db.sh`) and
+  `examples/pixels` (the live pixel board: WebSocket, QR code). The
   site's `zig build test` runs all of them but the two database scripts:
   run those when you change Bookings or the modules example.
 - `tools/docs_index.zig` runs in the build: it reads the headers and

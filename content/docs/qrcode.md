@@ -8,7 +8,7 @@ order: 230
 
 `spider.qrcode` turns a text, usually a link, into a QR code: a ticket to scan at the door, a payment, a page to open on a phone. It gives the squares; the app draws them.
 
-The code on this page is from `examples/guide` ([source](https://github.com/llllOllOOll/spiderme/tree/main/examples/guide)): a small server kept as tests, for what the example apps do not use.
+The code on this page is from `examples/guide` ([source](https://github.com/llllOllOOll/spiderme/tree/main/examples/guide)): a small server kept as tests, for what the example apps do not use. [Pixels](https://pixels.spiderme.org) shows one live: the QR code next to its board opens the page on a phone ([source](https://github.com/llllOllOOll/spiderme/tree/main/examples/pixels)).
 
 ## Turning it on
 

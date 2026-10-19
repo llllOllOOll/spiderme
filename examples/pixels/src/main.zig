@@ -1,0 +1,57 @@
+const std = @import("std");
+const spider = @import("spider");
+const features = @import("features");
+// const db = spider.pg;
+
+pub const spider_templates = @import("embedded_templates.zig").EmbeddedTemplates;
+
+pub fn main(init: std.process.Init) !void {
+    const allocator = init.arena.allocator();
+    const io = init.io;
+
+    // Uncomment to enable PostgreSQL (reads from .env automatically)
+    // try db.init(allocator, io, .{});
+    // defer db.deinit();
+
+    try serve(allocator, io);
+}
+
+/// Builds the server and listens. main() calls it, and so do the tests in
+/// src/app_test.zig.
+pub fn serve(allocator: std.mem.Allocator, io: std.Io) !void {
+    // What the server needs before it starts goes here (`spider g auth
+    // --provider=keycloak` puts the Keycloak provider in this spot).
+    _ = allocator;
+    _ = io;
+
+    var server = spider.app(.{});
+    defer server.deinit();
+
+    // Routes live with their feature (src/features/<name>/routes.zig);
+    // mountFeatures registers every feature listed in src/features/mod.zig.
+    // `spider routes` prints what got registered.
+    server
+        .use(spider.logger)
+        .mountFeatures(features)
+        // WebSocket routes live on the server; the handler is the board's.
+        .wsWith("/ws", features.board.controller.socket, .{ .public = true })
+        .onError(spider.errorHandler(.{ .template_not_found_is_404 = true }))
+        // Port and host come from spider.config.zig; the PORT variable
+        // (the environment or .env) replaces the port.
+        .listen(.{}) catch |err| return err;
+}
+
+// Routes in routes.zig with declared access, ui-* classes, icons from the
+// active sets, features registered: `spider check` prints the same report.
+test "the app follows Spider's conventions" {
+    try @import("spider").testing.expectConventions();
+}
+
+// Requests against the running app: src/app_test.zig.
+test {
+    _ = @import("app_test.zig");
+}
+
+test "every file with tests is part of this test binary" {
+    try @import("spider").testing.expectAllTestsDiscovered(@import("test_manifest"));
+}

@@ -1,13 +1,14 @@
 #!/usr/bin/env bash
 # Deploys the site, or one of the example apps, to the server.
 #
-#     ./deploy.sh [site|posts|bookings]            build, send, start the new version, retire the old one
-#     ./deploy.sh [site|posts|bookings] status     what is running on the server
-#     ./deploy.sh [site|posts|bookings] rollback   go back to the version before the current one
+#     ./deploy.sh [site|posts|bookings|pixels]            build, send, start the new version, retire the old one
+#     ./deploy.sh [site|posts|bookings|pixels] status     what is running on the server
+#     ./deploy.sh [site|posts|bookings|pixels] rollback   go back to the version before the current one
 #     ./deploy.sh bookings database                once, before its first deploy: its database
 #
-# Without a name it is the site: spiderme.org. `posts` and `bookings` are
-# the example apps of examples/: posts.spiderme.org, bookings.spiderme.org.
+# Without a name it is the site: spiderme.org. `posts`, `bookings` and
+# `pixels` are the example apps of examples/: posts.spiderme.org,
+# bookings.spiderme.org, pixels.spiderme.org.
 #
 # How it works. The image is built here and sent to the server over SSH
 # (no registry in between). On the server, a Traefik that is already there
@@ -45,7 +46,7 @@ KEEP_IMAGES=3                            # versions kept on the server for rollb
 #            container that is already on the server, and the name of the
 #            app's own database and role in it (see `database` below)
 TARGET="site"
-case "${1:-}" in site | posts | bookings)
+case "${1:-}" in site | posts | bookings | pixels)
     TARGET="$1"
     shift
     ;;
@@ -87,6 +88,18 @@ case "$TARGET" in
         SECRETS="JWT_SECRET PG_PASSWORD" # sessions; the password of its database role
         LEGACY=""
         DATABASE="postgres-main:bookings"
+        ;;
+    pixels)
+        APP="spiderme-pixels"
+        ROUTE="spiderme-pixels-v1"
+        RULE='Host(`pixels.spiderme.org`)'
+        CONTEXT="examples/pixels"
+        CHECK_URL="https://pixels.spiderme.org"
+        VOLUME=""   # the board lives in memory: a new version starts blank
+        SETTINGS=""
+        SECRETS=""
+        LEGACY=""
+        DATABASE=""
         ;;
 esac
 

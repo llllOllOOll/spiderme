@@ -8,7 +8,7 @@ order: 170
 
 A WebSocket is a connection both sides write to. Use one when the browser has things to say all the time: a chat, a cursor, a game. When only the server speaks, and the browser listens, [server-sent events](/docs/live) are simpler: they are plain HTTP, and the browser connects again by itself.
 
-The code on this page is from `examples/guide` ([source](https://github.com/llllOllOOll/spiderme/tree/main/examples/guide)): a small server kept as tests, for what the example apps do not use.
+The code on this page is from `examples/guide` ([source](https://github.com/llllOllOOll/spiderme/tree/main/examples/guide)): a small server kept as tests, for what the example apps do not use. To see a socket at work, open [Pixels](https://pixels.spiderme.org) in two windows: a board everyone paints at once ([source](https://github.com/llllOllOOll/spiderme/tree/main/examples/pixels)).
 
 ## A socket is a route
 

@@ -1,0 +1,50 @@
+extends "layout"
+
+<div class="min-h-screen flex flex-col items-center gap-6 p-4 sm:p-8 bg-gradient-to-b from-base-300 to-base-100">
+
+    <header class="w-full max-w-5xl flex items-center justify-between gap-4">
+        <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl grid grid-cols-2 gap-0.5 p-1.5 bg-base-200 shadow-lg" aria-hidden="true">
+                <span class="rounded-sm bg-[#ff004d]"></span><span class="rounded-sm bg-[#ffec27]"></span>
+                <span class="rounded-sm bg-[#00e436]"></span><span class="rounded-sm bg-[#29adff]"></span>
+            </div>
+            <h1 class="text-3xl font-black tracking-tight">Pixels</h1>
+        </div>
+        <span class="ui-badge ui-badge-primary gap-2" data-online>
+            <span class="w-2 h-2 rounded-full bg-success animate-pulse" aria-hidden="true"></span>
+            <span class="inline-block font-bold tabular-nums transition-transform duration-300" data-online-count>0</span>
+            <span data-online-label>people painting now</span>
+        </span>
+    </header>
+
+    <main class="w-full max-w-5xl grid gap-6 lg:grid-cols-[minmax(0,1fr)_260px] items-start">
+      <div class="flex flex-col items-center gap-5 min-w-0">
+        <div class="ui-card w-full p-2 sm:p-4 bg-base-200 shadow-2xl">
+            <canvas id="board" width="48" height="48"
+                    class="w-full aspect-square rounded-lg bg-[#1a1c2c] cursor-crosshair touch-none [image-rendering:pixelated]"
+                    aria-label="Shared pixel board, 48 by 48"></canvas>
+        </div>
+
+        <div class="flex flex-wrap justify-center gap-3" role="radiogroup" aria-label="Color" data-palette>
+            <button type="button" class="w-11 h-11 rounded-xl bg-[#ff004d] ring-offset-4 ring-offset-base-100 transition-transform hover:scale-110" data-color="0" aria-label="Red"></button>
+            <button type="button" class="w-11 h-11 rounded-xl bg-[#ffa300] ring-offset-4 ring-offset-base-100 transition-transform hover:scale-110" data-color="1" aria-label="Orange"></button>
+            <button type="button" class="w-11 h-11 rounded-xl bg-[#ffec27] ring-offset-4 ring-offset-base-100 transition-transform hover:scale-110" data-color="2" aria-label="Yellow"></button>
+            <button type="button" class="w-11 h-11 rounded-xl bg-[#00e436] ring-offset-4 ring-offset-base-100 transition-transform hover:scale-110" data-color="3" aria-label="Green"></button>
+            <button type="button" class="w-11 h-11 rounded-xl bg-[#29adff] ring-offset-4 ring-offset-base-100 transition-transform hover:scale-110" data-color="4" aria-label="Blue"></button>
+            <button type="button" class="w-11 h-11 rounded-xl bg-[#83769c] ring-offset-4 ring-offset-base-100 transition-transform hover:scale-110" data-color="5" aria-label="Purple"></button>
+            <button type="button" class="w-11 h-11 rounded-xl bg-[#ff77a8] ring-offset-4 ring-offset-base-100 transition-transform hover:scale-110" data-color="6" aria-label="Pink"></button>
+            <button type="button" class="w-11 h-11 rounded-xl bg-[#fff1e8] ring-offset-4 ring-offset-base-100 transition-transform hover:scale-110" data-color="7" aria-label="White"></button>
+        </div>
+        <p class="text-sm text-base-content/50">Pick a color, then click or drag on the board.</p>
+      </div>
+
+      <aside class="ui-card hidden lg:flex flex-col items-center gap-4 p-5 bg-base-200 shadow-2xl text-center">
+        <div class="text-lg font-bold">Paint with us</div>
+        <div class="w-full rounded-xl overflow-hidden bg-white p-2">{ qr }</div>
+        <p class="text-sm text-base-content/60">Scan with your phone (same Wi-Fi) and paint on this board live.</p>
+        <code class="text-xs font-mono text-base-content/40 break-all">{ url }</code>
+      </aside>
+    </main>
+</div>
+
+<script src="/js/board.js" defer></script>

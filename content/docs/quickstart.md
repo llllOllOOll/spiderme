@@ -56,9 +56,10 @@ spider g auth
 
 It adds accounts, sign in and sign out. From then on every route says who may call it, the ones of `posts` included: [Login](/docs/auth) explains how.
 
-## Two apps to read
+## Apps to read
 
-The guides show code from two example apps. Both are running, and their source is in this site's repository:
+The guides show code from the example apps. All of them are running, and their source is in this site's repository:
 
 - [Posts](https://posts.spiderme.org) ([source](https://github.com/llllOllOOll/spiderme/tree/main/examples/posts)): accounts, posts that belong to their authors, a JSON API with a key. SQLite.
 - [Bookings](https://bookings.spiderme.org) ([source](https://github.com/llllOllOOll/spiderme/tree/main/examples/bookings)): meeting rooms booked by the half hour, a day view that updates live, a scheduled job, mail and a webhook. PostgreSQL and htmx 4.
+- [Pixels](https://pixels.spiderme.org) ([source](https://github.com/llllOllOOll/spiderme/tree/main/examples/pixels)): a 48x48 board that everyone paints at the same time over a WebSocket, a live count of who is painting, and a QR code to join from a phone. No database.
