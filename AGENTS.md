@@ -263,7 +263,8 @@ Don't delete the "every file with tests is part of this test binary" tests.
   `examples/posts` (SQLite), `examples/bookings` (PostgreSQL: `./test.sh`
   starts a database for the run), `examples/guide`, `examples/build` and
   `examples/modules` (its migrations on PostgreSQL: `./test-db.sh`) and
-  `examples/pixels` (the live pixel board: WebSocket, QR code). The
+  `examples/pixels` (the live pixel board: WebSocket, QR code; a pixel
+  lasts 15 minutes, and `tools/pixels-reset.sh` clears the live board). The
   site's `zig build test` runs all of them but the two database scripts:
   run those when you change Bookings or the modules example.
 - `tools/docs_index.zig` runs in the build: it reads the headers and

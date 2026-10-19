@@ -50,6 +50,7 @@
     if (!p || p.x + ',' + p.y === last) return;
     last = p.x + ',' + p.y;
     paint(p.x, p.y, color);
+    painted(p.x, p.y);
     send(p.x + ',' + p.y + ',' + color);
   }
   canvas.addEventListener('pointerdown', e => {
@@ -63,19 +64,42 @@
   canvas.addEventListener('pointercancel', () => { drawing = false; });
 
   // ── Real time: everyone paints the same board ─────────────────────
-  // The server sends "board:" + one character per cell first ('-' for an
-  // empty one), then every "x,y,color" anybody paints.
+  // The server sends "board:" first: one character per cell ('-' for an
+  // empty one), then one per cell with the time it has left, in steps of
+  // 15 seconds. Then every "x,y,color" anybody paints. A pixel lasts 15
+  // minutes; each browser clears it when its time is up.
+  const LIFETIME_MS = 15 * 60 * 1000;
+  const STEP_MS = 15 * 1000;
+  const expires = new Array(SIZE * SIZE).fill(0);
+
   let socket = null;
   function send(msg) {
     if (socket && socket.readyState === WebSocket.OPEN) socket.send(msg);
   }
-  function drawAll(cells) {
-    for (let i = 0; i < cells.length && i < SIZE * SIZE; i++) {
-      const ch = cells[i];
-      if (ch === '-') { ctx.fillStyle = EMPTY; ctx.fillRect(i % SIZE, Math.floor(i / SIZE), 1, 1); }
-      else paint(i % SIZE, Math.floor(i / SIZE), Number(ch));
+  function clear(i) {
+    expires[i] = 0;
+    ctx.fillStyle = EMPTY;
+    ctx.fillRect(i % SIZE, Math.floor(i / SIZE), 1, 1);
+  }
+  function drawAll(board) {
+    const now = Date.now();
+    for (let i = 0; i < SIZE * SIZE; i++) {
+      const ch = board[i];
+      if (ch === undefined || ch === '-') { clear(i); continue; }
+      paint(i % SIZE, Math.floor(i / SIZE), Number(ch));
+      const steps = board.charCodeAt(SIZE * SIZE + i) - 48;
+      expires[i] = now + (steps > 0 ? steps : 60) * STEP_MS;
     }
   }
+  function painted(x, y) {
+    expires[y * SIZE + x] = Date.now() + LIFETIME_MS;
+  }
+  setInterval(() => {
+    const now = Date.now();
+    for (let i = 0; i < expires.length; i++) {
+      if (expires[i] && expires[i] <= now) clear(i);
+    }
+  }, 1000);
   const count = document.querySelector('[data-online-count]');
   const label = document.querySelector('[data-online-label]');
   function showOnline(n) {
@@ -93,7 +117,7 @@
       if (msg.startsWith('board:')) { drawAll(msg.slice(6)); return; }
       if (msg.startsWith('online:')) { showOnline(Number(msg.slice(7))); return; }
       const [x, y, c] = msg.split(',').map(Number);
-      if (c >= 0 && c < COLORS.length) paint(x, y, c);
+      if (c >= 0 && c < COLORS.length) { paint(x, y, c); painted(x, y); }
     });
     socket.addEventListener('close', () => setTimeout(connect, 1000));
   }

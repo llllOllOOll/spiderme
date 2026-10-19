@@ -97,7 +97,7 @@ case "$TARGET" in
         CHECK_URL="https://pixels.spiderme.org"
         VOLUME=""   # the board lives in memory: a new version starts blank
         SETTINGS=""
-        SECRETS=""
+        SECRETS="PIXELS_RESET_TOKEN" # clears the board for everyone (tools/pixels-reset.sh)
         LEGACY=""
         DATABASE=""
         ;;

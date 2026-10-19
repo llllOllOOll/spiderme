@@ -9,6 +9,10 @@ pub fn main(init: std.process.Init) !void {
     const allocator = init.arena.allocator();
     const io = init.io;
 
+    // The token that clears the board for everyone (deploy.sh keeps it on
+    // the server); without it, clearing is off.
+    features.board.board.reset_token = init.environ_map.get("PIXELS_RESET_TOKEN");
+
     // Uncomment to enable PostgreSQL (reads from .env automatically)
     // try db.init(allocator, io, .{});
     // defer db.deinit();
