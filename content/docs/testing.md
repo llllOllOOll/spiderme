@@ -86,7 +86,8 @@ A failed expectation prints the request and the start of the body, so you see wh
 
 The same `app` reaches everything the server does. Where each kind is shown:
 
-- **A database of its own.** With SQLite, a file the tests create, as `run` does above. With PostgreSQL, a server that exists for one run: [PostgreSQL](/docs/postgres) has the script.
+- **A database of its own.** With SQLite, a file the tests create, as `run` does above. With PostgreSQL, a server that exists for one run, migrated by `main.migrate` as `main` does: [PostgreSQL](/docs/postgres) has the script, [Migrations in production](/docs/migrations) tests of the migrations themselves.
+- **A module.** `server.check(arena, io)` gives the report `listen()` acts on, on a server that never listens; the module's routes and jobs answer through `app` like the app's own: [Modules](/docs/modules).
 - **Mail.** The tests send to memory and read what was sent: [Mail](/docs/mail).
 - **What the app asks of other servers.** A test starts a small server of its own and points the app at it: [HTTP client](/docs/http-client).
 - **A stream of events.** The test opens the stream and reads what arrives: [Live pages](/docs/live).

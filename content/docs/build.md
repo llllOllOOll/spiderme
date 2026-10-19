@@ -10,7 +10,7 @@ Spider has a lot in it, and an app gets only what it asks for. A database driver
 
 Two files at the root of the project say what it asked for. `build.zig.zon` names Spider and the exact version in use. `build.zig` says which optional parts are on, where templates come from and how the app is compiled. `spider new` writes both. This page is what to know before changing them.
 
-The code is from `examples/build` ([source](https://github.com/llllOllOOll/spiderme/tree/main/examples/build)): one small app that its own tests build in more than one way. Everything here, the sizes included, was run on Spider 0.10.1.
+The code is from `examples/build` ([source](https://github.com/llllOllOOll/spiderme/tree/main/examples/build)): one small app that its own tests build in more than one way. Everything here, the sizes included, was run on Spider 0.11.0.
 
 ## build.zig.zon: which Spider
 
@@ -25,7 +25,7 @@ The first `zig build` downloads Spider into `zig-pkg/`, inside the project and o
 `spider update` moves the project to the latest release by rewriting those two lines ([Command line tool](/docs/cli)). To choose the release yourself:
 
 ```bash
-zig fetch --save=spider "git+https://github.com/llllOllOOll/spider?ref=v0.10.1"
+zig fetch --save=spider "git+https://github.com/llllOllOOll/spider?ref=v0.11.0"
 ```
 
 ## build.zig: what the project asks for
@@ -70,8 +70,8 @@ The error names the part, and the fix is its line in `build.zig`. A part that wa
 
 Good to know:
 
-- Asking costs nothing until the code uses the part. A new project built with all five asked for and none used gives the same binary, to the byte, as one that asked for none.
-- A part that is used adds only itself. Making a QR code in that project added about 7 KB to a release build of 366 KB.
+- Asking costs nothing until the code uses the part, with one exception. A new project built with SQLite, file storage, QR codes and spreadsheets asked for and none used gives the same binary, to the byte, as one that asked for none. PostgreSQL adds about 3 KB even unused: the code that checks the migrations before the server listens comes with it ([Migrations in production](/docs/migrations)).
+- A part that is used adds only itself. Making a QR code in that project added about 7 KB to a release build of 371 KB.
 - There is nothing more to download. The optional parts come inside the Spider package; the line in `build.zig` decides what is compiled, not what is fetched.
 
 ## Templates: in the binary or on disk
@@ -138,7 +138,7 @@ Good to know:
 zig build -Doptimize=ReleaseSmall
 ```
 
-A new project with no database is about 25 MB in Debug and 366 KB in ReleaseSmall, on Linux x86_64. `ReleaseSafe` keeps the safety checks and `ReleaseFast` favours speed; both embed the templates too, and are between 6 and 7 MB. The [Dockerfile](/docs/docker) of a new project uses `ReleaseSmall`.
+A new project with no database is about 25 MB in Debug and 371 KB in ReleaseSmall, on Linux x86_64. `ReleaseSafe` keeps the safety checks and `ReleaseFast` favours speed; both embed the templates too, and are between 6 and 7 MB. The [Dockerfile](/docs/docker) of a new project uses `ReleaseSmall`.
 
 ## The I/O backend
 
@@ -154,5 +154,8 @@ The app's code is the same for both. A new project's `build.zig` has the two lin
 The `build.zig` of a new project also:
 
 - gives `spider.config.zig` to Spider ([Configuration](/docs/configuration));
+- on PostgreSQL, builds the migrations into the binary with `spider.addMigrations` ([Migrations in production](/docs/migrations));
 - compiles the stylesheet with Tailwind as part of every build, and alone with `zig build css`;
 - has `zig build run`, `zig build test` ([Testing](/docs/testing)) and the `dev` step that `spider dev` runs ([Development](/docs/development)).
+
+A [module](/docs/modules) is one more dependency in `build.zig.zon`, which `build.zig` gives the app's own Spider.

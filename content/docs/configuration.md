@@ -37,6 +37,10 @@ Spider reads a few variables itself:
 - `PORT`: the port, in place of the one in `spider.config.zig`.
 - `SQLITE_PATH`, or `PG_HOST`, `PG_PORT`, `PG_USER`, `PG_PASSWORD` and `PG_DB`: the [database](/docs/database).
 - `JWT_SECRET`: what [login](/docs/auth) sessions are signed with.
+- `SPIDER_MIGRATE`: when it is set, the app applies its PostgreSQL migrations and exits instead of serving ([Migrations in production](/docs/migrations)).
+- `SPIDER_CHECK`: when it is set, the app prints whether its modules are ready and exits (`spider check --modules` sets it).
+
+A [module](/docs/modules) lists the variables it reads. The server does not start while one it requires is not set, or is blank, and says which.
 
 ## Your own settings
 
@@ -45,7 +49,7 @@ Spider reads a few variables itself:
 ```zig from=examples/posts/src/features/posts/api.zig decl=apiKey
 ```
 
-`getOr` gives a default when the variable is not set; `get` gives null. Each call makes a copy of the value, which is why Posts reads its key once and keeps it.
+`getOr` gives a default when the variable is not set; `get` gives null. Nothing is allocated: the value is the process's own, valid while it runs, so reading it on every request costs nothing. Posts keeps the key after the first read only because it never changes.
 
 ## Secrets
 

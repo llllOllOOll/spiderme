@@ -58,6 +58,10 @@ A feature can also say what it needs before the first request. `pub fn boot` in 
 
 `boot` receives a `spider.Boot` with an allocator that lives as long as the process and the server's `io`. When it returns an error the server does not start, and the error says why: a missing setting is found when the app is deployed, not by the first visitor who needs it.
 
+## Jobs of a module
+
+A [module](/docs/modules) declares jobs and a `boot` the same way, in its root file, and may add a `shutdown`. The modules boot before the features, in the order their requirements give, and `server.deinit()` runs their `shutdown` after the jobs stopped: [Writing a module](/docs/writing-modules).
+
 ## Testing a job
 
 The timer is not what needs a test: the work is. Call the function the job calls, after putting the data in the state it should find:

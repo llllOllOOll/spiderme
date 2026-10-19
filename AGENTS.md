@@ -46,7 +46,8 @@ there on the first deploy and never copied anywhere else.
 | Run once | `zig build run` |
 | Tests | `zig build test` (see "Tests" below) |
 | New CRUD feature | `spider g feature <name>` |
-| Apply migrations | `spider migrate` |
+| Apply migrations (the site has no database; Posts and Bookings do, in their folder) | `spider migrate` (Bookings: `SPIDER_MIGRATE=1 ./bookings` on a server) |
+| Check that the modules of an app are ready (examples/modules) | `spider check --modules` |
 | Check the conventions below (file:line + fix) | `spider check` (`--strict`: warnings fail too) |
 | List routes and their access | `spider routes` (`--json` for tools) |
 | Fail on routes without access (app with auth) | `spider routes --check` |
@@ -258,6 +259,12 @@ Don't delete the "every file with tests is part of this test binary" tests.
   below); `order` places the page in
   its section, lowest first. All three are required.
 - **To add a page: write one `.md` file there. Nothing else.**
+- Code blocks show code of the examples, which have tests of their own:
+  `examples/posts` (SQLite), `examples/bookings` (PostgreSQL: `./test.sh`
+  starts a database for the run), `examples/guide`, `examples/build` and
+  `examples/modules` (its migrations on PostgreSQL: `./test-db.sh`). The
+  site's `zig build test` runs all of them but the two database scripts:
+  run those when you change Bookings or the modules example.
 - `tools/docs_index.zig` runs in the build: it reads the headers and
   generates the `docs_index` module (the pages in reading order, with their
   text). A missing or incomplete header, an unknown section, or an `order`
