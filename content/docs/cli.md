@@ -13,9 +13,9 @@ spider new <name>        create a project
 spider dev               build, run, reload after every save
 spider g feature <name>  generate a feature
 spider g auth            add a login
-spider migrate           apply the migrations
+spider migrate           apply the migrations (the modules', then the app's)
 spider routes            list the routes and who may call them
-spider check             check the project's conventions
+spider check             check the conventions (--modules: the modules)
 spider install           download the frontend assets
 spider ui                show or switch the UI kit
 spider icons             show, add or remove icon sets
@@ -38,7 +38,7 @@ curl -fsSL https://raw.githubusercontent.com/llllOllOOll/spider/main/scripts/ins
 `spider version` prints the version installed:
 
 ```text
-spider v0.10.0
+spider v0.11.0
 ```
 
 `spider self-update` downloads and installs the latest one.
@@ -56,24 +56,38 @@ It writes the project to `./myapp`, one line per file, fetches Spider, and says 
   create  myapp/src/features/home/routes.zig
   create  myapp/src/features/home/routes_test.zig
   create  myapp/Dockerfile
+  create  myapp/.dockerignore
   create  myapp/.env.example
   create  myapp/.gitignore
   create  myapp/src/app_test.zig
   create  myapp/src/ui.css (UI kit: daisyui)
   create  myapp/.env (local settings, git-ignored; JWT_SECRET generated)
-Fetching Spider v0.10.0...
+  create  myapp/AGENTS.md
+  create  myapp/CLAUDE.md
+  create  myapp/public/images/logo.png
+  create  myapp/public/favicon.png
+  create  myapp/public/favicon.ico
+  create  myapp/src/core/db/migrations.zig
+  create  myapp/src/core/db/mod.zig
+  update  myapp/src/core/mod.zig
+  CSS will be compiled on first 'zig build run'
+Fetching Spider v0.11.0...
+info: resolved to commit 4deaac0c713a78d801763cc072c9b48182447625
 
 Done! Next steps:
   cd myapp
   spider dev           ← builds, runs, and reloads the browser as you edit
+  zig build run        ← or: one build, one run
+                         (requires spider CLI in PATH — run: spider install)
 ```
 
 Without options the project has HTML views, a SQLite database and a first test. The options change that:
 
-- `--pg` uses PostgreSQL instead of SQLite.
+- `--pg` uses PostgreSQL instead of SQLite. Its migrations are built into the binary, and `main` applies them before it serves ([Migrations in production](/docs/migrations)); it also gets a `docker-compose.yml` that runs PostgreSQL for development.
 - `--no-db` leaves the database out.
 - `--api` makes a JSON project, without HTML views.
 - `--ui=tailwind` uses plain Tailwind instead of daisyUI. `spider ui use` switches later.
+- `--htmx=4` uses htmx 4 instead of htmx 2. The generators then write what that version understands.
 - `--pwa` makes the app installable. It is the same as running `spider add pwa` afterwards.
 - `--skip-downloads` does not download Tailwind, Alpine, htmx and the icons now. `spider install` does it later.
 
@@ -115,6 +129,8 @@ spider g feature notes
 A feature is a folder with everything one part of the app needs. The command writes it, with pages to list, create, edit and delete:
 
 ```text
+Generating feature 'notes'...
+  create  src/features/notes/mod.zig
   create  src/features/notes/model.zig
   create  src/features/notes/repository.zig
   create  src/features/notes/controller.zig
@@ -126,7 +142,7 @@ A feature is a folder with everything one part of the app needs. The command wri
   create  src/features/notes/views/NotesForm.html
   create  src/features/notes/views/NotesEditForm.html
   create  src/features/notes/views/page.html
-  create  src/core/db/migrations/1791665601_create_notes.sql
+  create  src/core/db/migrations/1792419124_create_notes.sql
   update  src/core/db/migrations.zig
   update  src/features/mod.zig
   (routes mounted by mountFeatures in src/main.zig)
@@ -138,6 +154,8 @@ Done! Next:
 ```
 
 Nothing in `src/main.zig` changes: the server mounts every feature listed in `src/features/mod.zig`, and the command adds the new one there.
+
+In a project on PostgreSQL there is no list of migrations to update: the line says so instead, `(built into the binary by spider.addMigrations: no list to update)`.
 
 `--api` generates JSON routes instead of pages.
 
@@ -163,7 +181,7 @@ Generating login with the app's own users...
   create  src/features/auth/views/register.html
   create  src/features/auth/views/account.html
   update  src/features/mod.zig
-  create  src/core/db/migrations/1791665601_create_users.sql
+  create  src/core/db/migrations/1792419128_create_users.sql
   update  src/core/db/migrations.zig
   update  src/main.zig (session middleware)
   update  src/app_test.zig (tests of the login)
@@ -172,6 +190,8 @@ Done. Open /auth/register to create the first account.
 
   Every route that is not `.public` now needs a login. Features made before
   this have their access undeclared: `spider check` lists them.
+  Logins are signed with JWT_SECRET (.env). The app applies the new
+  migration when it starts.
 ```
 
 - `--api` generates JSON routes that answer a token, without pages.
@@ -200,10 +220,10 @@ DROP TABLE IF EXISTS notes;
 
 ```text
 Running migrations on SQLite: db.sqlite...
-  running  1791665601_create_notes
-  applied  1791665601_create_notes
-  running  1791665601_create_users
-  applied  1791665601_create_users
+  running  1792419124_create_notes
+  applied  1792419124_create_notes
+  running  1792419128_create_users
+  applied  1792419128_create_users
 
 2 migration(s) applied.
 ```
@@ -216,6 +236,19 @@ Nothing to migrate.
 ```
 
 It reads where the database is from `.env`: `SQLITE_PATH` for SQLite, `PG_HOST`, `PG_PORT`, `PG_USER`, `PG_PASSWORD` and `PG_DB` for PostgreSQL. The app applies pending migrations when it starts too, so the command is for when you want them applied without running the app. [Database](/docs/database) is about writing them.
+
+A project made with `--pg` has its migrations in its binary. There the command builds the app and runs it with `SPIDER_MIGRATE` set, and the app applies them itself:
+
+```text
+Running migrations (zig build run with SPIDER_MIGRATE)...
+info: pg: connected (10 connections)
+info: migration 1792419170_create_notes applied
+info: 1 migration(s) applied
+```
+
+A server does the same with the binary alone, `SPIDER_MIGRATE=1 ./myapp`: [Migrations in production](/docs/migrations).
+
+When the app mounts [modules](/docs/modules), their migrations run first, then the app's. In a project that keeps its migrations as files, `--no-modules` runs only the app's and `--modules-only` only the modules'.
 
 ## spider routes
 
@@ -302,6 +335,15 @@ And as a warning: an inline `style=`, a pasted `<svg>`, a feature without `route
 
 A new project runs the same checks in `zig build test`, so they also fail there. [Testing](/docs/testing) shows that.
 
+`--modules` also builds the app and runs it with `SPIDER_CHECK` set: every module it mounts runs the checks `listen()` runs before it starts (its variables, its migrations, its own `check`), and the report is printed. It exits with 1 when one is not ready:
+
+```text
+spider: 1 module(s) not ready, refusing to start
+  heartbeat: HEARTBEAT_TOKEN is required but not set
+```
+
+It reads the database and the environment as the app does. [Modules](/docs/modules) has more.
+
 ## spider install
 
 ```bash
@@ -351,6 +393,10 @@ spider add pwa
 It makes the app installable on a phone or a desktop: a manifest, a service worker that shows a page when the device is offline, the script that registers it, and the icons.
 
 ```text
+  create  public/manifest.webmanifest
+  create  public/sw.js
+  create  public/offline.html
+  create  public/js/pwa.js
   create  public/pwa/icon-192.png
   create  public/pwa/icon-512.png
   create  public/pwa/icon-maskable-512.png
