@@ -145,6 +145,12 @@ pub fn build(b: *std.Build) void {
     build_tests.setCwd(b.path("examples/build"));
     build_tests.has_side_effects = true;
     test_step.dependOn(&build_tests.step);
+    // What the pages on modules show is kept as tests in examples/modules,
+    // the module's own tests included.
+    const modules_tests = b.addSystemCommand(&.{ b.graph.zig_exe, "build", "test" });
+    modules_tests.setCwd(b.path("examples/modules"));
+    modules_tests.has_side_effects = true;
+    test_step.dependOn(&modules_tests.step);
 
     // `spider dev` runs `zig build dev --watch`: build the app, then tell the
     // supervisor where the new binary is and whether the page's files (the
