@@ -40,6 +40,8 @@ const placements = [_]Placement{
     .{ .prefix = "src/core/app.zig", .slug = "api-server", .title = "Server" },
     .{ .prefix = "src/modules/static.zig", .slug = "api-server", .title = "Server" },
     .{ .prefix = "src/modules/health.zig", .slug = "api-server", .title = "Server" },
+    .{ .prefix = "src/core/module.zig", .slug = "api-modules", .title = "Modules and migrations" },
+    .{ .prefix = "src/core/migration.zig", .slug = "api-modules", .title = "Modules and migrations" },
     .{ .prefix = "src/routing/", .slug = "api-group", .title = "Group and routes" },
     .{ .prefix = "src/core/extractors.zig", .slug = "api-extractors", .title = "Path, Form, Loaded" },
     .{ .prefix = "src/internal/config.zig", .slug = "api-config", .title = "Config" },
@@ -216,6 +218,10 @@ const Tree = struct {
             // `const X = X;` would loop.
             if (std.mem.eql(u8, local.value, expr)) return null;
             current = try self.followAt(path, local, depth + 1);
+            // A name from a package the reference does not read (`std`):
+            // what follows it is not Spider's API, and the declaration that
+            // uses it is shown as it is.
+            if (current == .decl and std.mem.startsWith(u8, current.decl.decl.value, import_open)) return null;
             rest = rest[first.len..];
         }
 
@@ -919,6 +925,20 @@ test "generate: a name that cannot be followed stops the build and says which" {
     const missing = [_][2][]const u8{.{ "src/spider.zig", "/// Gone.\npub const x = @import(\"nowhere.zig\");\npub const y = x.thing;\n" }};
     var fake2: Fake = .{ .files = &missing };
     try t.expectError(error.ApiFileNotFound, generate(arena.allocator(), &fake2, Fake.read, &problem));
+}
+
+test "generate: a value computed with std is shown where it is declared" {
+    var arena: std.heap.ArenaAllocator = .init(t.allocator);
+    defer arena.deinit();
+    const files = [_][2][]const u8{
+        .{ "src/spider.zig", "/// The version.\npub const version = @import(\"version.zig\").version;\n" },
+        .{ "src/version.zig", "const std = @import(\"std\");\n/// The version, parsed.\npub const version: std.SemanticVersion = std.SemanticVersion.parse(\"1.0.0\") catch unreachable;\n" },
+    };
+    var fake: Fake = .{ .files = &files };
+    var problem: []const u8 = "";
+    const pages = try generate(arena.allocator(), &fake, Fake.read, &problem);
+    const md = pageNamed(pages, "api-version").?.markdown;
+    try t.expect(std.mem.indexOf(u8, md, "The version, parsed.") != null);
 }
 
 test "headingId: what a heading is linked by" {
