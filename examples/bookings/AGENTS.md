@@ -47,7 +47,7 @@ src/features/<name>/      one folder per feature:
 src/features/mod.zig      registry: one `pub const <name> = @import(...)` per
                           feature — everything listed here is mounted and tested
 src/core/                 app-wide code shared by features
-  db/migrations.zig       migration list (+ SQL files in db/migrations/)
+  db/migrations/          SQL files, built into the binary (build.zig: spider.addMigrations)
 src/features/<f>/views/   templates for c.view("<f>/<file>", data, .{}); PascalCase
                           files (PostsList.html) are components: <PostsList ... />
 src/shared/templates/     layout.html (`extends "layout"`, minimal), app.html
@@ -205,10 +205,13 @@ auth. Fix the code, not the check — and don't delete that test.
   try tx.commit();` — never `query(void, .., "BEGIN")` (refused: each call
   runs on its own pooled connection).
 - Migrations: `src/core/db/migrations/<timestamp>_<name>.sql` with
-  `-- migrate:up` / `-- migrate:down` sections, listed in
-  `src/core/db/migrations.zig`. `spider g feature` creates one; apply it with
-  `spider migrate`, then restart the app. **Until you do, the feature's pages
-  answer 500**; the log shows `relation "<table>" does not exist`.
+  `-- migrate:up` / `-- migrate:down` sections (only the up part runs). Every
+  file of the folder is built into the binary (`spider.addMigrations` in
+  build.zig); `main()` applies the pending ones before serving (`migrate()`
+  in src/main.zig), each in its own transaction with its row in
+  `schema_migrations`, so restarting the app (or `spider migrate`) applies a
+  new one. `spider g feature` creates one. **Never edit a migration that
+  ran**: the app refuses to start (`error.MigrationChanged`); add a new one.
 
 ## Tests
 

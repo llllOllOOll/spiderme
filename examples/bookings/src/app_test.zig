@@ -26,7 +26,7 @@ fn run() !void {
     // `./test.sh` starts a PostgreSQL that lives for one run and points the
     // PG_* variables at it; the tables are made here, as main() makes them.
     try spider.pg.init(gpa, io, .{ .database = "bookings_test" });
-    try @import("core").db.migrations.migrate(gpa);
+    _ = try main.migrate(gpa);
 
     try main.serve(gpa, io);
 }

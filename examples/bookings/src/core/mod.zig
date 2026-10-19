@@ -10,4 +10,3 @@ test {
 test "every file with tests is part of this test binary" {
     try @import("spider").testing.expectAllTestsDiscovered(@import("test_manifest"));
 }
-pub const db = @import("db/mod.zig");
