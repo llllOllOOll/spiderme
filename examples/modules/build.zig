@@ -56,6 +56,7 @@ pub fn build(b: *std.Build) void {
         .{ "src/compile_errors/wrong_spider.zig", "spider.module(\"old_widget\"): supports Spider >=0.12.0 <0.13.0, but this is Spider 0.11.0" },
         .{ "src/compile_errors/boot_signature.zig", "mountModules: module \"late\": boot must be `pub fn boot(b: spider.Boot) !void`" },
         .{ "src/compile_errors/requires_missing.zig", "mountModules: module \"billing\" requires \"audit\", which is not mounted: add it to the same mountModules call" },
+        .{ "src/compile_errors/migrations_order.zig", "spider.module(\"audit\"): migration \"0001_init\" comes after \"0002_actor\": list migrations in the order they run, without repeats" },
     };
     for (refused) |case| {
         const t = b.addTest(.{ .root_module = b.createModule(.{
@@ -67,6 +68,20 @@ pub fn build(b: *std.Build) void {
         t.expect_errors = .{ .contains = case[1] };
         test_step.dependOn(&t.step);
     }
+
+    // The modules' migrations on a real PostgreSQL: not part of `test`,
+    // ./test-db.sh starts a database for the run.
+    const db_tests = b.addRunArtifact(b.addTest(.{ .root_module = b.createModule(.{
+        .root_source_file = b.path("src/db_test.zig"),
+        .target = target,
+        .optimize = optimize,
+        .imports = &.{
+            .{ .name = "spider", .module = spider_mod },
+            .{ .name = "spider_notify", .module = notify_mod },
+        },
+    }) }));
+    db_tests.has_side_effects = true;
+    b.step("test-db", "The modules' migrations (needs ./test-db.sh)").dependOn(&db_tests.step);
 
     // The module's own tests, in its own package, on its own Spider.
     const module_tests = b.addSystemCommand(&.{ b.graph.zig_exe, "build", "test" });

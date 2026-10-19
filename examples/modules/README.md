@@ -21,5 +21,9 @@ show code that stopped working.
   `HEARTBEAT_TOKEN`: the server refuses to start.
 - `src/compile_errors/` holds modules Spider refuses at compile time; the
   build checks that each fails with its message.
+- `src/audit/` is a module with tables. `src/db_test.zig` applies its
+  migrations and notify's on a PostgreSQL that exists for one run:
+
+      ./test-db.sh
 
 The site's own `zig build test` runs these too.
