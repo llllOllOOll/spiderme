@@ -66,3 +66,11 @@ A project created with `--pg` also gets a `docker-compose.yml`. It does not run 
 ```bash
 docker compose up -d
 ```
+
+A PostgreSQL project migrates when it starts, like any other. The same image can also migrate as a step of its own, before the new version starts: with `SPIDER_MIGRATE` set, the app applies the migrations and exits.
+
+```bash
+docker run --rm --env-file .env -e SPIDER_MIGRATE=1 myapp
+```
+
+[Migrations in production](/docs/migrations) says when that is worth doing.

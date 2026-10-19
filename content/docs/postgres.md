@@ -30,14 +30,16 @@ PG_DB=bookings_development
 
 `main` opens the connections and applies the migrations before it serves:
 
-```zig from=examples/bookings/src/main.zig decl=main
+```zig from=examples/bookings/src/main.zig decl=main,migrate
 ```
 
 `db.init` opens a pool of connections, ten unless `.pool_size` says otherwise. Every query takes one from the pool and gives it back. What `.{}` leaves out comes from the `PG_*` variables.
 
+The migrations are the files of `src/core/db/migrations/`, built into the binary: `build.zig` has a line for it, and there is no list to keep. `migrate` applies the ones that have not run, each in a transaction of its own, so a new database, or a new container, is ready when the server starts. With `SPIDER_MIGRATE=1` the app only migrates and exits, which is also what `spider migrate` runs. [Migrations in production](/docs/migrations) is about running them on a server.
+
 ## A rule the database keeps
 
-A migration is a SQL file, as with SQLite. This one makes the bookings, and with them the rule of the whole app:
+A migration is a SQL file, as with SQLite, and the files run in the order of their names. This one makes the bookings, and with them the rule of the whole app:
 
 ```sql from=examples/bookings/src/core/db/migrations/1791667710_create_bookings.sql
 ```

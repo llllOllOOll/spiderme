@@ -26,6 +26,8 @@ To add one by hand, write the file and add it to the list in `src/core/db/migrat
 ```zig from=examples/posts/src/core/db/migrations.zig decl=MIGRATIONS
 ```
 
+A project on PostgreSQL has no list: every file of the folder is built into the binary, and they run in the order of their names. [Migrations in production](/docs/migrations) is about that.
+
 A migration can also put rows in: the second one of Posts adds four posts, so a new copy of the app has something to show.
 
 ## Queries
