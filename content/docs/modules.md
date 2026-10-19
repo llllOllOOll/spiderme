@@ -48,7 +48,16 @@ When the app compiles, `mountModules` checks each module's manifest, the exact s
 
 Mounting them in two calls would hide their dependencies from each other, so `listen()` refuses it (`mountModules ran 2 times: mount every module in one call`).
 
-What a module declares is mounted with it: its routes beside the app's, its jobs started by `listen()`. They are checked like the app's own, so `spider routes` lists a module's routes too.
+What a module declares is mounted with it: its routes beside the app's, its jobs started by `listen()`. `spider routes` lists them with the app's own:
+
+```text
+GET     /                                                public
+GET     /_spider/health                                  public  quiet_log
+GET     /heartbeat                                       public  quiet_log
+GET     /up                                              public  quiet_log
+4 routes
+1 background jobs, every: 1000ms
+```
 
 ## Before the server listens
 
@@ -105,4 +114,4 @@ A module says which versions of Spider it was tested with, as a range: `.spider 
 error: spider.module("old_widget"): supports Spider >=0.12.0 <0.13.0, but this is Spider 0.11.0
 ```
 
-So after `spider update`, a module that was not tested with the new Spider stops the build until a version of it that was is out. For the official modules that wait is short: a Spider release does not ship until every one of them passes on it ([Writing a module](/docs/writing-modules) says how).
+So after `spider update`, a module that was not tested with the new Spider stops the build until a version of it that was is out. The official modules are tested before Spider is: a release does not ship until every one of them passes on it, and their ranges are then widened to include it ([Writing a module](/docs/writing-modules) says how).

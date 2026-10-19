@@ -17,7 +17,7 @@ The code on this page is from `examples/modules` ([source](https://github.com/ll
 
 - `.name`: lowercase letters, digits and `_`, starting with a letter, at most 64 bytes. Unique in the app.
 - `.version`: the module's own version, `major.minor.patch`.
-- `.spider`: the versions of Spider the module was tested with. One or more comparisons separated by spaces, all of which must hold: `>=0.11.0 <0.12.0`. `^` and `~` are not understood. Spider compares it with `spider.version`, the version it is.
+- `.spider`: the versions of Spider the module was tested with. One or more comparisons separated by spaces, all of which must hold: `>=0.11.0 <0.12.0`. `^` and `~` are not understood. Spider compares it with its own version, `spider.version`.
 - `.requires`: other modules, by name. They start before this one, and must be mounted in the same call.
 - `.migrations`: its tables, below.
 - `.env`: the variables it reads. `.required` ones must be set, and not blank, for the server to start; `.optional` ones are there for the reader.

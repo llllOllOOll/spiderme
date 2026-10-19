@@ -8,7 +8,7 @@ order: 285
 
 An app on PostgreSQL keeps its migrations inside its binary. A server that runs the app needs nothing else to bring its database up to date: no command line tool, no SQL files beside it. This page is about what a run does, how to migrate a server, what keeps the app from starting, and how to move an older app to it.
 
-A project on SQLite keeps the list of [Database](/docs/database) and is not concerned. The code here is from [Bookings](https://bookings.spiderme.org), the example app in `examples/bookings` ([source](https://github.com/llllOllOOll/spiderme/tree/main/examples/bookings)).
+A project on SQLite keeps its list of migrations, as [Database](/docs/database) shows, and nothing here concerns it. The code here is from [Bookings](https://bookings.spiderme.org), the example app in `examples/bookings` ([source](https://github.com/llllOllOOll/spiderme/tree/main/examples/bookings)).
 
 ## In the binary
 
@@ -64,7 +64,7 @@ The checksum is how Spider knows. A migration whose SQL is not what ran stops th
 
 ## What keeps a server from starting
 
-A server given the migrations (`.migrations(...)`, as `migrate` does above) checks them before it listens, and refuses to start while one has not run. A test of Bookings gives it one more file than the database has seen:
+A server given the migrations with `.migrations(...)` checks them before it listens, and refuses to start while one has not run, naming it. `main` above gives them only to the server that migrates, since it migrates before every start. An app that migrates as a step of its own gives them to the server that serves as well, `server.migrations(migrations)`, and a version started on a database nobody migrated stops at once instead of failing on the first query. A test of Bookings gives a server one more file than the database has seen:
 
 ```zig from=examples/bookings/src/migrations_test.zig decl=migrations decl="a migration the database does not have keeps the server from starting"
 ```
