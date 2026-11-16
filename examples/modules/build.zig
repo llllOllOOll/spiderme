@@ -53,7 +53,7 @@ pub fn build(b: *std.Build) void {
     // What Spider refuses at compile time: each file must fail to build,
     // with that message.
     const refused = [_][2][]const u8{
-        .{ "src/compile_errors/wrong_spider.zig", "spider.module(\"old_widget\"): supports Spider >=0.12.0 <0.13.0, but this is Spider 0.11.0" },
+        .{ "src/compile_errors/wrong_spider.zig", "spider.module(\"old_widget\"): supports Spider >=0.15.0 <0.16.0, but this is Spider 0.14.0-dev" },
         .{ "src/compile_errors/boot_signature.zig", "mountModules: module \"late\": boot must be `pub fn boot(b: spider.Boot) !void`" },
         .{ "src/compile_errors/requires_missing.zig", "mountModules: module \"billing\" requires \"audit\", which is not mounted: add it to the same mountModules call" },
         .{ "src/compile_errors/migrations_order.zig", "spider.module(\"audit\"): migration \"0001_init\" comes after \"0002_actor\": list migrations in the order they run, without repeats" },

@@ -5,7 +5,7 @@ const audit = struct {
     pub const spider_module = spider.module(.{
         .name = "audit",
         .version = "0.2.0",
-        .spider = ">=0.11.0 <0.12.0",
+        .spider = ">=0.11.0 <0.15.0",
         .migrations = .{
             .{ .name = "0002_actor", .sql = "ALTER TABLE audit_events ADD COLUMN actor TEXT;" },
             .{ .name = "0001_init", .sql = "CREATE TABLE audit_events (id BIGINT PRIMARY KEY);" },

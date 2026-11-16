@@ -5,7 +5,7 @@ const old_widget = struct {
     pub const spider_module = spider.module(.{
         .name = "old_widget",
         .version = "2.0.0",
-        .spider = ">=0.12.0 <0.13.0",
+        .spider = ">=0.15.0 <0.16.0",
     });
 };
 

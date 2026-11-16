@@ -5,13 +5,13 @@
     .minimum_zig_version = "0.17.0",
     .dependencies = .{
         .spider = .{
-            .url = "git+https://github.com/llllOllOOll/spider?ref=v0.11.0#4deaac0c713a78d801763cc072c9b48182447625",
-            .hash = "spider-0.11.0-P7cGrgVS0wDwj8Kifdr2RaEiXPkVaFbNaDNbzGeKiI3f",
+            .url = "git+https://github.com/llllOllOOll/spider?ref=develop#25b88567540d3e1bb05be464076cb9d679d44156",
+            .hash = "spider-0.14.0-dev-P7cGrnsp2wCjvf7iJPo6YGDPCkbQHvZEC8erVSdGDtZ9",
         },
         // The official modules: one package, pinned to a commit.
         .spider_modules = .{
-            .url = "git+https://github.com/llllOllOOll/spider-modules#d99f79f78e29fac413170c92c8f879d9441d60d5",
-            .hash = "spider_modules-0.1.0-9C7p2CmAAgCFAVi-gFFRvcerLcu2TO8qm-GZOtmg3ax0",
+            .url = "git+https://github.com/llllOllOOll/spider-modules#cdb128bb7881e48d60ccf97309f84cc013b94169",
+            .hash = "spider_modules-0.1.0-9C7p2AwBCQCwng3kEPZpQiSreoGi4X-hCfzliLDw9RV4",
         },
         // A module of this example, in a folder of its own.
         .heartbeat = .{

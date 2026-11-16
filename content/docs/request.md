@@ -70,7 +70,7 @@ A field the form did not send is an empty string, zero or `false`; an optional o
 
 ## Typed parameters
 
-Instead of reading and converting a value yourself, a handler can ask for it in its parameters. `spider.Path` takes a path segment as a number or text, and `spider.Form` takes the form. A value that does not convert answers 400 before the handler runs.
+Instead of reading and converting a value yourself, a handler can ask for it in its parameters. `spider.Path` takes a path segment as a number or text, and `spider.Form` takes the form. A path value that does not convert names nothing and answers 404; a form that does not convert answers 400. Either way the handler does not run.
 
 ```zig from=examples/posts/src/features/posts/api.zig decl=show
 ```

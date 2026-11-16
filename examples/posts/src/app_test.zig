@@ -405,7 +405,7 @@ test "GET /api/posts lists, searches and limits; its answers are not cached" {
     try bad.expectContains("limit must be a whole number");
 }
 
-test "GET /api/posts/:id shows one post; an id that is not a number is a 400" {
+test "GET /api/posts/:id shows one post; an id that is not a number names no post: 404" {
     const app = try spider.testing.start(run);
 
     var one = try app.request(.{ .target = "/api/posts/4", .headers = &.{key} });
@@ -415,7 +415,7 @@ test "GET /api/posts/:id shows one post; an id that is not a number is a 400" {
 
     var bad = try app.request(.{ .target = "/api/posts/four", .headers = &.{key} });
     defer bad.deinit();
-    try bad.expectStatus(400);
+    try bad.expectStatus(404);
 }
 
 test "POST /api/posts saves a post sent as JSON" {

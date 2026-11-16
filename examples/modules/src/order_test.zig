@@ -17,7 +17,7 @@ const audit = struct {
     pub const spider_module = spider.module(.{
         .name = "audit",
         .version = "1.0.0",
-        .spider = ">=0.11.0 <0.12.0",
+        .spider = ">=0.11.0 <0.15.0",
     });
 
     pub fn check(_: *spider.Check) !void {
@@ -29,7 +29,7 @@ const billing = struct {
     pub const spider_module = spider.module(.{
         .name = "billing",
         .version = "1.0.0",
-        .spider = ">=0.11.0 <0.12.0",
+        .spider = ">=0.11.0 <0.15.0",
         // audit starts before billing, whatever the order they are mounted in.
         .requires = .{"audit"},
     });
@@ -43,7 +43,7 @@ const mailer = struct {
     pub const spider_module = spider.module(.{
         .name = "mailer",
         .version = "1.0.0",
-        .spider = ">=0.11.0 <0.12.0",
+        .spider = ">=0.11.0 <0.15.0",
         .env = .{ .required = .{"EXAMPLE_SMTP_URL"} },
     });
 };

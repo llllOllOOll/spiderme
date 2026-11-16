@@ -14,7 +14,7 @@ pub const spider_module = spider.module(.{
     .name = "heartbeat",
     .version = "0.1.0",
     // The Spider versions this module was tested with.
-    .spider = ">=0.11.0 <0.12.0",
+    .spider = ">=0.11.0 <0.15.0",
     // Spider refuses to start the server while one of these is not set.
     .env = .{ .required = .{"HEARTBEAT_TOKEN"} },
 });

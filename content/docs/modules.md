@@ -108,10 +108,10 @@ The module's routes and jobs are tested like the app's own, through `spider.test
 
 ## Versions
 
-A module says which versions of Spider it was tested with, as a range: `.spider = ">=0.11.0 <0.12.0"`. An app built with a Spider outside it does not compile:
+A module says which versions of Spider it was tested with, as a range: `.spider = ">=0.11.0 <0.15.0"`. An app built with a Spider outside it does not compile:
 
 ```text
-error: spider.module("old_widget"): supports Spider >=0.12.0 <0.13.0, but this is Spider 0.11.0
+error: spider.module("old_widget"): supports Spider >=0.15.0 <0.16.0, but this is Spider 0.14.0-dev
 ```
 
 So after `spider update`, a module that was not tested with the new Spider stops the build until a version of it that was is out. The official modules are tested before Spider is: a release does not ship until every one of them passes on it, and their ranges are then widened to include it ([Writing a module](/docs/writing-modules) says how).

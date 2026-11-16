@@ -17,7 +17,7 @@ The code on this page is from `examples/modules` ([source](https://github.com/ll
 
 - `.name`: lowercase letters, digits and `_`, starting with a letter, at most 64 bytes. Unique in the app.
 - `.version`: the module's own version, `major.minor.patch`.
-- `.spider`: the versions of Spider the module was tested with. One or more comparisons separated by spaces, all of which must hold: `>=0.11.0 <0.12.0`. `^` and `~` are not understood. Spider compares it with its own version, `spider.version`.
+- `.spider`: the versions of Spider the module was tested with. One or more comparisons separated by spaces, all of which must hold: `>=0.11.0 <0.15.0`. `^` and `~` are not understood. Spider compares it with its own version, `spider.version`.
 - `.requires`: other modules, by name. They start before this one, and must be mounted in the same call.
 - `.migrations`: its tables, below.
 - `.env`: the variables it reads. `.required` ones must be set, and not blank, for the server to start; `.optional` ones are there for the reader.
@@ -29,7 +29,7 @@ An unknown field does not compile.
 Every rule is checked when the app compiles, and the message names the module. The example keeps four modules that must fail, and its build checks each message: one tested with another Spider, a `boot` that Spider cannot call, a requirement that is not mounted, and migrations out of order:
 
 ```text
-spider.module("old_widget"): supports Spider >=0.12.0 <0.13.0, but this is Spider 0.11.0
+spider.module("old_widget"): supports Spider >=0.15.0 <0.16.0, but this is Spider 0.14.0-dev
 mountModules: module "late": boot must be `pub fn boot(b: spider.Boot) !void`
 mountModules: module "billing" requires "audit", which is not mounted: add it to the same mountModules call
 spider.module("audit"): migration "0001_init" comes after "0002_actor": list migrations in the order they run, without repeats
