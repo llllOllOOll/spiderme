@@ -66,6 +66,8 @@ What the visitor then sees is decided in one place, the error handler given to `
 ```zig from=examples/posts/src/main.zig decl=onError,fallback,api_errors
 ```
 
+Without a function of its own, the ready-made handler does the same for a page: `spider.errorHandler(.{ .not_found_view = "not-found", .forbidden_view = "forbidden" })` renders those views for a full page that answers 404 (an unknown route, `error.NotFound`, a path value that is not of its type) or 403. The 404 view gets `.message` and `.path`. A JSON or htmx caller keeps its usual answer.
+
 To say more about a 400, set the detail before returning the error, as the API does for a `?limit=` that is not a number:
 
 ```zig from=examples/posts/src/features/posts/api.zig decl=list
