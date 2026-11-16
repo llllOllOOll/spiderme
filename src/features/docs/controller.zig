@@ -123,6 +123,14 @@ fn codeBlock(allocator: std.mem.Allocator, node: spider.zmd.Node) std.mem.Alloca
     return std.fmt.allocPrint(allocator, "<div class=\"code-block\" data-lang=\"{s}\">\n  <pre><code>{s}</code></pre>\n</div>\n", .{ @tagName(highlight.langOf(lang_name)), code });
 }
 
+test "every page renders with its code coloured" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    for (pages.all) |entry| {
+        _ = try spider.zmd.parse(arena.allocator(), entry.markdown, .{ .h2 = headings.h2, .h3 = headings.h3, .h4 = headings.h4, .block = codeBlock });
+    }
+}
+
 /// Anything but letters and digits a single `-`, the case kept; what is
 /// inside `<...>` (markup the heading already has) does not count.
 pub fn headingId(allocator: std.mem.Allocator, content: []const u8) ![]const u8 {

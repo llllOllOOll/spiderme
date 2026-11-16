@@ -211,8 +211,11 @@ fn bash(out: *Out, s: []const u8) !void {
         } else if (ch != ' ' and ch != '\t' and ch != '\\' and (i == 0 or s[i - 1] == ' ' or s[i - 1] == '\n' or s[i - 1] == '\t' or s[i - 1] == '|' or s[i - 1] == '(')) {
             end = i;
             while (end < s.len and s[end] != ' ' and s[end] != '\n' and s[end] != ';' and s[end] != '|' and s[end] != ')') end += 1;
+            if (end == i) end = i + 1; // a lone `)` or `|`: plain text
             const word = s[i..end];
-            if (isOneOf(word, &bash_keywords)) {
+            if (end == i + 1 and !isIdent(word[0]) and word[0] != '.' and word[0] != '/' and word[0] != '~') {
+                // punctuation, left plain
+            } else if (isOneOf(word, &bash_keywords)) {
                 class = "k";
             } else if (command_next and std.mem.indexOfScalar(u8, word, '=') == null) {
                 class = "f";
