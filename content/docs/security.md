@@ -53,7 +53,7 @@ Behind a proxy, every connection comes from the proxy. The visitor's address is 
 ```zig from=examples/guide/src/security_test.zig decl="the visitor's address: what the trusted proxy wrote, not what the visitor claims"
 ```
 
-`trusted_proxies` takes addresses or ranges (`"10.0.0.0/8"`). Empty, the default, the header is ignored and `c.clientIp()` is the address of the connection. Use `c.clientIp()` for logs, audit and rate limits, and never read the header yourself.
+`trusted_proxies` takes addresses or ranges (`"10.0.0.0/8"`). Empty, the default, the header is ignored and `c.clientIp()` is the address of the connection. An entry with a port or an IPv6 address in brackets (`203.0.113.7:4242`, `[2001:db8::1]:443`), as some proxies write, is read without them; an entry that cannot be read gives no address rather than the proxy's. Use `c.clientIp()` for logs, audit and rate limits, and never read the header yourself.
 
 ## One id per request
 

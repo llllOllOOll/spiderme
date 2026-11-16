@@ -33,6 +33,18 @@ The value is text. `load` turns it into a number, and gives null when it is not 
 
 A fixed path wins over a dynamic one: `/posts/new` reaches `new`, not `show` with an id of "new". The order the routes are written in does not matter.
 
+Instead of reading the text and converting it, a handler can ask for the value already converted, in its parameters: `id: spider.Path(u32, "id")`, read as `id.value` ([Requests](/docs/request)). A value that does not convert names nothing, so the answer is 404 before the handler runs; an enum takes its tag names, `spider.Path(enum { daily, weekly }, "period")`, and any other name is a 404 too. A route whose path has no `:id` for a handler that reads one is refused when the server starts, with a message that names the route.
+
+## The rest of a path
+
+A path that ends in `/*` takes everything after it, at any depth: `/files/*` answers `/files/a` and `/files/a/b/c.pdf`. The handler reads it with `c.params.get("*")`, as it was sent (`a/b%2Fc.pdf`).
+
+## Methods
+
+A request to a path that has routes, but none for its method, answers `405` with an `Allow` header listing the methods the path does have; a path with no route at all is a 404. `HEAD` is answered by the `GET` route: the same status and headers, without the body. A route registered for `HEAD` itself wins.
+
+A request that declares a body is read whatever its method, so a `DELETE` with a JSON body reaches the handler with it.
+
 ## How routes reach the server
 
 `src/main.zig` does not list routes. It mounts the features, and that registers every function of a feature's `routes.zig` that takes no parameters and returns a group:

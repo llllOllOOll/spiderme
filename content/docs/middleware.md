@@ -48,7 +48,7 @@ The pages of Posts are another group, and neither middleware touches them.
 
 - `spider.logger` prints one line per request: status, method, path and time.
 - `spider.session.middleware()` reads the login cookie and tells the routes who is signed in. See [Login](/docs/auth).
-- `spider.gzip` compresses responses for clients that accept it.
+- `spider.gzip` compresses responses for clients that accept it (`gzip` or `*` above `q=0` in `Accept-Encoding`). It leaves alone a response that set its own `Content-Encoding`, formats that are compressed already (images other than SVG, video, audio, fonts, archives, PDF, Office files) and any body it would not make smaller.
 - `spider.varyHtmx` adds `Vary: HX-Request` to HTML responses.
 - `spider.forceHttps(.{ .default_base_url = "https://example.com" })` redirects plain HTTP to HTTPS behind a proxy.
 

@@ -6,7 +6,7 @@ order: 60
 
 # Database
 
-A new project uses SQLite: the data is one file, `db.sqlite`, next to the app, and there is nothing to install. `spider new myapp --pg` makes a project on PostgreSQL instead. [PostgreSQL](/docs/postgres) is about that.
+A new project uses SQLite: the data is one file, `db.sqlite`, next to the app, and there is nothing to install. `spider new myapp --pg` makes a project on PostgreSQL instead. [PostgreSQL](/docs/postgres) is about that, and [SQL Server](/docs/sqlserver) about the third database Spider talks to.
 
 The code on this page is from [Posts](https://posts.spiderme.org), the example app in `examples/posts` ([source](https://github.com/llllOllOOll/spiderme/tree/main/examples/posts)).
 

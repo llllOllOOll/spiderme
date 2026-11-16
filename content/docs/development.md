@@ -38,6 +38,8 @@ Open another terminal. `zig build test`, `spider g feature`, `spider routes` and
 
 Only one `spider dev` runs in a project at a time. A second one says so and stops.
 
+`spider dev` does not run on Windows yet: there, `zig build run` builds and runs the app, and a Debug build still reads templates from disk, so a saved template shows on the next request.
+
 ## Good to know
 
 - Stop it with Ctrl+C.

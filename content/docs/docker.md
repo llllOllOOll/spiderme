@@ -37,6 +37,15 @@ zig build -Doptimize=ReleaseSmall
 
 The second is the image you run. It holds two things: the binary and the `public` folder. Templates are not copied, because a release build keeps them inside the binary.
 
+The build also writes the binary's debug info to `zig-out/bin/<app>.debug` ([The build](/docs/build#The-debug-info-in-a-file-of-its-own)). It stays in the first stage, out of the image. To turn a crash's stack trace into files and lines, keep that file for each version you deploy. To take it out of the first stage:
+
+```bash
+docker build --target builder -t myapp-build .
+docker create --name myapp-build myapp-build
+docker cp myapp-build:/app/zig-out/bin/myapp.debug .
+docker rm myapp-build
+```
+
 ## What stays out of the image
 
 The `.dockerignore` keeps `.env`, the SQLite database and your local build out of the build. Tailwind, the icons, htmx and Alpine are not in git either: the build downloads them again, for the image's own system.

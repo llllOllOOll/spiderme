@@ -22,6 +22,11 @@ Everything has a default, so the file only lists what the app changes. The setti
 - `static_dir`: the folder served as [static files](/docs/static). `null` serves none.
 - `max_body_bytes`: the largest request body accepted, 10 MB unless you say otherwise. A bigger one is answered 413 before it is read.
 - `require_route_access`: with `true`, the app refuses to start while a route does not say who may call it, and names each one.
+- `default_layout`: the layout of a page without `extends` whose route names none. See [Templates](/docs/templates#A-layout-without-extends).
+- `templates_strict`: whether a name a template reads and the data does not have is said (`.warn`), fails the view (`.error`) or neither (`.off`). Unset, `.warn` in a Debug build. See [Templates](/docs/templates#A-name-that-is-not-there).
+- `compiled_templates`: `false` turns off the [compiled templates](/docs/templates#Compiled-templates) of release builds.
+- `request_memory_retain`: how much of a request's memory a connection keeps for its next request, 1 MiB unless you say otherwise, never more than it used. Lower it for many idle keep-alive connections on little memory.
+- `trusted_proxies`: the addresses of the proxies whose `X-Forwarded-For` `c.clientIp()` believes ([Security](/docs/security)).
 
 ## The environment
 
