@@ -8,5 +8,6 @@ test "docs routes: method, path and access" {
         .{ "GET", "/docs", "public" },
         .{ "GET", "/docs/search", "public" },
         .{ "GET", "/docs/:page", "public" },
+        .{ "GET", "/theme/:mode", "public" },
     });
 }

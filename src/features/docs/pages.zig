@@ -33,6 +33,11 @@ pub const first = all[0].slug;
 /// The Zig release the documentation is written for (shown in the header).
 pub const zig_version = "0.17.0";
 
+/// The Spider these pages describe, and the latest release (the version
+/// switch in the header).
+pub const spider_version = "0.14.0-dev";
+pub const stable_version = "0.12.1";
+
 /// "Edit this page" links to `edit_base ++ slug ++ ".md"`.
 pub const edit_base = "https://github.com/llllOllOOll/spiderme/edit/main/content/docs/";
 

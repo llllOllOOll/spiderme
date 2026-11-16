@@ -9,5 +9,6 @@ pub fn build() spider.Group {
     _ = g.get("/docs", controller.index, .{ .public = true });
     _ = g.get("/docs/search", controller.search, .{ .public = true });
     _ = g.get("/docs/:page", controller.page, .{ .public = true });
+    _ = g.get("/theme/:mode", controller.theme, .{ .public = true });
     return g;
 }

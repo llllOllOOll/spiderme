@@ -9,8 +9,44 @@
     --paper: #FFFFFF;
     --thread: #FF5300;      /* the thread, the dots, the logo */
     --link: #C2410C;        /* link text: the orange darkened for contrast */
+    --panel: #F7F6F8;       /* the search box, the boxes of the side column */
+    --soft: #FFF1EA;        /* behind the page being read, in the menu */
+    --code-bg: #1D1B24;     /* the install command */
+    --code-fg: #E9E6EF;
     --sans: 'Atkinson Hyperlegible', system-ui, sans-serif;
     --mono: 'JetBrains Mono', ui-monospace, monospace;
+    color-scheme: light;
+}
+
+/* Dark: the system's choice, unless the reader picked one with the switch
+   in the header (data-theme on <html>, from the `theme` cookie). */
+@media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+        --ink: #F3F1F6;
+        --text: #CFCCD6;
+        --muted: #9A96A5;
+        --rule: #2B2933;
+        --paper: #141318;
+        --thread: #FF6A1F;
+        --link: #FF9A62;
+        --panel: #1B1A21;
+        --soft: #2A1A12;
+        --code-bg: #0E0D12;
+        color-scheme: dark;
+    }
+}
+:root[data-theme="dark"] {
+    --ink: #F3F1F6;
+    --text: #CFCCD6;
+    --muted: #9A96A5;
+    --rule: #2B2933;
+    --paper: #141318;
+    --thread: #FF6A1F;
+    --link: #FF9A62;
+    --panel: #1B1A21;
+    --soft: #2A1A12;
+    --code-bg: #0E0D12;
+    color-scheme: dark;
 }
 
 /* The two typefaces, served by the site (SIL Open Font License 1.1: the
@@ -41,7 +77,7 @@
 
 *, *::before, *::after { box-sizing: border-box; }
 
-html { -webkit-text-size-adjust: 100%; }
+html { -webkit-text-size-adjust: 100%; scroll-padding-top: 16px; }
 
 body {
     margin: 0;
@@ -57,9 +93,19 @@ a:hover { text-decoration: underline; }
 
 a:focus-visible,
 input:focus-visible,
+summary:focus-visible,
 .menu-toggle:focus-visible + .menu-button {
-    outline: 2px solid var(--ink);
+    outline: 2px solid var(--thread);
     outline-offset: 2px;
+}
+
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
 }
 
 .skip {
@@ -81,8 +127,8 @@ input:focus-visible,
     align-items: center;
     flex-wrap: wrap;
     gap: 8px 24px;
-    min-height: 56px;
-    padding: 8px 32px;
+    min-height: 60px;
+    padding: 8px 28px;
     border-bottom: 1px solid var(--rule);
     font-size: 14px;
 }
@@ -97,138 +143,157 @@ input:focus-visible,
 }
 .logo span { color: var(--ink); }
 
-.top-links { display: flex; gap: 24px; }
+.top-links { display: flex; flex-wrap: wrap; gap: 4px 22px; color: var(--muted); }
+.top-links a:hover { color: var(--ink); }
 
-.search {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin-left: auto;
-    color: var(--muted);
-}
+.search { margin-left: auto; }
 .search input {
-    width: 160px;
-    padding: 2px 0;
-    border: 0;
-    border-bottom: 1px solid var(--ink);
-    border-radius: 0;
-    background: transparent;
+    width: 280px;
+    height: 36px;
+    padding: 0 12px;
+    border: 1px solid var(--rule);
+    border-radius: 8px;
+    background: var(--panel);
     color: var(--ink);
     font: inherit;
 }
+.search input::placeholder { color: var(--muted); }
 
-.zig {
+/* The version and the colours: <details> menus, so no JavaScript. */
+.menu { position: relative; }
+.menu summary {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    height: 36px;
+    padding: 0 12px;
+    border: 1px solid var(--rule);
+    border-radius: 8px;
+    list-style: none;
+    cursor: pointer;
     font-family: var(--mono);
-    font-size: 12px;
-    color: var(--muted);
+    font-size: 13px;
+    color: var(--ink);
 }
+.menu summary::-webkit-details-marker { display: none; }
+.version summary::after { content: "▾"; color: var(--muted); font-size: 11px; }
+.version .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--thread); }
+/* half light, half dark */
+.theme-icon {
+    width: 14px;
+    height: 14px;
+    border: 1.5px solid var(--ink);
+    border-radius: 50%;
+    background: linear-gradient(90deg, var(--ink) 50%, transparent 50%);
+}
+.menu-panel {
+    position: absolute;
+    right: 0;
+    top: calc(100% + 6px);
+    z-index: 5;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    width: max-content;
+    max-width: 280px;
+    padding: 8px;
+    border: 1px solid var(--rule);
+    border-radius: 8px;
+    background: var(--paper);
+    box-shadow: 0 8px 24px rgb(0 0 0 / 0.12);
+    font-size: 14px;
+}
+.menu-panel p { margin: 0; padding: 6px 8px; color: var(--text); }
+.menu-panel p b { display: block; font-family: var(--mono); font-weight: 500; color: var(--ink); }
+.menu-panel a { padding: 6px 8px; border-radius: 6px; color: var(--link); }
+.menu-panel a:hover { background: var(--soft); text-decoration: none; }
+.version .menu-panel { width: 260px; }
 
-/* ── page ───────────────────────────────────────────────────────────── */
+/* ── page: menu, text, and the side column ──────────────────────────── */
 
-.shell { display: flex; align-items: flex-start; }
+.shell {
+    display: grid;
+    grid-template-columns: 250px minmax(0, 1fr) 240px;
+    align-items: start;
+}
 
 .menu-toggle,
 .menu-button { display: none; }
 
-/* ── the thread ─────────────────────────────────────────────────────── */
+/* ── the menu of pages ──────────────────────────────────────────────── */
 
 .thread {
-    flex: none;
-    width: 224px;
-    padding: 28px 0 28px 36px;
-    font-size: 15px;
+    position: sticky;
+    top: 0;
+    max-height: 100vh;
+    overflow-y: auto;
+    padding: 24px 16px 32px 20px;
+    border-right: 1px solid var(--rule);
+    font-size: 14.5px;
 }
 
-.thread-line {
-    position: relative;
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-}
-.thread-line::before {
-    content: "";
-    position: absolute;
-    left: 4px;
-    top: 6px;
-    bottom: 6px;
-    width: 1px;
-    background: var(--thread);
-}
+.thread-line { display: flex; flex-direction: column; gap: 1px; }
 
 .thread-group {
-    padding: 14px 0 4px 26px;
-    font-size: 13px;
+    padding: 18px 10px 6px;
+    font-size: 11.5px;
     font-weight: 700;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
     color: var(--muted);
 }
-.thread-group:first-child { padding-top: 4px; }
+.thread-group:first-child { padding-top: 0; }
 
 .thread-link {
-    position: relative;
-    padding: 5px 0 5px 26px;
+    padding: 5px 10px;
+    border-radius: 6px;
+    color: var(--text);
 }
-/* one dot per page: hollow, on the thread */
-.thread-link::before {
-    content: "";
-    position: absolute;
-    left: 0;
-    top: 50%;
-    width: 9px;
-    height: 9px;
-    margin-top: -5px;
-    border: 1px solid var(--thread);
-    border-radius: 50%;
-    background: var(--paper);
-}
-/* the page being read: filled and larger */
+.thread-link:hover { background: var(--panel); text-decoration: none; }
+/* the page being read */
 .thread-link.current {
-    font-weight: 700;
+    background: var(--soft);
     color: var(--link);
-}
-.thread-link.current::before {
-    left: -2px;
-    width: 13px;
-    height: 13px;
-    margin-top: -7px;
-    border: 0;
-    background: var(--thread);
+    font-weight: 700;
 }
 
 /* ── content ────────────────────────────────────────────────────────── */
 
 .content {
-    flex: 1;
     min-width: 0;
-    padding: 28px 56px 56px 32px;
+    padding: 36px 48px 56px;
 }
 
-/* The reading column: about 58 characters of body text. Everything in it
-   (text, code, the footer) is this wide. */
-.column { max-width: 58ch; font-size: 18px; }
+/* The reading column: about 62 characters of body text. Everything in it
+   (text, code, the footer) is this wide. The overview is wider. */
+.column { max-width: 62ch; font-size: 17px; }
+.column.wide { max-width: 860px; }
 
-.prose { color: var(--text); line-height: 1.55; overflow-wrap: break-word; }
+.prose { color: var(--text); line-height: 1.6; overflow-wrap: break-word; }
 
 .prose h1 {
     margin: 0 0 16px;
-    font-size: 44px;
+    font-size: 42px;
     font-weight: 700;
-    line-height: 1.05;
+    line-height: 1.08;
     letter-spacing: -0.02em;
     color: var(--ink);
+    text-wrap: balance;
 }
 .prose h2 {
-    margin: 32px 0 8px;
+    margin: 40px 0 8px;
     font-size: 24px;
     font-weight: 700;
     line-height: 1.2;
     color: var(--ink);
 }
 .prose h3 {
-    margin: 24px 0 8px;
+    margin: 28px 0 8px;
     font-size: 19px;
     font-weight: 700;
     color: var(--ink);
 }
+.prose strong { color: var(--ink); }
 .prose p,
 .prose ul,
 .prose ol { margin: 0 0 16px; }
@@ -246,6 +311,7 @@ input:focus-visible,
 .prose code {
     font-family: var(--mono);
     font-size: 0.82em;
+    color: var(--ink);
     /* A long name or type in the middle of a sentence breaks rather than
        pushing the page wider than a phone. */
     overflow-wrap: anywhere;
@@ -253,8 +319,9 @@ input:focus-visible,
 .prose pre {
     margin: 0 0 16px;
     padding: 14px 18px;
-    border: 1px solid var(--ink);
-    border-radius: 2px;
+    border: 1px solid var(--rule);
+    border-radius: 8px;
+    background: var(--panel);
     overflow-x: auto;
     color: var(--ink);
     font-family: var(--mono);
@@ -266,14 +333,24 @@ input:focus-visible,
    language name in a bar above it: not shown here. */
 .prose .code-block-bar { display: none; }
 
+.prose table {
+    display: block;
+    max-width: 100%;
+    overflow-x: auto;
+    border-collapse: collapse;
+    margin: 0 0 16px;
+    font-size: 15px;
+}
+.prose th,
+.prose td { padding: 6px 12px 6px 0; border-bottom: 1px solid var(--rule); text-align: left; }
+
+.prose img { max-width: 100%; height: auto; }
+
 .results { list-style: none; padding-left: 0; }
 
 .page-foot {
     display: flex;
-    flex-wrap: wrap;
-    justify-content: space-between;
-    gap: 8px 24px;
-    margin-top: 24px;
+    margin-top: 32px;
     padding-top: 12px;
     border-top: 1px solid var(--rule);
     font-size: 15px;
@@ -282,12 +359,181 @@ input:focus-visible,
 .page-foot a:hover { text-decoration: underline; }
 .page-foot .next { margin-left: auto; font-weight: 700; }
 
-/* ── small screens: the thread folds into a menu ────────────────────── */
+/* ── the side column: on this page, what is new ─────────────────────── */
+
+.aside {
+    position: sticky;
+    top: 0;
+    padding: 36px 20px 32px;
+    border-left: 1px solid var(--rule);
+    font-size: 13.5px;
+}
+.aside-title {
+    margin-bottom: 8px;
+    font-size: 11.5px;
+    font-weight: 700;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+    color: var(--muted);
+}
+.toc { display: flex; flex-direction: column; }
+.toc a {
+    padding: 3px 0 3px 12px;
+    border-left: 2px solid var(--rule);
+    color: var(--text);
+}
+.toc a:hover { border-color: var(--thread); color: var(--ink); text-decoration: none; }
+
+.news {
+    margin-top: 28px;
+    padding: 14px;
+    border: 1px solid var(--rule);
+    border-radius: 10px;
+    background: var(--panel);
+    color: var(--text);
+}
+.news b { color: var(--ink); }
+.news ul { margin: 8px 0 10px; padding-left: 16px; }
+.news li { margin-bottom: 2px; }
+.news code { font-family: var(--mono); font-size: 12px; }
+.news-more { color: var(--link); }
+
+.edit { display: block; margin-top: 20px; color: var(--muted); }
+
+/* ── the overview page ──────────────────────────────────────────────── */
+
+.overview h1 { font-size: 52px; max-width: 14ch; }
+.overview h1 :is(em, i) { font-style: normal; color: var(--thread); }
+.overview > p:first-of-type { font-size: 19px; color: var(--text); }
+
+/* the install command */
+.overview > .code-block:first-of-type pre {
+    border: 0;
+    background: var(--code-bg);
+    color: var(--code-fg);
+    font-size: 14px;
+}
+.overview > .code-block:first-of-type pre::before { content: "$ "; color: var(--thread); }
+.overview > .code-block:first-of-type pre code { color: inherit; }
+
+/* the numbers under it */
+.overview > .code-block:first-of-type + p { font-size: 14px; color: var(--muted); }
+.overview > .code-block:first-of-type + p strong { font-family: var(--mono); font-weight: 500; }
+
+/* the guide, in order: five steps side by side */
+.overview ol {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 0;
+    padding: 0;
+    border: 1px solid var(--rule);
+    border-radius: 10px;
+    overflow: hidden;
+    list-style: none;
+    counter-reset: step;
+}
+.overview ol li {
+    margin: 0;
+    padding: 14px 14px 16px;
+    border-right: 1px solid var(--rule);
+    font-size: 14px;
+    line-height: 1.45;
+    counter-increment: step;
+}
+.overview ol li:last-child { border-right: 0; }
+.overview ol li::before {
+    content: counter(step);
+    display: block;
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--thread);
+}
+.overview ol li a,
+.overview ul li > a:first-child {
+    display: block;
+    margin: 2px 0 4px;
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--ink);
+    text-decoration: none;
+}
+.overview ol li code {
+    display: inline-block;
+    margin-top: 10px;
+    padding: 2px 6px;
+    border: 1px solid var(--rule);
+    border-radius: 5px;
+    background: var(--panel);
+    font-size: 11.5px;
+    overflow-wrap: anywhere;
+}
+
+/* the code and the page it makes, side by side */
+.overview .code-block:has(+ p > img) {
+    float: left;
+    width: 56%;
+    margin-right: 2%;
+}
+.overview .code-block:has(+ p > img) pre { margin: 0; font-size: 12px; }
+.overview p:has(> img) {
+    float: right;
+    width: 42%;
+    margin: 0;
+}
+.overview p:has(> img) img {
+    display: block;
+    border: 1px solid var(--rule);
+    border-radius: 8px;
+}
+.overview p:has(> img) + h2 { clear: both; padding-top: 24px; }
+
+/* apps to read: three cards */
+.overview ul {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 16px;
+    padding: 0;
+    list-style: none;
+}
+.overview ul li {
+    margin: 0;
+    padding: 16px;
+    border: 1px solid var(--rule);
+    border-radius: 10px;
+    font-size: 14.5px;
+}
+.overview ul li code {
+    display: inline-block;
+    margin-left: 4px;
+    padding: 0 6px;
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+    font-size: 11px;
+    color: var(--muted);
+}
+
+/* ── narrower screens ───────────────────────────────────────────────── */
+
+@media (max-width: 1180px) {
+    .shell { grid-template-columns: 230px minmax(0, 1fr); }
+    .aside { display: none; }
+    .overview ol { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); }
+    .overview ol li { border-bottom: 1px solid var(--rule); }
+}
+
+@media (max-width: 960px) {
+    .overview .code-block:has(+ p > img),
+    .overview p:has(> img) { float: none; width: auto; margin: 0 0 16px; }
+    .overview ul { grid-template-columns: 1fr; }
+}
+
+/* ── small screens: the menu of pages folds ─────────────────────────── */
 
 @media (max-width: 760px) {
-    .top { padding: 8px 16px; gap: 8px 16px; }
-    .top-links { gap: 16px; }
-    .search { margin-left: 0; flex: 1; min-width: 140px; }
+    .top { padding: 8px 16px; gap: 8px 12px; }
+    .top-links { order: 5; width: 100%; gap: 4px 16px; }
+    .version { margin-left: auto; }
+    .search { order: 4; flex: 1 1 100%; margin-left: 0; }
     .search input { width: 100%; }
 
     .shell { display: block; }
@@ -319,8 +565,10 @@ input:focus-visible,
 
     .thread {
         display: none;
-        width: auto;
-        padding: 16px 16px 16px 20px;
+        position: static;
+        max-height: none;
+        padding: 16px;
+        border-right: 0;
         border-bottom: 1px solid var(--rule);
     }
     .menu-toggle:checked ~ .thread { display: block; }
@@ -328,5 +576,8 @@ input:focus-visible,
 
     .content { padding: 24px 16px 48px; }
     .prose h1 { font-size: 34px; }
-    .column { font-size: 17px; }
+    .overview h1 { font-size: 38px; }
+    .column { font-size: 16.5px; }
+    .overview ol { grid-template-columns: 1fr; }
+    .overview ol li { border-right: 0; }
 }

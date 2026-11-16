@@ -3,6 +3,76 @@ const spider = @import("spider");
 const pages = @import("pages.zig");
 
 const NavItem = struct { title: []const u8, href: []const u8, current: bool };
+const TocItem = struct { title: []const u8, id: []const u8 };
+
+/// The colours a reader picked with the switch in the header, kept in the
+/// `theme` cookie. Without the cookie the page follows the system.
+pub const Theme = enum { light, dark, system };
+
+/// The `data-theme` of `<html>`: "light", "dark", or "" to follow the system.
+fn themeOf(c: *spider.Ctx) []const u8 {
+    const value = c.cookie("theme") orelse return "";
+    const picked = std.meta.stringToEnum(Theme, value) orelse return "";
+    return switch (picked) {
+        .light => "light",
+        .dark => "dark",
+        .system => "",
+    };
+}
+
+/// The page to go back to after switching colours: a page of this site,
+/// never an address elsewhere (`//host` included). "/" for anything else.
+pub fn safeBack(back: ?[]const u8) []const u8 {
+    const path = back orelse return "/";
+    if (path.len == 0 or path[0] != '/') return "/";
+    if (path.len > 1 and (path[1] == '/' or path[1] == '\\')) return "/";
+    for (path) |ch| if (ch < 0x20 or ch == 0x7f) return "/";
+    return path;
+}
+
+test "safeBack: only a path of this site" {
+    try std.testing.expectEqualStrings("/docs/router", safeBack("/docs/router"));
+    try std.testing.expectEqualStrings("/docs/router#Methods", safeBack("/docs/router#Methods"));
+    try std.testing.expectEqualStrings("/", safeBack(null));
+    try std.testing.expectEqualStrings("/", safeBack(""));
+    try std.testing.expectEqualStrings("/", safeBack("https://example.com/"));
+    try std.testing.expectEqualStrings("/", safeBack("//example.com"));
+    try std.testing.expectEqualStrings("/", safeBack("/\\example.com"));
+    try std.testing.expectEqualStrings("/", safeBack("/docs\r\nSet-Cookie: x=1"));
+}
+
+/// The `## ` headings of a page's Markdown, for "On this page", with the
+/// same ids the rendered headings get. Lines inside code blocks are not
+/// headings.
+pub fn toc(arena: std.mem.Allocator, markdown: []const u8) ![]const TocItem {
+    var items: std.ArrayList(TocItem) = .empty;
+    var in_code = false;
+    var lines = std.mem.splitScalar(u8, markdown, '\n');
+    while (lines.next()) |raw| {
+        const line = std.mem.trimEnd(u8, raw, "\r");
+        if (std.mem.startsWith(u8, line, "```")) {
+            in_code = !in_code;
+            continue;
+        }
+        if (in_code or !std.mem.startsWith(u8, line, "## ")) continue;
+        const text = std.mem.trim(u8, line[3..], " ");
+        // The title as it reads: the backticks of code names left out.
+        const title = try std.mem.replaceOwned(u8, arena, text, "`", "");
+        try items.append(arena, .{ .title = title, .id = try headingId(arena, text) });
+    }
+    return items.items;
+}
+
+test "toc: the h2 headings, with the ids of the page, code blocks skipped" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const items = try toc(arena.allocator(), "# Title\n\n## Moving from 0.12 to 0.14\n\n```bash\n## not a heading\n```\n\n### Deeper\n\n## The `secret`\n");
+    try std.testing.expectEqual(@as(usize, 2), items.len);
+    try std.testing.expectEqualStrings("Moving from 0.12 to 0.14", items[0].title);
+    try std.testing.expectEqualStrings("Moving-from-0-12-to-0-14", items[0].id);
+    try std.testing.expectEqualStrings("The secret", items[1].title);
+    try std.testing.expectEqualStrings("The-secret", items[1].id);
+}
 const NavSection = struct { title: []const u8, pages: []const NavItem };
 
 /// The sidebar: the index grouped by section, in order. `current` is the
@@ -100,6 +170,12 @@ pub fn page(c: *spider.Ctx) !spider.Response {
     const has_next = i + 1 < pages.all.len;
     return c.view("docs/page", .{
         .title = current.title,
+        .theme = themeOf(c),
+        .path = try std.fmt.allocPrint(c.arena, "/docs/{s}", .{slug}),
+        .overview = std.mem.eql(u8, slug, "overview"),
+        .toc = try toc(c.arena, current.markdown),
+        .spider_version = pages.spider_version,
+        .stable_version = pages.stable_version,
         .content = spider.RawHtml{ .html = html },
         .sections = try nav(c.arena, i),
         .zig_version = pages.zig_version,
@@ -132,6 +208,12 @@ pub fn search(c: *spider.Ctx) !spider.Response {
     }
     return c.view("docs/page", .{
         .title = "Search",
+        .theme = themeOf(c),
+        .path = "/docs/search",
+        .overview = false,
+        .toc = @as([]const TocItem, &.{}),
+        .spider_version = pages.spider_version,
+        .stable_version = pages.stable_version,
         .content = spider.RawHtml{ .html = "" },
         .sections = try nav(c.arena, null),
         .zig_version = pages.zig_version,
@@ -144,4 +226,16 @@ pub fn search(c: *spider.Ctx) !spider.Response {
         .next_href = "",
         .results = results.items,
     }, .{});
+}
+
+/// GET /theme/:mode?back=/docs/… — keeps the reader's choice of colours in
+/// a cookie for a year and goes back to the page. No JavaScript: the switch
+/// in the header is three links.
+pub fn theme(c: *spider.Ctx, mode: spider.Path(Theme, "mode")) !spider.Response {
+    return c.redirectWith(safeBack(c.queryDecoded("back")), try c.withCookie("theme", @tagName(mode.value), .{
+        .path = "/",
+        .max_age = 365 * 24 * 60 * 60,
+        .same_site = "Lax",
+        .http_only = true,
+    }));
 }

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="{ theme }">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,6 +8,7 @@
     <link rel="shortcut icon" href="/favicon.ico">
     <link rel="preload" href="/fonts/atkinson-hyperlegible-400.woff2?v=1" as="font" type="font/woff2" crossorigin>
     <link rel="preload" href="/fonts/atkinson-hyperlegible-700.woff2?v=1" as="font" type="font/woff2" crossorigin>
+    <meta name="color-scheme" content="light dark">
     <link rel="stylesheet" href="/css/app.css">
 </head>
 <body>
@@ -19,15 +20,32 @@
         <span>Spider</span>
     </a>
     <nav class="top-links" aria-label="Site">
-        <a href="/docs/quickstart">Guide</a>
+        <a href="/docs/overview">Docs</a>
         <a href="/docs/api">API</a>
+        <a href="/docs/overview#Apps-to-read">Examples</a>
+        <a href="https://github.com/llllOllOOll/spider/blob/develop/CHANGELOG.md">Changelog</a>
         <a href="https://github.com/llllOllOOll/spider">GitHub</a>
     </nav>
     <form class="search" action="/docs/search" method="get" role="search">
-        <label for="q">Search</label>
-        <input id="q" name="q" type="search" value="{ query }" autocomplete="off">
+        <label class="sr-only" for="q">Search</label>
+        <input id="q" name="q" type="search" value="{ query }" placeholder="Search the docs" autocomplete="off">
     </form>
-    <span class="zig" title="The Zig release these docs are written for">Zig { zig_version }</span>
+    <details class="menu version">
+        <summary title="The Spider these pages describe"><span class="dot" aria-hidden="true"></span>{ spider_version }</summary>
+        <div class="menu-panel">
+            <p><b>{ spider_version }</b> These pages: the <code>develop</code> branch, the next release. Zig { zig_version }.</p>
+            <p><b>{ stable_version }</b> The latest release.</p>
+            <a href="/docs/versions">Versions and channels</a>
+        </div>
+    </details>
+    <details class="menu theme">
+        <summary title="Colours"><span class="theme-icon" aria-hidden="true"></span><span class="sr-only">Colours</span></summary>
+        <div class="menu-panel">
+            <a href="/theme/light?back={ path }">Light</a>
+            <a href="/theme/dark?back={ path }">Dark</a>
+            <a href="/theme/system?back={ path }">As the system</a>
+        </div>
+    </details>
 </header>
 
 <div class="shell">
@@ -50,15 +68,14 @@
     </nav>
 
     <main id="content" class="content">
-        <div class="column">
+        <div class="column { "wide" if (overview) }">
         if (is_page) {
-        <article class="prose">{ content }</article>
+        <article class="prose { "overview" if (overview) }">{ content }</article>
+        if (has_next) {
         <footer class="page-foot">
-            <a href="{ edit_url }">{ edit_label }</a>
-            if (has_next) {
             <a class="next" href="{ next_href }">Next: { next_title }</a>
-            }
         </footer>
+        }
         } else {
         <article class="prose">
             <h1>Search</h1>
@@ -75,6 +92,30 @@
         }
         </div>
     </main>
+
+    <aside class="aside" aria-label="This page">
+        if (toc.len > 0) {
+        <div class="aside-title">On this page</div>
+        <nav class="toc">
+            for (toc) |item| {
+            <a href="#{ item.id }">{ item.title }</a>
+            }
+        </nav>
+        }
+        <div class="news">
+            <b>New in 0.14</b>
+            <ul>
+                <li><a href="/docs/templates#Compiled-templates">Compiled templates</a></li>
+                <li><a href="/docs/templates#Checked-when-the-app-compiles"><code>c.viewChecked</code></a></li>
+                <li><a href="/docs/components#The-props-a-component-declares">Props in components</a></li>
+                <li><a href="/docs/sqlserver">SQL Server</a></li>
+            </ul>
+            <a class="news-more" href="/docs/versions#Moving-from-0-12-to-0-14">Moving from 0.12</a>
+        </div>
+        if (is_page) {
+        <a class="edit" href="{ edit_url }">{ edit_label }</a>
+        }
+    </aside>
 </div>
 </body>
 </html>
