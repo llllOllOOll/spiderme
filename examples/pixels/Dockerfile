@@ -36,7 +36,14 @@ RUN curl -fsSL https://raw.githubusercontent.com/llllOllOOll/spider/main/scripts
 
 WORKDIR /app
 COPY . .
-RUN mkdir -p public && zig build -Doptimize=ReleaseSmall
+# The CPU is named, never the one of the machine that builds: an image built
+# on a newer CPU than the server's stops there with SIGILL (exit code 132).
+# x86_64_v3+aes+pclmul is what the x86-64 servers have; baseline elsewhere.
+RUN case "$(dpkg --print-architecture)" in \
+      amd64) ZIG_CPU="x86_64_v3+aes+pclmul" ;; \
+      *) ZIG_CPU="baseline" ;; \
+    esac; \
+    mkdir -p public && zig build -Doptimize=ReleaseSmall -Dcpu="${ZIG_CPU}"
 
 FROM debian:bookworm-slim
 # Certificates for the HTTPS requests the app makes (login providers, mail).
