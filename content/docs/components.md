@@ -48,6 +48,19 @@ An attribute is written in one of two ways, and they are not the same thing:
 
 Do not mix the two in one attribute inside a loop. `href="/shop/{ product.id }"` reaches the component as that very text, braces included, because the loop's `product` does not exist inside the component. Pass the value and build the text where it is used, as `ProductCard` does with `id`: `href="/shop/{ id }"`.
 
+## The props a component declares
+
+A component can say on its first line what it takes. `PriceTag` does:
+
+```html from=examples/guide/src/shared/templates/PriceTag.html
+```
+
+- `amount!`: required. A call must give it, or the caller must have a value of that name.
+- `on_sale: bool = false`: a type and a default. The default is used when neither the call nor the caller's data has the value.
+- A type is `string`, `int` or `bool`; without one, any value is taken.
+
+The line is not printed. With it, a prop the component does not declare, a missing required one and a value of the wrong type are reported: `spider check` checks every call in the app, and `c.viewChecked` checks the types when the app compiles ([Templates](/docs/templates#Checked-when-the-app-compiles)). A component without the line works as before, and takes any attribute.
+
 ## What goes inside the tag
 
 A component prints what was written inside its tag where it says `{ slot }`:
@@ -107,7 +120,7 @@ A component only one page uses can be written in that page, above where it is us
 
 ## A name that is wrong
 
-A tag that no file answers to prints nothing, and nothing says so. When a part of a page is missing, check the spelling of the tag first:
+A tag that no file answers to prints nothing. When a part of a page is missing, check the spelling of the tag first. `templates_strict` can make Spider say so: `.warn` logs the name, `.error` fails the view ([Templates](/docs/templates#A-name-that-is-not-there)).
 
 ```html from=examples/guide/src/features/shop/views/typo.html
 ```

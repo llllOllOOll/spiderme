@@ -20,7 +20,7 @@ pub fn index(c: *spider.Ctx) !Response {
     else
         try repository.list(c.arena);
 
-    return c.view("posts/index", .{
+    return c.viewChecked("posts/index", .{
         .title = "Posts",
         .q = q,
         .searching = q.len > 0,
@@ -30,7 +30,7 @@ pub fn index(c: *spider.Ctx) !Response {
 
 pub fn show(c: *spider.Ctx) !Response {
     const post = (try policy.load(c)) orelse return error.NotFound;
-    return c.view("posts/show", .{
+    return c.viewChecked("posts/show", .{
         .title = post.title,
         .post = try present.card(c.arena, post),
         // The same rule the routes use decides whether the buttons show.
@@ -77,7 +77,7 @@ pub fn update(c: *spider.Ctx, mine: Mine) !Response {
 /// Asks before deleting. It is a page, so it works without JavaScript.
 pub fn confirmDelete(c: *spider.Ctx, mine: Mine) !Response {
     const post = mine.value;
-    return c.view("posts/delete", .{
+    return c.viewChecked("posts/delete", .{
         .title = "Delete post",
         .post = try present.card(c.arena, post.*),
     }, .{});
@@ -127,7 +127,7 @@ test "csvField: quotes around the text, quotes inside doubled" {
 /// errors it answers 422 and keeps what was typed.
 fn form(c: *spider.Ctx, id: ?i64, input: model.Input, errors: model.Errors) !Response {
     const heading: []const u8 = if (id == null) "New post" else "Edit post";
-    return c.view("posts/form", .{
+    return c.viewChecked("posts/form", .{
         .title = heading,
         .heading = heading,
         .action = if (id) |n| try std.fmt.allocPrint(c.arena, "/posts/{d}/update", .{n}) else "/posts/create",

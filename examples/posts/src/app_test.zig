@@ -136,6 +136,20 @@ test "GET /posts/new shows the form to who is signed in" {
     try res.expectContains("Publish post");
 }
 
+test "the layout offers New post on every page but the form itself" {
+    const app = try spider.testing.start(run);
+    var buf: [1024]u8 = undefined;
+    const writer = app.with(&.{try signUp(app, &buf, "Layout Reader", "layout@example.com")});
+
+    var feed = try writer.get("/posts");
+    defer feed.deinit();
+    try feed.expectContains("href=\"/posts/new\">New post</a>");
+
+    var form = try writer.get("/posts/new");
+    defer form.deinit();
+    try form.expectNotContains("href=\"/posts/new\">New post</a>");
+}
+
 test "POST /posts/create says what is missing and keeps what was typed" {
     const app = try spider.testing.start(run);
     var buf: [1024]u8 = undefined;

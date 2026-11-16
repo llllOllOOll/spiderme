@@ -52,7 +52,7 @@ pub fn serve(allocator: std.mem.Allocator, io: std.Io) !void {
 fn onError(c: *spider.Ctx, err: anyerror) anyerror!spider.Response {
     if (std.mem.startsWith(u8, c.getPath(), "/api/")) return api_errors(c, err);
     if (err == error.NotFound) {
-        return c.view("not-found", .{ .title = "Page not found" }, .{ .status = .not_found });
+        return c.viewChecked("not-found", .{ .title = "Page not found" }, .{ .status = .not_found });
     }
     return fallback(c, err);
 }
