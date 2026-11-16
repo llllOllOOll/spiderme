@@ -17,13 +17,14 @@ spider migrate           apply the migrations (the modules', then the app's)
 spider routes            list the routes and who may call them
 spider check             check the conventions (--modules: the modules)
 spider install           download the frontend assets
+spider clean             free the disk the build cache took
 spider ui                show or switch the UI kit
 spider icons             show, add or remove icon sets
 spider add pwa           make the app installable
 spider remove pwa        undo that
 spider generate-vapid    make the keys for Web Push
-spider update            move the project to the latest Spider
-spider self-update       update the tool itself
+spider update            move the project to another Spider
+spider self-update       install another version of the tool
 spider version           the version installed
 ```
 
@@ -32,16 +33,17 @@ Every command explains itself: `spider help new`, or `spider new --help`.
 ## Install
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/llllOllOOll/spider/main/scripts/install.sh | bash
+curl -fsSL https://spiderme.org/install.sh | bash                          # the latest release
+curl -fsSL https://spiderme.org/install.sh | bash -s -- --version canary   # a build of develop
 ```
 
 `spider version` prints the version installed:
 
 ```text
-spider v0.11.0
+spider v0.14.0-dev
 ```
 
-`spider self-update` downloads and installs the latest one.
+`spider self-update` installs another version of the tool: [spider self-update](#spider-self-update) below.
 
 ## spider new
 
@@ -71,8 +73,9 @@ It writes the project to `./myapp`, one line per file, fetches Spider, and says 
   create  myapp/src/core/db/mod.zig
   update  myapp/src/core/mod.zig
   CSS will be compiled on first 'zig build run'
-Fetching Spider v0.11.0...
-info: resolved to commit 4deaac0c713a78d801763cc072c9b48182447625
+Fetching Spider v0.14.0-dev...
+note: this spider is a development build (0.14.0-dev); the project uses the develop branch
+info: resolved ref "develop" to commit 25b88567540d3e1bb05be464076cb9d679d44156
 
 Done! Next steps:
   cd myapp
@@ -81,7 +84,7 @@ Done! Next steps:
                          (requires spider CLI in PATH — run: spider install)
 ```
 
-Without options the project has HTML views, a SQLite database and a first test. The options change that:
+The project is on the tool's own version: a release for a released tool, the `develop` branch at its current commit for a `-dev` one ([Versions](/docs/versions)). Without options it has HTML views, a SQLite database and a first test. The options change that:
 
 - `--pg` uses PostgreSQL instead of SQLite. Its migrations are built into the binary, and `main` applies them before it serves ([Migrations in production](/docs/migrations)); it also gets a `docker-compose.yml` that runs PostgreSQL for development.
 - `--no-db` leaves the database out.
@@ -118,7 +121,7 @@ spider dev
 
 It builds the app, runs it, and after every save builds it again and reloads the browser. While a build runs or after it fails, the version that was up keeps answering, and the compiler's errors go to the terminal. Ctrl+C stops it.
 
-`--port 4000` makes the app listen on another port for this run. [Development](/docs/development) has more on working this way.
+`--port 4000` makes the app listen on another port for this run. [Development](/docs/development) has more on working this way. It does not run on Windows yet.
 
 ## spider g feature
 
@@ -142,13 +145,13 @@ Generating feature 'notes'...
   create  src/features/notes/views/NotesForm.html
   create  src/features/notes/views/NotesEditForm.html
   create  src/features/notes/views/page.html
-  create  src/core/db/migrations/1792419124_create_notes.sql
+  create  src/core/db/migrations/1794813330_create_notes.sql
   update  src/core/db/migrations.zig
   update  src/features/mod.zig
   (routes mounted by mountFeatures in src/main.zig)
 
 Done! Next:
-  spider migrate   create the notes table (until then /notes answers 500)
+  restart the app  it creates the notes table as it starts (spider dev restarts on save; spider migrate only migrates)
   spider routes    check what got registered, and who may call it
   access: src/features/notes/routes.zig (defaults() and each route's config)
 ```
@@ -181,7 +184,7 @@ Generating login with the app's own users...
   create  src/features/auth/views/register.html
   create  src/features/auth/views/account.html
   update  src/features/mod.zig
-  create  src/core/db/migrations/1792419128_create_users.sql
+  create  src/core/db/migrations/1794813331_create_users.sql
   update  src/core/db/migrations.zig
   update  src/main.zig (session middleware)
   update  src/app_test.zig (tests of the login)
@@ -220,10 +223,10 @@ DROP TABLE IF EXISTS notes;
 
 ```text
 Running migrations on SQLite: db.sqlite...
-  running  1792419124_create_notes
-  applied  1792419124_create_notes
-  running  1792419128_create_users
-  applied  1792419128_create_users
+  running  1794813330_create_notes
+  applied  1794813330_create_notes
+  running  1794813331_create_users
+  applied  1794813331_create_users
 
 2 migration(s) applied.
 ```
@@ -242,7 +245,10 @@ A project made with `--pg` has its migrations in its binary. There the command b
 ```text
 Running migrations (zig build run with SPIDER_MIGRATE)...
 info: pg: connected (10 connections)
-info: migration 1792419170_create_notes applied
+[spider] runtime templates: 13 loaded from "./src"
+[spider] templates are read from "./src" on every request (Debug build): edits need no rebuild.
+[spider] A release build (-Doptimize=ReleaseSafe/Fast/Small) embeds them; `.templates = .embedded` on the spider dependency does so in every build.
+info: migration 1794813397_create_notes applied
 info: 1 migration(s) applied
 ```
 
@@ -350,7 +356,11 @@ It reads the database and the environment as the app does. [Modules](/docs/modul
 spider install
 ```
 
-It downloads the frontend assets into the project: Tailwind, Alpine, htmx, daisyUI when the UI kit uses it, and the icon sets that `src/styles.css` loads. A new project has them already. They are not committed to git, so run it after cloning a project.
+It downloads the frontend assets into the project: Tailwind, Alpine, htmx, daisyUI when the UI kit uses it, and the icon sets that `src/styles.css` loads. Each download is checked against the SHA-256 Spider knows for it, and one that does not match is not used. A new project has them already. They are not committed to git, so run it after cloning a project.
+
+## spider clean
+
+Zig never removes old outputs from `.zig-cache`: every build leaves a copy of the binary there. Every build of a Spider app already prunes it, keeping the two newest copies of each binary (`SPIDER_KEEP_ZIG_CACHE=1` turns that off). `spider clean` keeps only the newest; `--all` deletes the whole `.zig-cache` (stop `spider dev` first), and the next build compiles everything again.
 
 ## spider ui
 
@@ -450,4 +460,31 @@ The argument is how a push service can reach you: a `mailto:` or an `https:` add
 
 ## spider update
 
-`spider update` moves the project to the latest Spider. It changes `build.zig.zon`, so read the [changelog](https://github.com/llllOllOOll/spider/blob/main/CHANGELOG.md) before you run it: a release may change what the app has to do.
+`spider update` moves the project to another Spider by rewriting `build.zig.zon`. A project stays on its version until you run it.
+
+```text
+Usage: spider update [X.Y.Z | --patch | --canary | --stable]
+
+Move the spider dependency in this project's build.zig.zon:
+  (nothing), --stable  the latest release
+  X.Y.Z               that release (checked to exist first)
+  --patch             the latest patch of the project's release line
+  --canary            the develop branch (development; pinned to its
+                      current commit)
+A project stays on its version until you run this.
+```
+
+Read the [changelog](https://github.com/llllOllOOll/spider/blob/develop/CHANGELOG.md) before you move to another minor version: it may change what the app has to do. [Versions](/docs/versions) says how the versions work.
+
+## spider self-update
+
+```text
+Usage: spider self-update [X.Y.Z | --canary | --stable]
+
+Install the spider CLI:
+  (nothing), --stable  the latest release
+  X.Y.Z               that release
+  --canary            a build of the develop branch (needs git and zig)
+```
+
+With nothing after it, it goes to the latest release, even from a `-dev` tool: on `develop`, keep using `--canary`.
