@@ -1,6 +1,7 @@
 const std = @import("std");
 const spider = @import("spider");
 const pages = @import("pages.zig");
+const highlight = @import("highlight.zig");
 
 const NavItem = struct { title: []const u8, href: []const u8, current: bool };
 const TocItem = struct { title: []const u8, id: []const u8 };
@@ -114,6 +115,14 @@ const headings = struct {
     }
 };
 
+/// A fenced block with its code coloured (highlight.zig), in the markup
+/// Spider's Markdown gives every block. `node.content` is already escaped.
+fn codeBlock(allocator: std.mem.Allocator, node: spider.zmd.Node) std.mem.Allocator.Error![]const u8 {
+    const lang_name = node.meta orelse "";
+    const code = try highlight.highlight(allocator, highlight.langOf(lang_name), node.content);
+    return std.fmt.allocPrint(allocator, "<div class=\"code-block\" data-lang=\"{s}\">\n  <pre><code>{s}</code></pre>\n</div>\n", .{ @tagName(highlight.langOf(lang_name)), code });
+}
+
 /// Anything but letters and digits a single `-`, the case kept; what is
 /// inside `<...>` (markup the heading already has) does not count.
 pub fn headingId(allocator: std.mem.Allocator, content: []const u8) ![]const u8 {
@@ -165,7 +174,7 @@ pub fn page(c: *spider.Ctx) !spider.Response {
 
     // The page's Markdown (compiled in, without its header) as HTML.
     // Headings get an id, so a page can be linked to at one of them.
-    const html = try spider.zmd.parse(c.arena, current.markdown, .{ .h2 = headings.h2, .h3 = headings.h3, .h4 = headings.h4 });
+    const html = try spider.zmd.parse(c.arena, current.markdown, .{ .h2 = headings.h2, .h3 = headings.h3, .h4 = headings.h4, .block = codeBlock });
 
     const has_next = i + 1 < pages.all.len;
     return c.view("docs/page", .{

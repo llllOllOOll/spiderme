@@ -13,6 +13,13 @@
     --soft: #FFF1EA;        /* behind the page being read, in the menu */
     --code-bg: #1D1B24;     /* the install command */
     --code-fg: #E9E6EF;
+    --tok-k: #C2410C;       /* code: keywords, tags */
+    --tok-s: #2F7A3A;       /* strings */
+    --tok-c: #8A8696;       /* comments */
+    --tok-n: #0E7490;       /* numbers, template code */
+    --tok-f: #2F5BB7;       /* function and command names */
+    --tok-t: #8B3FB0;       /* types, attributes */
+    --tok-b: #A15C07;       /* builtins, variables */
     --sans: 'Atkinson Hyperlegible', system-ui, sans-serif;
     --mono: 'JetBrains Mono', ui-monospace, monospace;
     color-scheme: light;
@@ -32,6 +39,13 @@
         --panel: #1B1A21;
         --soft: #2A1A12;
         --code-bg: #0E0D12;
+        --tok-k: #FF9A62;
+        --tok-s: #9FD38A;
+        --tok-c: #8E8A99;
+        --tok-n: #67D4E6;
+        --tok-f: #8AB4F8;
+        --tok-t: #D7A8F0;
+        --tok-b: #F5B971;
         color-scheme: dark;
     }
 }
@@ -46,6 +60,13 @@
     --panel: #1B1A21;
     --soft: #2A1A12;
     --code-bg: #0E0D12;
+    --tok-k: #FF9A62;
+    --tok-s: #9FD38A;
+    --tok-c: #8E8A99;
+    --tok-n: #67D4E6;
+    --tok-f: #8AB4F8;
+    --tok-t: #D7A8F0;
+    --tok-b: #F5B971;
     color-scheme: dark;
 }
 
@@ -333,6 +354,15 @@ summary:focus-visible,
    language name in a bar above it: not shown here. */
 .prose .code-block-bar { display: none; }
 
+/* Code colours: the spans src/features/docs/highlight.zig puts in. */
+.tok-k, .tok-tag { color: var(--tok-k); }
+.tok-s { color: var(--tok-s); }
+.tok-c { color: var(--tok-c); font-style: italic; }
+.tok-n, .tok-p { color: var(--tok-n); }
+.tok-f { color: var(--tok-f); }
+.tok-t, .tok-a { color: var(--tok-t); }
+.tok-b { color: var(--tok-b); }
+
 .prose table {
     display: block;
     max-width: 100%;
@@ -415,6 +445,8 @@ summary:focus-visible,
 }
 .overview > .code-block:first-of-type pre::before { content: "$ "; color: var(--thread); }
 .overview > .code-block:first-of-type pre code { color: inherit; }
+.overview > .code-block:first-of-type pre span { color: inherit; }
+.overview > .code-block:first-of-type pre .tok-f { color: var(--thread); }
 
 /* the numbers under it */
 .overview > .code-block:first-of-type + p { font-size: 14px; color: var(--muted); }
