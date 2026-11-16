@@ -230,6 +230,18 @@ summary:focus-visible,
 .menu-panel a:hover { background: var(--soft); text-decoration: none; }
 .version .menu-panel { width: 260px; }
 
+/* The docs describe a version not released yet: said once, above all. */
+.dev-note {
+    margin: 0;
+    padding: 8px 28px;
+    border-bottom: 1px solid var(--rule);
+    background: var(--soft);
+    color: var(--text);
+    font-size: 14px;
+}
+.dev-note b { color: var(--ink); }
+.dev-note a { color: var(--link); text-decoration: underline; text-underline-offset: 2px; }
+
 /* ── page: menu, text, and the side column ──────────────────────────── */
 
 .shell {
@@ -563,6 +575,7 @@ summary:focus-visible,
 
 @media (max-width: 760px) {
     .top { padding: 8px 16px; gap: 8px 12px; }
+    .dev-note { padding: 8px 16px; }
     .top-links { order: 5; width: 100%; gap: 4px 16px; }
     .version { margin-left: auto; }
     .search { order: 4; flex: 1 1 100%; margin-left: 0; }

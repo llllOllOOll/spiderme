@@ -12,11 +12,21 @@ You need **Zig 0.17.0**, the official release, from [ziglang.org/download](https
 
 ## Install the command line tool
 
+These pages describe **0.14.0-dev**, the `develop` branch: the next release, not out yet. To follow them, install the tool from that branch. It builds the tool, so it needs git and Zig:
+
 ```bash
-curl -fsSL https://raw.githubusercontent.com/llllOllOOll/spider/main/scripts/install.sh | bash
+curl -fsSL https://spiderme.org/install.sh | bash -s -- --version canary
 ```
 
-It installs `spider` in `~/.local/bin`.
+`spider version` then says `spider v0.14.0-dev`, and `spider new` starts projects on `develop`, pinned to the commit of that day ([Versions](/docs/versions)).
+
+The latest release is **0.12.1**. For it, leave out the option:
+
+```bash
+curl -fsSL https://spiderme.org/install.sh | bash
+```
+
+Either way `spider` goes in `~/.local/bin`. `spider self-update --canary` and `spider self-update` move an installed tool between the two.
 
 ## Create an app
 

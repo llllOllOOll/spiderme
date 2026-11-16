@@ -9,10 +9,12 @@ order: 5
 Spider is a web framework for Zig: a router, templates checked when the app compiles, PostgreSQL, SQLite and SQL Server, and a command line tool that writes the project for you.
 
 ```bash
-curl -fsSL https://spiderme.org/install.sh | bash
+curl -fsSL https://spiderme.org/install.sh | bash -s -- --version canary
 ```
 
-**942 KB**, the release build of a new project · **Zig 0.17.0**, and nothing else to install · **Linux, macOS and Windows**
+**942 KB**, the release build of a new project · **Zig 0.17.0** · **Linux, macOS and Windows**
+
+These pages describe **0.14.0-dev**, the `develop` branch: what becomes 0.14.0, not released yet. The command above builds the `spider` tool from that branch (it needs git and Zig), and `spider new` then starts projects on it. The latest release is **0.12.1**: `curl -fsSL https://spiderme.org/install.sh | bash` installs it. [Versions](/docs/versions) has both channels and how to move a project between them.
 
 ## The guide, in order
 
