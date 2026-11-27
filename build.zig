@@ -68,10 +68,10 @@ pub fn build(b: *std.Build) void {
 
     b.installArtifact(exe);
 
-    const gen = b.addRunArtifact(spider_dep.artifact("generate-templates"));
-    gen.addArg("src/");
-    gen.addArg("src/embedded_templates.zig");
-    exe.step.dependOn(&gen.step);
+    // The templates (every .html under src/): c.view checks each view's data
+    // against its template when the app compiles, and a release build
+    // embeds them.
+    @import("spider").addTemplates(b, spider_dep, "src");
 
     const run_cmd = b.addRunArtifact(exe);
     run_cmd.step.dependOn(b.getInstallStep());

@@ -13,10 +13,10 @@ The code on this page is from [Bookings](https://bookings.spiderme.org), the exa
 ## Which htmx
 
 ```bash
-spider new bookings --htmx=4
+spider new bookings
 ```
 
-Without the flag a new project is on htmx 2. Either way `spider install` downloads the script to `public/js` (it is not kept in git), and the layout loads it:
+A new project is on htmx 4; `--htmx=2` makes one on htmx 2, and every project made before 0.14 is on htmx 2. Either way `spider install` downloads the script to `public/js` (it is not kept in git), and the layout loads it:
 
 ```html
 <script defer src="/js/htmx4.min.js"></script>

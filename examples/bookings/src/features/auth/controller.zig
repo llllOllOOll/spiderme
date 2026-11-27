@@ -54,6 +54,7 @@ pub fn logout(c: *spider.Ctx) !Response {
 pub fn account(c: *spider.Ctx) !Response {
     return c.view("auth/account", .{
         .title = "Your account",
+        .nav = "",
         .name = c.params.get("_auth_name") orelse "",
         .email = c.params.get("_auth_email") orelse "",
         .role = if (c.hasRole("admin")) "Admin" else "User",
@@ -74,6 +75,8 @@ fn signIn(c: *spider.Ctx, user: model.User) !Response {
 fn loginPage(c: *spider.Ctx, email: []const u8, problem: ?[]const u8) !Response {
     return c.view("auth/login", .{
         .title = "Sign in",
+        .nav = "",
+        .is_admin = false,
         .email = email,
         .problem = problem orelse "",
     }, .{ .status = if (problem == null) .ok else .unprocessable_entity });
@@ -82,6 +85,8 @@ fn loginPage(c: *spider.Ctx, email: []const u8, problem: ?[]const u8) !Response 
 fn registerPage(c: *spider.Ctx, form: model.Registration, problem: ?[]const u8) !Response {
     return c.view("auth/register", .{
         .title = "Create an account",
+        .nav = "",
+        .is_admin = false,
         .name = form.name,
         .email = form.email,
         .problem = problem orelse "",

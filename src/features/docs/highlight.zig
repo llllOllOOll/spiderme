@@ -488,7 +488,7 @@ test "zig: keywords, strings, comments, builtins, types and calls" {
     var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
     defer arena.deinit();
     const a = arena.allocator();
-    const src = "/// The feed.\npub fn index(c: *spider.Ctx) !Response {\n    const q = @as(u8, 3) orelse \"x\";\n    return c.viewChecked(\"posts/index\", .{});\n}\n";
+    const src = "/// The feed.\npub fn index(c: *spider.Ctx) !Response {\n    const q = @as(u8, 3) orelse \"x\";\n    return c.view(\"posts/index\", .{});\n}\n";
     const html_out = try highlight(a, .zig, try escapeForTest(a, src));
     try std.testing.expect(std.mem.indexOf(u8, html_out, "<span class=\"tok-c\">/// The feed.</span>") != null);
     try std.testing.expect(std.mem.indexOf(u8, html_out, "<span class=\"tok-k\">pub</span> <span class=\"tok-k\">fn</span> <span class=\"tok-f\">index</span>") != null);

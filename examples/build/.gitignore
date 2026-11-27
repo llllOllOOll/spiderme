@@ -3,4 +3,3 @@ zig-out/
 zig-pkg/
 .env
 .env.local
-src/embedded_templates.zig

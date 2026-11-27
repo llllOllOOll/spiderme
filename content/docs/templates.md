@@ -6,7 +6,7 @@ order: 120
 
 # Templates
 
-A template is an HTML file with values in braces. `c.viewChecked` renders one with the data a handler gives it, and checks that data when the app compiles.
+A template is an HTML file with values in braces. `c.view` renders one with the data a handler gives it, and checks that data when the app compiles.
 
 The code on this page is from [Posts](https://posts.spiderme.org), the example app in `examples/posts` ([source](https://github.com/llllOllOOll/spiderme/tree/main/examples/posts)). This is the handler of its feed:
 
@@ -53,28 +53,29 @@ A page can also get its layout from its route, without naming it: `.layout = "ad
 
 ## Checked when the app compiles
 
-`c.viewChecked` compares the data with what the template reads, and what its layout and its components read, when the app compiles. The layout of Posts reads `composing`; had it been written `if (!composing)`, every view would have needed that field, and the build would have stopped with one error per view, naming what is missing and what the data has:
+`c.view` compares the data with what the template reads, and what its layout and its components read, when the app compiles. The layout of Posts reads `composing`; had it been written `if (!composing)`, every view would have needed that field, and the build would have stopped with one error per view, naming what is missing and what the data has:
 
 ```text
 error: view "posts/index" (in <layout>): `composing`: the data has no field `composing` (it has: title, q, searching, posts)
 ```
 
-What it catches: a template that does not exist, a field that is not there (`posts[].titel`), a value a template cannot print, a struct printed as text, a `for` over something that is not a list, and a component's prop of the wrong type. A name the template reads only behind `??` or `== null` may be missing, and so may a prop the component declares and a call leaves out.
+What it catches: a template that does not exist, a field that is not there (`posts[].titel`), a value a template cannot print, a struct printed as text, a `for` over something that is not a list, a component that does not exist, and a call that does not fit a component's `-- props:` line. Each message starts with the template's file and line. A name the template reads only behind `??` or `== null` may be missing, and so may a prop the component declares and a call leaves out.
 
-`c.view` renders the same template without the check. It is for a view whose name is chosen while the app runs; otherwise prefer `c.viewChecked`.
+The name of the view has to be known when the app compiles: a literal, or a `comptime` value. A view chosen while the app runs is an `inline` switch over the names it can be, so that each one is checked. `c.viewChecked`, the name of this check in the first 0.14 builds, is the same call and stays for one release.
+
+It needs the list the build writes, `addTemplates` in `build.zig` ([Build](/docs/build#Templates-in-the-binary-or-on-disk)); without it, `c.view` does not compile and says so.
 
 ## A name that is not there
 
-With `c.view`, a name the data does not have renders as nothing. `templates_strict` in `spider.config.zig` decides whether that is said: `.off` says nothing, `.warn` logs one line for each name and view, naming the components it was in, and `.error` fails the view (a 500). Unset, it is `.warn` in a Debug build and `.off` in a release build, so a misspelled name shows in the log of `spider dev`. A field that is there and `null` is not reported.
+A name the check lets through can still be missing while the app runs: one read behind `??` or compared with `null`, a name a component with a `-- props:` line reads without declaring it ([Components](/docs/components#The-props-a-component-declares)), and every name of a template given as text to `c.render`. It renders as nothing. `templates_strict` in `spider.config.zig` decides whether that is said: `.off` says nothing, `.warn` logs one line for each name and view, naming the components it was in, and `.error` fails the view (a 500). Unset, it is `.warn` in a Debug build and `.off` in a release build, so a misspelled name shows in the log of `spider dev`. A field that is there and `null` is not reported.
 
 ## Compiled templates
 
-In a release build each template is also compiled into a Zig function, and `c.viewChecked` renders with it: the text is written straight from the template file and the data is read field by field, with no names looked up while the page is made. The HTML is the same, to the byte; Spider's tests render a set of templates both ways and fail on any difference.
+In a release build each template is also compiled into a Zig function, and `c.view` renders with it: the text is written straight from the template file and the data is read field by field, with no names looked up while the page is made. The HTML is the same, to the byte; Spider's tests render a set of templates both ways and fail on any difference.
 
 What renders as before, with the same HTML:
 
 - a Debug build, so that a saved template shows on the next request;
-- `c.view`, whose template may be chosen while the app runs;
 - `templates_strict` other than `.off`, since its warnings are made per request;
 - a page without `extends` that gets its layout from its route;
 - a template the compiler does not take: one that reads `current_user`, a condition that calls a function, a component that includes itself.

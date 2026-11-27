@@ -4,8 +4,6 @@ const core = @import("core");
 const features = @import("features");
 const db = spider.sqlite;
 
-pub const spider_templates = @import("embedded_templates.zig").EmbeddedTemplates;
-
 pub fn main(init: std.process.Init) !void {
     const allocator = init.arena.allocator();
 
@@ -52,7 +50,7 @@ pub fn serve(allocator: std.mem.Allocator, io: std.Io) !void {
 fn onError(c: *spider.Ctx, err: anyerror) anyerror!spider.Response {
     if (std.mem.startsWith(u8, c.getPath(), "/api/")) return api_errors(c, err);
     if (err == error.NotFound) {
-        return c.viewChecked("not-found", .{ .title = "Page not found" }, .{ .status = .not_found });
+        return c.view("not-found", .{ .title = "Page not found" }, .{ .status = .not_found });
     }
     return fallback(c, err);
 }

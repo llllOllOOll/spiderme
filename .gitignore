@@ -14,5 +14,3 @@ public/css/app.css
 public/js/alpine.min.js
 public/js/htmx.min.js
 
-# Written by every build: the list of templates a release build embeds
-src/embedded_templates.zig

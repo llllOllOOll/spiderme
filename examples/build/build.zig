@@ -33,8 +33,6 @@ pub fn build(b: *std.Build) void {
     disk_elsewhere.expectStdErrMatch("views_dir \"./src\" not found");
     test_step.dependOn(&disk_elsewhere.step);
 
-    test_step.dependOn(checkTemplateList(b, embedded));
-
     const spider_mod = spider(b, target, optimize, .auto).module("spider");
 
     // A part that was asked for: the test compiles and runs.
@@ -99,25 +97,9 @@ fn app(
             .imports = &.{.{ .name = "spider", .module = spider_mod }},
         }),
     });
-    embedTemplates(b, spider_dep, exe);
+    // The templates (every .html under src/): c.view checks each view's
+    // data against its template when the app compiles, and a build with
+    // `.templates = .embedded` keeps them in the binary.
+    spider_build.addTemplates(b, spider_dep, "src");
     return exe;
-}
-
-/// Writes src/embedded_templates.zig, the list of every `.html` under
-/// src/, before the app is compiled.
-fn embedTemplates(b: *std.Build, spider_dep: *std.Build.Dependency, exe: *std.Build.Step.Compile) void {
-    const gen = b.addRunArtifact(spider_dep.artifact("generate-templates"));
-    gen.addArg("src/");
-    gen.addArg("src/embedded_templates.zig");
-    exe.step.dependOn(&gen.step);
-}
-
-/// What that file has for this project: one line, for its one template.
-fn checkTemplateList(b: *std.Build, exe: *std.Build.Step.Compile) *std.Build.Step {
-    const check = b.addCheckFile(b.path("src/embedded_templates.zig"), .{ .expected_matches = &.{
-        "    hello_index: []const u8 = @embedFile(\"features/hello/views/index.html\"),",
-    } });
-    // After the app is compiled, so after the file was written.
-    check.step.dependOn(&exe.step);
-    return &check.step;
 }

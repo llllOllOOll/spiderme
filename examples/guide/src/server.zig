@@ -42,7 +42,6 @@ pub fn run() !void {
         .get("/auth/google", googleLogin, .{ .public = true })
         .get("/auth/google/callback", googleCallback, .{ .public = true })
         .get("/shop", shop, .{ .public = true })
-        .get("/shop/typo", shopTypo, .{ .public = true })
         .get("/shop/receipt", receipt, .{ .public = true })
         .get("/tasks", tasks, .{ .public = true })
         .post("/tasks", addTask, .{ .public = true })
@@ -361,10 +360,6 @@ fn shop(c: *spider.Ctx) !spider.Response {
     const list = try c.viewFragment("shop/index", "ProductList", data, .{});
     const count = try c.viewFragment("shop/index", "ResultCount", data, .{});
     return c.html(try std.mem.concat(c.arena, u8, &.{ list.body orelse "", count.body orelse "" }), .{});
-}
-
-fn shopTypo(c: *spider.Ctx) !spider.Response {
-    return c.view("shop/typo", .{}, .{});
 }
 
 fn receipt(c: *spider.Ctx) !spider.Response {

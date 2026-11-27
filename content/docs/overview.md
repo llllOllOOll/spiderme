@@ -28,7 +28,7 @@ Five steps from nothing to a running app. Each one is a page.
 
 ## The code and the page it makes
 
-The feed of the Posts example: its handler, and the page at [posts.spiderme.org](https://posts.spiderme.org). `c.viewChecked` checks the view against the data when the app compiles: a field the template reads and the handler does not send is a build error, not a blank on the page.
+The feed of the Posts example: its handler, and the page at [posts.spiderme.org](https://posts.spiderme.org). `c.view` checks the view against the data when the app compiles: a field the template reads and the handler does not send is a build error, not a blank on the page.
 
 ```zig from=examples/posts/src/features/posts/controller.zig decl=index
 ```

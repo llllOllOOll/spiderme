@@ -42,7 +42,7 @@ extends "layout"
                 <a class="ui-link ui-row-title" href="/bookings/{ booking.id }">{ booking.title }</a>
                 <span class="ui-muted ui-small">{ booking.day } · { booking.starts }–{ booking.ends } · { booking.booked_by }</span>
             </div>
-            <StateBadge state="{ booking.state }" />
+            <StateBadge state="{ booking.shown_state }" />
         </div>
         }
         }

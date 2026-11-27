@@ -53,7 +53,7 @@ pub fn logout(c: *spider.Ctx) !Response {
 
 /// Who is signed in. Only reachable with a session (see routes.zig).
 pub fn account(c: *spider.Ctx) !Response {
-    return c.viewChecked("auth/account", .{
+    return c.view("auth/account", .{
         .title = "Your account",
         .name = c.params.get("_auth_name") orelse "",
         .email = c.params.get("_auth_email") orelse "",
@@ -82,7 +82,7 @@ const last_email = "last_email";
 const one_year = 365 * 24 * 60 * 60;
 
 fn loginPage(c: *spider.Ctx, email: []const u8, problem: ?[]const u8) !Response {
-    return c.viewChecked("auth/login", .{
+    return c.view("auth/login", .{
         .title = "Sign in",
         .email = email,
         .problem = problem orelse "",
@@ -90,7 +90,7 @@ fn loginPage(c: *spider.Ctx, email: []const u8, problem: ?[]const u8) !Response 
 }
 
 fn registerPage(c: *spider.Ctx, form: model.Registration, problem: ?[]const u8) !Response {
-    return c.viewChecked("auth/register", .{
+    return c.view("auth/register", .{
         .title = "Create an account",
         .name = form.name,
         .email = form.email,

@@ -78,21 +78,17 @@ Good to know:
 
 ## Templates: in the binary or on disk
 
-An app says it has templates to embed with one line in `src/main.zig`:
+An app registers its templates with one line in `build.zig`:
 
-```zig from=examples/build/src/main.zig decl=spider_templates
+```zig
+@import("spider").addTemplates(b, spider_dep, "src");
 ```
 
-and `build.zig` writes that file before it compiles the app:
-
-```zig from=examples/build/build.zig decl=embedTemplates
-```
-
-`spider new` sets all of this up.
+`spider new` writes it. The example has it in `app`, once for each way it builds the app.
 
 ### The program that finds the templates
 
-`generate-templates` is a small program that comes with Spider. The build compiles it and runs it before the app, every time. It walks `src/`, finds every `.html` and `.md` file, and writes `src/embedded_templates.zig`. For the example's one template the file is:
+`generate-templates` is a small program that comes with Spider. `addTemplates` has the build compile it and run it before the app, every time. It walks `src/`, finds every `.html` and `.md` file, and writes the list into the build's cache, where the app's code reaches it through Spider. For the example's one template the file is:
 
 ```zig
 pub const EmbeddedTemplates = struct {
@@ -102,6 +98,19 @@ pub const EmbeddedTemplates = struct {
         pub const hello_index = .{
             .{ "name", 1, .text, false, "" },
         };
+    };
+
+    pub const spider_files = struct {
+        pub const hello_index = "src/features/hello/views/index.html";
+    };
+
+    pub const spider_fragments = struct {
+        pub const files = struct {
+            pub const hello_index = .{
+                .{ "name", 0, .text, false, "hello_index" },
+            };
+        };
+        pub const inline_ = struct {};
     };
 
     pub const elroy = struct {
@@ -120,11 +129,13 @@ pub const EmbeddedTemplates = struct {
 ```
 
 - The first line points at the template file. Whether the templates then go into the binary is the choice below.
-- `spider_manifest` lists what each template reads (here `name`, on line 1, as text). `c.viewChecked` uses it to check a view's data when the app compiles ([Templates](/docs/templates)).
+- `spider_manifest` lists what each template reads (here `name`, on line 1, as text). `c.view` uses it to check a view's data when the app compiles ([Templates](/docs/templates#Checked-when-the-app-compiles)); `spider_files` gives the file its messages name, and `spider_fragments` is the same list for each component rendered alone with `c.viewFragment`.
 - `elroy` is the template compiled into a Zig function, which a release build renders with: the text is written straight from the template file, and the data is read field by field. See [Compiled templates](/docs/templates#Compiled-templates).
-- It is written again by every build, so it stays out of git and is never edited by hand.
+- It is written again by every build, in the cache, so it is never in git and never edited by hand.
 - A template added, renamed or removed is in the list after the next build. Nothing registers templates by hand.
 - The name on the left is how the file is found: `features/hello/views/index.html` is the view `"hello/index"`. A file whose name starts with a capital letter is a [component](/docs/components), known by that name alone.
+
+Projects made before 0.14 ran `generate-templates` themselves, writing `src/embedded_templates.zig`, and declared `pub const spider_templates` in `src/main.zig`. That still works; moving to `addTemplates` is the one line above in place of both ([Moving from 0.12 to 0.14](/docs/versions#Moving-from-0-12-to-0-14)).
 
 The build of a new project runs two more programs that come with Spider: one lists the files that have tests, so that none is left out of `zig build test` ([Testing](/docs/testing)), and one tells `spider dev` that a new build is ready ([Development](/docs/development)). All three run on your machine during the build. None of them is in the app.
 
@@ -152,7 +163,7 @@ Good to know:
 
 - `.auto` follows the `.optimize` given to the Spider dependency, not the app's. Leave `.optimize = optimize` out and Spider is in Debug, so a release build reads its templates from disk.
 - An app that reads its templates from disk says so when it starts, with the directory.
-- An app with no `spider_templates` in `src/main.zig` has nothing to embed: its templates are always read from disk.
+- An app without `addTemplates` has nothing to embed, and `c.view` does not compile in it: the check needs the list.
 - `.embedded` in a Debug build is for trying the app the way it will be deployed. `.disk` in a release build is for changing templates on the server without a build, and then the template folder is deployed with the binary.
 
 ## Debug and release

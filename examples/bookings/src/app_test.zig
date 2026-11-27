@@ -141,3 +141,24 @@ test "auth: signing out ends the session" {
     try out.expectRedirect("/auth/login");
     try std.testing.expectEqualStrings("", out.cookie("session").?);
 }
+
+test "bookings: my bookings show each one's state" {
+    const app = try running();
+    var buf: [1024]u8 = undefined;
+    const cookie = try signUp(app, &buf, "Badge Owner", "badge@example.com");
+
+    var made = try app.request(.{
+        .method = "POST",
+        .target = "/bookings/create",
+        .headers = &.{ cookie, "Content-Type: application/x-www-form-urlencoded" },
+        .body = "room=1&date=2031-05-06&start=10:00&end=11:00&title=Badge+check&note=",
+    });
+    defer made.deinit();
+    try made.expectStatus(303);
+
+    var mine = try app.request(.{ .target = "/bookings", .headers = &.{cookie} });
+    defer mine.deinit();
+    try mine.expectStatus(200);
+    try mine.expectContains("Badge check");
+    try mine.expectContains("ui-badge-held");
+}

@@ -12,6 +12,7 @@ const columns =
     \\CASE WHEN b.state = 'held'
     \\     THEN greatest(0, ceil(extract(epoch FROM b.held_until - now()) / 60))::integer
     \\END AS minutes_left,
+    \\CASE WHEN b.state = 'held' AND b.held_until <= now() THEN 'expired' ELSE b.state::text END AS shown_state,
     \\b.state IN ('held', 'confirmed') AND now() - b.created_at < interval '8 seconds' AS fresh
 ;
 const from = " FROM bookings b JOIN rooms r ON r.id = b.room_id ";

@@ -8,8 +8,6 @@ const db = spider.pg;
 /// binary (build.zig: spider.addMigrations).
 const migrations = @import("migrations").all;
 
-pub const spider_templates = @import("embedded_templates.zig").EmbeddedTemplates;
-
 pub fn main(init: std.process.Init) !void {
     const allocator = init.arena.allocator();
     const io = init.io;
@@ -75,17 +73,21 @@ pub fn serve(allocator: std.mem.Allocator, io: std.Io) !void {
 /// Where every error a handler or a middleware returns ends up: a missing
 /// room, booking or page gets the 404 page, something the visitor may not
 /// do the 403 page, nobody signed in the sign-in page; anything else gets
-/// Spider's own answer.
+/// Spider's own answer. The two pages are rendered here, not by
+/// `errorHandler`, because they go inside the layout, and the layout reads
+/// `nav` and `is_admin`: `c.view` checks that every view gives them.
 fn onError(c: *spider.Ctx, err: anyerror) anyerror!spider.Response {
     if (err == error.NotFound) {
-        return c.view("not-found", .{ .title = "Not found" }, .{ .status = .not_found });
+        return c.view("not-found", .{ .title = "Not found", .nav = "", .is_admin = c.hasRole("admin") }, .{ .status = .not_found });
+    }
+    if (err == error.Forbidden and !c.isHtmx() and !c.wantsJson()) {
+        return c.view("not-allowed", .{ .title = "Not allowed", .nav = "", .is_admin = c.hasRole("admin") }, .{ .status = .forbidden });
     }
     return fallback(c, err);
 }
 
 const fallback = spider.errorHandler(.{
     .unauthorized_redirect = "/auth/login",
-    .forbidden_view = "not-allowed",
 });
 
 // Routes in routes.zig with declared access, ui-* classes, icons from the

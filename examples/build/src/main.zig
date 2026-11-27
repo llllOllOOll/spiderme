@@ -2,10 +2,6 @@
 const std = @import("std");
 const spider = @import("spider");
 
-/// The templates of the app, for a build that keeps them in the binary.
-/// The build writes `embedded_templates.zig` from the `.html` files.
-pub const spider_templates = @import("embedded_templates.zig").EmbeddedTemplates;
-
 fn hello(c: *spider.Ctx) !spider.Response {
     return c.view("hello/index", .{ .name = "build" }, .{});
 }

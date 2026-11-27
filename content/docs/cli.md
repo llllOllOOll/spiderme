@@ -75,7 +75,7 @@ It writes the project to `./myapp`, one line per file, fetches Spider, and says 
   CSS will be compiled on first 'zig build run'
 Fetching Spider v0.14.0-dev...
 note: this spider is a development build (0.14.0-dev); the project uses the develop branch
-info: resolved ref "develop" to commit 25b88567540d3e1bb05be464076cb9d679d44156
+info: resolved ref "develop" to commit 31c51aef84936c2728058e0a08f12d5d5f36d927
 
 Done! Next steps:
   cd myapp
@@ -90,9 +90,10 @@ The project is on the tool's own version: a release for a released tool, the `de
 - `--no-db` leaves the database out.
 - `--api` makes a JSON project, without HTML views.
 - `--ui=tailwind` uses plain Tailwind instead of daisyUI. `spider ui use` switches later.
-- `--htmx=4` uses htmx 4 instead of htmx 2. The generators then write what that version understands.
+- `--htmx=2` uses htmx 2 instead of htmx 4, the default. htmx 4 changed attribute inheritance, error swaps and event names; the generators write what the project's version understands ([htmx](/docs/htmx)).
 - `--pwa` makes the app installable. It is the same as running `spider add pwa` afterwards.
 - `--skip-downloads` does not download Tailwind, Alpine, htmx and the icons now. `spider install` does it later.
+- `--minimal` writes only `build.zig`, `src/main.zig` with one route and its handler, and `views/` with a page and a component: no database, no features, no Tailwind, no Docker. It takes no other option. It is for trying Spider, or for a small server that will stay small.
 
 What the project has:
 
@@ -337,7 +338,14 @@ What it treats as an error:
 - a feature that is not in `src/features/mod.zig`;
 - in an app with a login, a route that declares no access.
 
-And as a warning: an inline `style=`, a pasted `<svg>`, a feature without `routes_test.zig`. `--strict` fails on warnings too, which is what you want in CI.
+And as a warning:
+
+- a component without a `-- props:` line: nothing checks its calls, and it reads any name of its caller ([Components](/docs/components#The-props-a-component-declares));
+- an inline `style=`, unless its value comes from the data (`width: { pct }%`) or is the safe area (`env(safe-area-inset-top)`): no class can hold those;
+- a pasted `<svg>`, where an icon class would do; a chart, an illustration or a logo is marked `<svg data-graphic ...>` and left alone;
+- a feature without `routes_test.zig`.
+
+`--strict` fails on warnings too, which is what you want in CI.
 
 A new project runs the same checks in `zig build test`, so they also fail there. [Testing](/docs/testing) shows that.
 

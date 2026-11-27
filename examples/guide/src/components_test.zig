@@ -41,16 +41,6 @@ test "components: htmx gets the parts that change, each one a component" {
     try res.expectNotContains("<html");
 }
 
-test "components: a tag no file answers to prints nothing, and says nothing" {
-    const app = try spider.testing.start(run);
-    var res = try app.get("/shop/typo");
-    defer res.deinit();
-    try res.expectStatus(200);
-    try res.expectContains("<p>before</p>");
-    try res.expectContains("<p>after</p>");
-    try res.expectNotContains("Notebook");
-}
-
 test "components: one defined in the page that uses it" {
     const app = try spider.testing.start(run);
     var res = try app.get("/shop/receipt");

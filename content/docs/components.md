@@ -27,12 +27,12 @@ Where the file goes: next to the views of the feature that uses it (`src/feature
 
 ## What a component sees
 
-Two things: its attributes, and everything the page was given.
+What its first line says it takes: its props. Each one is the attribute of that name, or, when the call leaves it out, the page's value of that name.
 
 ```html from=examples/guide/src/features/shop/views/ProductList.html
 ```
 
-`<ProductList />` in the page has no attribute. It reads `products` and `q` because the handler gave them to the page. That is the usual way to cut a long page into parts: each part is a file, and none of them needs its values passed down.
+`<ProductList />` in the page has no attribute. Its line names `products` and `q`, and it gets them from the page, because the handler gave them to the page. That is the usual way to cut a long page into parts: each part is a file that says what it reads, and none of them needs its values passed down.
 
 `<ProductCard>` is different: it is used once per product, so each use says which one, in attributes.
 
@@ -59,7 +59,11 @@ A component can say on its first line what it takes. `PriceTag` does:
 - `on_sale: bool = false`: a type and a default. The default is used when neither the call nor the caller's data has the value.
 - A type is `string`, `int` or `bool`; without one, any value is taken.
 
-The line is not printed. With it, a prop the component does not declare, a missing required one and a value of the wrong type are reported: `spider check` checks every call in the app, and `c.viewChecked` checks the types when the app compiles ([Templates](/docs/templates#Checked-when-the-app-compiles)). A component without the line works as before, and takes any attribute.
+The line is not printed. With it, a prop the component does not declare, a missing required one and a value of the wrong type stop the build: `c.view` checks every call of the page it renders when the app compiles ([Templates](/docs/templates#Checked-when-the-app-compiles)), and `spider check` checks every call in the app.
+
+A component with the line sees its props and `current_user`, and nothing else of the page: a name it reads without declaring it renders as nothing. To read one more of the page's values, add it to the line. What is written inside its tag is not the component's: it still sees the page (below).
+
+A component without the line sees every value of the page and takes any attribute, and nothing checks its calls. `spider check` warns about it; `-- props:` alone is the line of a component that takes nothing but what goes inside its tag.
 
 ## What goes inside the tag
 
@@ -120,10 +124,13 @@ A component only one page uses can be written in that page, above where it is us
 
 ## A name that is wrong
 
-A tag that no file answers to prints nothing. When a part of a page is missing, check the spelling of the tag first. `templates_strict` can make Spider say so: `.warn` logs the name, `.error` fails the view ([Templates](/docs/templates#A-name-that-is-not-there)).
+A tag that no file answers to, and that the page does not define, stops the build, at the line of the call:
 
 ```html from=examples/guide/src/features/shop/views/typo.html
 ```
 
-```zig from=examples/guide/src/components_test.zig decl="components: a tag no file answers to prints nothing, and says nothing"
+```text
+error: src/features/shop/views/typo.html:2: view "shop/typo": <ProdctCard> is not a component: no template file ProdctCard.html (or prodct_card.html) and no <ProdctCard>...</ProdctCard> defined in this file
 ```
+
+The example keeps this page apart, in `src/typo.zig`, and its build checks that it does not compile.

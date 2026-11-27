@@ -32,6 +32,8 @@ Three things are different from a handler:
 
 What it does have is the hub: the same one handlers reach with `c.sseHub()`. The job above uses it to tell the pages showing a day that the day changed.
 
+A job that needs an `std.Io`, to start a process or open a file, takes it as a second parameter: `fn (hub: *spider.Hub, io: std.Io) void`. It is the job thread's own, made with the process's environment, so a process it starts finds its `PATH`. With the zio backend, the default, the server's own (`hub.io`) cannot start a process from a job's thread. A job written with the hub alone works as before.
+
 The query the job runs is in the repository, like any other:
 
 ```zig from=examples/bookings/src/features/bookings/repository.zig decl=expireStale

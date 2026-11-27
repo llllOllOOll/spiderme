@@ -8,8 +8,8 @@
         // own build fetches it. An app that depends on the package gives
         // the module its own spider instead.
         .spider = .{
-            .url = "git+https://github.com/llllOllOOll/spider?ref=develop#25b88567540d3e1bb05be464076cb9d679d44156",
-            .hash = "spider-0.14.0-dev-P7cGrnsp2wCjvf7iJPo6YGDPCkbQHvZEC8erVSdGDtZ9",
+            .url = "git+https://github.com/llllOllOOll/spider?ref=develop#31c51aef84936c2728058e0a08f12d5d5f36d927",
+            .hash = "spider-0.14.0-dev-P7cGrqMW3ADAezdRX_RRIPe88sP2UPuKjFsvD781JcWP",
             .lazy = true,
         },
     },

@@ -17,7 +17,7 @@ extends "layout"
                 <span class="ui-muted ui-small">{ booking.room } · { booking.day } · { booking.starts }–{ booking.ends }</span>
             </div>
             <div class="ui-row-actions">
-                <StateBadge state="{ booking.state }" />
+                <StateBadge state="{ booking.shown_state }" />
                 <a class="ui-btn ui-btn-secondary ui-btn-sm" href="/bookings/{ booking.id }">Open</a>
             </div>
         </div>

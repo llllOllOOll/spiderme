@@ -245,6 +245,9 @@ test "GET /posts/:id/delete asks first, POST /posts/:id/delete removes the post"
     try ask.expectStatus(200);
     try ask.expectContains("Delete this post?");
     try ask.expectContains("Soon gone");
+    // The way back leads to the post itself.
+    var back: [96]u8 = undefined;
+    try ask.expectContains(try std.fmt.bufPrint(&back, "<a class=\"ui-back\" href=\"{s}\">", .{post}));
 
     var still_there = try app.get(post);
     defer still_there.deinit();

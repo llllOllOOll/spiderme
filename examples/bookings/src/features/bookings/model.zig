@@ -32,6 +32,9 @@ pub const Booking = struct {
     /// For a held booking: whole minutes until the hold ends, 0 once it
     /// has. null in every other state.
     minutes_left: ?i32 = null,
+    /// The state as its badge shows it, as text: "expired" for a hold that
+    /// ran out, whatever the row still says.
+    shown_state: []const u8 = "",
     /// Made in the last few seconds: the day view points it out.
     fresh: bool = false,
 };
